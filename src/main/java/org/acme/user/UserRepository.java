@@ -9,7 +9,11 @@ public interface UserRepository<T, ID> {
 
     Optional<T> findById(ID id);
 
+    Optional<T> findByEmail(String email);
+
     boolean existsById(ID id);
+
+    boolean existsByEmail(String email);
 
     ID save(T t);
 
