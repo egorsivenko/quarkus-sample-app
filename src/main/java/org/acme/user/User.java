@@ -1,31 +1,30 @@
 package org.acme.user;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import io.quarkus.elytron.security.common.BcryptUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class User {
 
     private String fullName;
     private String email;
     private String password;
+    private String role;
+    private LocalDateTime createdAt;
 
-    @Builder.Default
-    private Role role = Role.USER;
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    public User(String fullName, String email, String password, String role) {
+        this.fullName = fullName;
+        this.email = email;
+        this.password = BcryptUtil.bcryptHash(password);
+        this.role = role;
+        this.createdAt = LocalDateTime.now();
+    }
 
-    public enum Role {
-        ADMIN,
-        USER
+    public boolean verifyPassword(String password) {
+        return BcryptUtil.matches(password, this.password);
     }
 }
