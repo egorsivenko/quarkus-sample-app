@@ -16,13 +16,14 @@
         <article>
             <div>
                 <h1>Login</h1>
-                <form class="login-form" autocomplete="off">
-                    <input type="email" name="email" maxlength="50" placeholder="Email" autofocus required />
-                    <input type="password" name="password" maxlength="50" placeholder="Password" required />
+                <form action="javascript:void(0);" class="login-form" autocomplete="off">
+                    <p id="error-message" style="color: red; display: none;">Invalid credentials. Please try again.</p>
+                    <input type="email" id="email" maxlength="50" placeholder="Email" autofocus required />
+                    <input type="password" id="password" maxlength="50" placeholder="Password" required />
                     <fieldset>
                         <a href="#">Forgot Password?</a>
                     </fieldset>
-                    <button type="submit" class="contrast">Login</button>
+                    <button type="submit" class="contrast" onclick="login()">Login</button>
                     <label align="center">
                         Don't have an account? <a href="/auth/register">Register</a>
                     </label>
@@ -30,6 +31,39 @@
             </div>
         </article>
     </main>
+
+    <script>
+        const login = () => {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+
+            const formData = new URLSearchParams();
+            formData.append("j_email", emailInput.value);
+            formData.append("j_password", passwordInput.value);
+
+            fetch("/j_security_check", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+            })
+            .then((response) => {
+                if (response.ok) {
+                    window.location.href = '/profile';
+                } else {
+                    const errorMessage = document.getElementById('error-message');
+                    errorMessage.style.display = 'block';
+
+                    emailInput.value = '';
+                    passwordInput.value = '';
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+        };
+    </script>
 </body>
 
 </html>

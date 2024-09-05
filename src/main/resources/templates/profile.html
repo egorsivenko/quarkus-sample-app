@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+
+    <link rel="shortcut icon" href="https://picocss.com/favicon.ico" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+<h3>Hello my friend, you did it!</h3>
+<button class="outline" onclick="logout()">Logout</button>
+
+<script>
+    const logout = () => {
+        document.cookie = 'quarkus-credential=; Max-Age=0;path=/';
+        window.location.href = '/auth/login';
+    };
+</script>
+</body>
+</html>
