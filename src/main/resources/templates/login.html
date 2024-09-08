@@ -16,14 +16,14 @@
         <article>
             <div>
                 <h1>Login</h1>
-                <form action="javascript:void(0);" autocomplete="off">
+                <form id="login-form" autocomplete="off">
                     <p id="error-message" style="color: red; display: none;">Invalid credentials. Please try again.</p>
                     <input type="email" id="email" maxlength="50" placeholder="Email" autofocus required />
                     <input type="password" id="password" maxlength="50" placeholder="Password" required />
                     <fieldset>
                         <a href="#">Forgot Password?</a>
                     </fieldset>
-                    <button type="submit" class="contrast" onclick="login()">Login</button>
+                    <button type="submit" class="contrast">Login</button>
                     <label align="center">
                         Don't have an account? <a href="/auth/register">Register</a>
                     </label>
@@ -33,7 +33,9 @@
     </main>
 
     <script>
-        const login = () => {
+        document.getElementById('login-form').addEventListener('submit', (event) => {
+            event.preventDefault();
+
             const emailInput = document.getElementById('email');
             const passwordInput = document.getElementById('password');
 
@@ -55,14 +57,14 @@
                     const errorMessage = document.getElementById('error-message');
                     errorMessage.style.display = 'block';
 
-                    emailInput.value = '';
+                    emailInput.focus();
                     passwordInput.value = '';
                 }
             })
             .catch((error) => {
                 console.error(error);
             });
-        };
+        });
     </script>
 </body>
 

@@ -16,8 +16,8 @@
         <article>
             <div>
                 <h1>Register</h1>
-                <form action="javascript:void(0);" autocomplete="off">
-                    <input type="text" id="fullName" minlength="4" maxlength="50" placeholder="Full name" required
+                <form id="register-form" autocomplete="off">
+                    <input type="text" id="full-name" minlength="4" maxlength="50" placeholder="Full name" required
                         pattern="^[A-Za-z]+(?: [A-Za-z]+)?$" title="Full name shouldn't include special characters."
                         autofocus />
                     <input type="email" id="email" maxlength="50" placeholder="Email" required
@@ -27,7 +27,7 @@
                     <input type="password" id="password" minlength="6" maxlength="50" placeholder="Password" required
                         pattern="^[A-Za-z0-9]+$"
                         title="Password shouldn't include special characters and whitespaces." />
-                    <button type="submit" class="contrast" onclick="register()">Register</button>
+                    <button type="submit" class="contrast">Register</button>
                     <label align="center">
                         Already have an account? <a href="/auth/login">Login</a>
                     </label>
@@ -37,8 +37,10 @@
     </main>
 
     <script>
-        const register = () => {
-            const fullNameInput = document.getElementById('fullName');
+        document.getElementById('register-form').addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const fullNameInput = document.getElementById('full-name');
             const emailInput = document.getElementById('email');
             const passwordInput = document.getElementById('password');
 
@@ -82,7 +84,7 @@
             .catch((error) => {
                 console.error(error);
             });
-        };
+        });
     </script>
 </body>
 
