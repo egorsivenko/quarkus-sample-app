@@ -27,4 +27,8 @@ public class User {
     public boolean verifyPassword(String password) {
         return BcryptUtil.matches(password, this.password);
     }
+
+    public void changePassword(String newPassword) {
+        this.password = BcryptUtil.bcryptHash(newPassword);
+    }
 }
