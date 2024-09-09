@@ -3,6 +3,7 @@ package org.acme.user;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import java.util.List;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -10,6 +11,10 @@ public class UserService {
 
     @Inject
     UserRepository<User, UUID> userRepository;
+
+    public List<User> listAll() {
+        return userRepository.findAll();
+    }
 
     public User getByEmail(String email) {
         return userRepository.findByEmail(email).orElseThrow();

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users list</title>
+
+    <link rel="shortcut icon" href="https://picocss.com/favicon.ico" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+</head>
+<body>
+<h3>Users list</h3>
+<a href="/profile" role="button" class="outline contrast">Back</a>
+<table class="striped">
+    <thead>
+        <tr>
+            <th scope="col">Full name</th>
+            <th scope="col">Email</th>
+            <th scope="col">Role</th>
+            <th scope="col">Registration date</th>
+        </tr>
+    </thead>
+    <tbody>
+    {#for user in users}
+        <tr>
+            <th scope="row">{user.fullName}</th>
+            <td>{user.email}</td>
+            <td>{user.role}</td>
+            <td>{user.createdAt.format('dd-MM-yyyy HH:mm:ss')}</td>
+        </tr>
+    {/for}
+    </tbody>
+</table>
+</body>
+</html>

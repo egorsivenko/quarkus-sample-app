@@ -7,13 +7,12 @@
 
     <link rel="shortcut icon" href="https://picocss.com/favicon.ico" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
-    <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
 <h4>Hello, {user.fullName} &#x1F44B;</h4>
 <h4>Email: {user.email}</h4>
 {#if user:isAdmin}
-    <h4>You are an admin!</h4>
+    <a href="/admin/users" role="button" class="outline contrast">Users list</a>
 {/if}
 <a href="/profile/change-password" role="button" class="outline contrast">Change password</a>
 <button class="outline" onclick="logout()">Logout</button>
