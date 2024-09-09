@@ -6,6 +6,7 @@ import org.acme.auth.exception.EmailAlreadyTakenException;
 import org.acme.auth.request.RegisterRequest;
 import org.acme.user.User;
 import org.acme.user.UserRepository;
+import org.acme.user.UserRole;
 
 import java.util.UUID;
 
@@ -19,7 +20,7 @@ public class AuthService {
         if (userRepository.existsByEmail(request.email())) {
             throw new EmailAlreadyTakenException(request.email());
         }
-        User user = new User(request.fullName(), request.email(), request.password(), "user");
+        User user = new User(request.fullName(), request.email(), request.password(), UserRole.USER);
         userRepository.save(user);
     }
 }

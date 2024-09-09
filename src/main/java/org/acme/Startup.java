@@ -6,6 +6,7 @@ import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import org.acme.user.User;
 import org.acme.user.UserRepository;
+import org.acme.user.UserRole;
 
 import java.util.UUID;
 
@@ -16,6 +17,6 @@ public class Startup {
     UserRepository<User, UUID> userRepository;
 
     public void saveAdminUser(@Observes StartupEvent event) {
-        userRepository.save(new User("Egor", "egor@gmail.com", "password", "admin"));
+        userRepository.save(new User("Egor", "egor@gmail.com", "password", UserRole.ADMIN));
     }
 }

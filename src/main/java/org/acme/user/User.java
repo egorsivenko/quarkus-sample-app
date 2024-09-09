@@ -13,10 +13,10 @@ public class User {
     private String fullName;
     private String email;
     private String password;
-    private String role;
+    private UserRole role;
     private LocalDateTime createdAt;
 
-    public User(String fullName, String email, String password, String role) {
+    public User(String fullName, String email, String password, UserRole role) {
         this.fullName = fullName;
         this.email = email;
         this.password = BcryptUtil.bcryptHash(password);

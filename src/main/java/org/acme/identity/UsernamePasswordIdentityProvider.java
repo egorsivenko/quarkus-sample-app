@@ -36,7 +36,7 @@ public class UsernamePasswordIdentityProvider implements IdentityProvider<Userna
             return Uni.createFrom().item(QuarkusSecurityIdentity.builder()
                     .setPrincipal(new QuarkusPrincipal(request.getUsername()))
                     .addCredential(request.getPassword())
-                    .addRole(user.getRole())
+                    .addRole(user.getRole().toString())
                     .build());
         }
         throw new AuthenticationFailedException("Invalid credentials");

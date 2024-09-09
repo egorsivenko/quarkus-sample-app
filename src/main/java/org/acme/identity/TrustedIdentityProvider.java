@@ -33,7 +33,7 @@ public class TrustedIdentityProvider implements IdentityProvider<TrustedAuthenti
         return Uni.createFrom().item(QuarkusSecurityIdentity.builder()
                 .setPrincipal(new QuarkusPrincipal(user.getEmail()))
                 .addCredential(new PasswordCredential(user.getPassword().toCharArray()))
-                .addRole(user.getRole())
+                .addRole(user.getRole().toString())
                 .build());
     }
 }
