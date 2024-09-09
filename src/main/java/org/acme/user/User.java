@@ -16,6 +16,10 @@ public class User {
     private UserRole role;
     private LocalDateTime createdAt;
 
+    public User(String fullName, String email, String password) {
+        this(fullName, email, password, UserRole.USER);
+    }
+
     public User(String fullName, String email, String password, UserRole role) {
         this.fullName = fullName;
         this.email = email;

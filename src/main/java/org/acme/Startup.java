@@ -19,6 +19,6 @@ public class Startup {
     }
 
     public void saveRegularUser(@Observes StartupEvent event) {
-        userRepository.save(new User("John", "john@gmail.com", "password", UserRole.USER));
+        userRepository.save(new User("John", "john@gmail.com", "password"));
     }
 }
