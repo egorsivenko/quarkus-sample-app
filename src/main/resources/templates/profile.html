@@ -10,7 +10,11 @@
     <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
-<h3>Hello my friend, you did it!</h3>
+<h4>Hello, {user.fullName} &#x1F44B;</h4>
+<h4>Email: {user.email}</h4>
+{#if user:isAdmin}
+    <h4>You are an admin!</h4>
+{/if}
 <a href="/profile/change-password" role="button" class="outline contrast">Change password</a>
 <button class="outline" onclick="logout()">Logout</button>
 

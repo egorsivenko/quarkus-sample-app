@@ -30,8 +30,10 @@ public class UserProfileResource {
     UserService userService;
 
     @GET
-    public TemplateInstance profileTemplate() {
-        return profile.instance();
+    public TemplateInstance profileTemplate(@Context SecurityContext securityContext) {
+        String email = securityContext.getUserPrincipal().getName();
+        User user = userService.getByEmail(email);
+        return profile.data("user", user);
     }
 
     @GET
