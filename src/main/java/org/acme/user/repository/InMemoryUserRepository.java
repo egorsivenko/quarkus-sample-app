@@ -1,6 +1,7 @@
-package org.acme.user;
+package org.acme.user.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import org.acme.user.User;
 
 import java.util.List;
 import java.util.Map;

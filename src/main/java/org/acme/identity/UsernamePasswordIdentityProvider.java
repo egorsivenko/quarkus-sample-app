@@ -11,7 +11,7 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.user.User;
-import org.acme.user.UserRepository;
+import org.acme.user.repository.UserRepository;
 
 import java.util.UUID;
 

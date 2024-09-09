@@ -1,4 +1,4 @@
-package org.acme.user;
+package org.acme.user.repository;
 
 import java.util.List;
 import java.util.Optional;

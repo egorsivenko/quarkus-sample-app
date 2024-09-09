@@ -5,7 +5,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import org.acme.user.User;
-import org.acme.user.UserRepository;
+import org.acme.user.repository.UserRepository;
 import org.acme.user.UserRole;
 
 import java.util.UUID;

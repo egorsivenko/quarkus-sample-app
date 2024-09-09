@@ -2,6 +2,7 @@ package org.acme.user;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.acme.user.repository.UserRepository;
 
 import java.util.List;
 import java.util.UUID;
