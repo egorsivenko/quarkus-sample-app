@@ -19,4 +19,8 @@ public class Startup {
     public void saveAdminUser(@Observes StartupEvent event) {
         userRepository.save(new User("Egor", "egor@gmail.com", "password", UserRole.ADMIN));
     }
+
+    public void saveRegularUser(@Observes StartupEvent event) {
+        userRepository.save(new User("John", "john@gmail.com", "password", UserRole.USER));
+    }
 }
