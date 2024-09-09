@@ -1,23 +1,26 @@
 package org.acme.user.repository;
 
+import org.acme.user.User;
+
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface UserRepository<T, ID> {
+public interface UserRepository {
 
-    List<T> findAll();
+    List<User> findAll();
 
-    Optional<T> findById(ID id);
+    Optional<User> findById(UUID id);
 
-    Optional<T> findByEmail(String email);
+    Optional<User> findByEmail(String email);
 
-    boolean existsById(ID id);
+    boolean existsById(UUID id);
 
     boolean existsByEmail(String email);
 
-    ID save(T t);
+    UUID save(User user);
 
-    void update(ID id, T t);
+    void update(UUID id, User user);
 
-    void delete(ID id);
+    void delete(UUID id);
 }

@@ -10,7 +10,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ApplicationScoped
-public class InMemoryUserRepository implements UserRepository<User, UUID> {
+public class InMemoryUserRepository implements UserRepository {
 
     private final Map<UUID, User> users = new ConcurrentHashMap<>();
 

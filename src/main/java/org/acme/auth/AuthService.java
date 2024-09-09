@@ -5,16 +5,14 @@ import jakarta.inject.Inject;
 import org.acme.auth.exception.EmailAlreadyTakenException;
 import org.acme.auth.request.RegisterRequest;
 import org.acme.user.User;
-import org.acme.user.repository.UserRepository;
 import org.acme.user.UserRole;
-
-import java.util.UUID;
+import org.acme.user.repository.UserRepository;
 
 @ApplicationScoped
 public class AuthService {
 
     @Inject
-    UserRepository<User, UUID> userRepository;
+    UserRepository userRepository;
 
     public void registerUser(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {

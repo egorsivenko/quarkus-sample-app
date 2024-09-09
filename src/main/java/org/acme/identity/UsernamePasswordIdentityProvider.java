@@ -13,13 +13,11 @@ import jakarta.inject.Inject;
 import org.acme.user.User;
 import org.acme.user.repository.UserRepository;
 
-import java.util.UUID;
-
 @ApplicationScoped
 public class UsernamePasswordIdentityProvider implements IdentityProvider<UsernamePasswordAuthenticationRequest> {
 
     @Inject
-    UserRepository<User, UUID> userRepository;
+    UserRepository userRepository;
 
     @Override
     public Class<UsernamePasswordAuthenticationRequest> getRequestType() {

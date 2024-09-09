@@ -5,13 +5,12 @@ import jakarta.inject.Inject;
 import org.acme.user.repository.UserRepository;
 
 import java.util.List;
-import java.util.UUID;
 
 @ApplicationScoped
 public class UserService {
 
     @Inject
-    UserRepository<User, UUID> userRepository;
+    UserRepository userRepository;
 
     public List<User> listAll() {
         return userRepository.findAll();
