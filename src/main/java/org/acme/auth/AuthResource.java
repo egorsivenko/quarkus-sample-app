@@ -9,11 +9,10 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import org.acme.auth.exception.EmailAlreadyTakenException;
 import org.acme.auth.request.RegisterRequest;
-import org.jboss.resteasy.reactive.RestResponse;
-import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
+import org.acme.mapper.UserMapper;
+import org.acme.user.User;
+import org.acme.user.UserService;
 
 @Path("/auth")
 @Produces(MediaType.TEXT_HTML)
@@ -26,7 +25,10 @@ public class AuthResource {
     Template register;
 
     @Inject
-    AuthService authService;
+    UserService userService;
+
+    @Inject
+    UserMapper userMapper;
 
     @GET
     @Path("/login")
@@ -44,11 +46,7 @@ public class AuthResource {
     @Path("/register")
     @Consumes(MediaType.APPLICATION_JSON)
     public void register(RegisterRequest request) {
-        authService.registerUser(request);
-    }
-
-    @ServerExceptionMapper
-    public RestResponse<String> mapException(EmailAlreadyTakenException ex) {
-        return RestResponse.status(Response.Status.BAD_REQUEST, ex.getMessage());
+        User user = userMapper.mapToUser(request);
+        userService.create(user);
     }
 }

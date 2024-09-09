@@ -1,4 +1,4 @@
-package org.acme.identity;
+package org.acme.provider;
 
 import io.quarkus.security.credential.PasswordCredential;
 import io.quarkus.security.identity.AuthenticationRequestContext;
@@ -11,13 +11,13 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.user.User;
-import org.acme.user.repository.UserRepository;
+import org.acme.user.UserService;
 
 @ApplicationScoped
 public class TrustedIdentityProvider implements IdentityProvider<TrustedAuthenticationRequest> {
 
     @Inject
-    UserRepository userRepository;
+    UserService userService;
 
     @Override
     public Class<TrustedAuthenticationRequest> getRequestType() {
@@ -26,7 +26,7 @@ public class TrustedIdentityProvider implements IdentityProvider<TrustedAuthenti
 
     @Override
     public Uni<SecurityIdentity> authenticate(TrustedAuthenticationRequest request, AuthenticationRequestContext context) {
-        User user = userRepository.findByEmail(request.getPrincipal()).orElseThrow();
+        User user = userService.getByEmail(request.getPrincipal());
 
         return Uni.createFrom().item(QuarkusSecurityIdentity.builder()
                 .setPrincipal(new QuarkusPrincipal(user.getEmail()))

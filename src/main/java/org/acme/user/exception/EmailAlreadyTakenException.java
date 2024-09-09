@@ -1,4 +1,4 @@
-package org.acme.auth.exception;
+package org.acme.user.exception;
 
 public class EmailAlreadyTakenException extends RuntimeException {
 

@@ -1,4 +1,4 @@
-package org.acme.identity;
+package org.acme.provider;
 
 import io.quarkus.security.AuthenticationFailedException;
 import io.quarkus.security.identity.AuthenticationRequestContext;
@@ -11,13 +11,14 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.user.User;
-import org.acme.user.repository.UserRepository;
+import org.acme.user.UserService;
+import org.acme.user.exception.UserNotFoundException;
 
 @ApplicationScoped
 public class UsernamePasswordIdentityProvider implements IdentityProvider<UsernamePasswordAuthenticationRequest> {
 
     @Inject
-    UserRepository userRepository;
+    UserService userService;
 
     @Override
     public Class<UsernamePasswordAuthenticationRequest> getRequestType() {
@@ -27,16 +28,21 @@ public class UsernamePasswordIdentityProvider implements IdentityProvider<Userna
     @Override
     public Uni<SecurityIdentity> authenticate(UsernamePasswordAuthenticationRequest request,
                                               AuthenticationRequestContext authenticationRequestContext) {
-        User user = userRepository.findByEmail(request.getUsername()).orElse(null);
-        String password = String.valueOf(request.getPassword().getPassword());
+        try {
+            User user = userService.getByEmail(request.getUsername());
+            String password = String.valueOf(request.getPassword().getPassword());
 
-        if (user != null && user.verifyPassword(password)) {
+            if (!user.verifyPassword(password)) {
+                throw new AuthenticationFailedException("Invalid credentials: password verification failed.");
+            }
+
             return Uni.createFrom().item(QuarkusSecurityIdentity.builder()
                     .setPrincipal(new QuarkusPrincipal(request.getUsername()))
                     .addCredential(request.getPassword())
                     .addRole(user.getRole().toString())
                     .build());
+        } catch (UserNotFoundException e) {
+            throw new AuthenticationFailedException("Invalid credentials.", e);
         }
-        throw new AuthenticationFailedException("Invalid credentials");
     }
 }

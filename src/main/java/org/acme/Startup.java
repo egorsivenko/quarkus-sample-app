@@ -6,19 +6,19 @@ import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import org.acme.user.User;
 import org.acme.user.UserRole;
-import org.acme.user.repository.UserRepository;
+import org.acme.user.UserService;
 
 @ApplicationScoped
 public class Startup {
 
     @Inject
-    UserRepository userRepository;
+    UserService userService;
 
     public void saveAdminUser(@Observes StartupEvent event) {
-        userRepository.save(new User("Egor", "egor@gmail.com", "password", UserRole.ADMIN));
+        userService.create(new User("Egor", "egor@gmail.com", "password", UserRole.ADMIN));
     }
 
     public void saveRegularUser(@Observes StartupEvent event) {
-        userRepository.save(new User("John", "john@gmail.com", "password"));
+        userService.create(new User("John", "john@gmail.com", "password"));
     }
 }
