@@ -3,13 +3,17 @@ package org.acme.user;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @NoArgsConstructor
 public class User {
 
+    @Setter
+    private UUID id;
     private String fullName;
     private String email;
     private String password;

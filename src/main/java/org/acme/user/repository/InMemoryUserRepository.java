@@ -43,10 +43,10 @@ public class InMemoryUserRepository implements UserRepository {
     }
 
     @Override
-    public UUID save(User user) {
+    public void save(User user) {
         UUID uuid = UUID.randomUUID();
         users.put(uuid, user);
-        return uuid;
+        user.setId(uuid);
     }
 
     @Override

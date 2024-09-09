@@ -18,7 +18,7 @@ public interface UserRepository {
 
     boolean existsByEmail(String email);
 
-    UUID save(User user);
+    void save(User user);
 
     void update(UUID id, User user);
 
