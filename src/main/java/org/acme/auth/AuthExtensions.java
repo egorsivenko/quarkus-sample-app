@@ -10,6 +10,12 @@ import org.acme.user.UserRole;
 @TemplateExtension(namespace = "user")
 public class AuthExtensions {
 
+    public static String email() {
+        try (var instance = Arc.container().instance(CurrentIdentityAssociation.class)) {
+            return instance.get().getIdentity().getPrincipal().getName();
+        }
+    }
+
     public static boolean isAdmin() {
         try (var instance = Arc.container().instance(CurrentIdentityAssociation.class)) {
             return instance.get().getIdentity().getRoles().contains(UserRole.ADMIN.toString());

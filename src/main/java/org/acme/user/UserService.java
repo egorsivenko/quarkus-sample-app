@@ -7,6 +7,7 @@ import org.acme.user.exception.UserNotFoundException;
 import org.acme.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.UUID;
 
 @ApplicationScoped
 public class UserService {
@@ -28,6 +29,10 @@ public class UserService {
             throw new EmailAlreadyTakenException(user.getEmail());
         }
         userRepository.save(user);
+    }
+
+    public void delete(UUID id) {
+        userRepository.delete(id);
     }
 
     public boolean verifyPassword(String email, String password) {

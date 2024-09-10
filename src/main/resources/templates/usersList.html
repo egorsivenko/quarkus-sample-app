@@ -11,13 +11,14 @@
 <body>
 <h3>Users list</h3>
 <a href="/profile" role="button" class="outline contrast">Back</a>
-<table class="striped">
+<table>
     <thead>
         <tr>
             <th scope="col">Full name</th>
             <th scope="col">Email</th>
             <th scope="col">Role</th>
             <th scope="col">Registration date</th>
+            <th scope="col">Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -27,6 +28,17 @@
             <td>{user.email}</td>
             <td>{user.role}</td>
             <td>{user.createdAt.format('dd-MM-yyyy HH:mm:ss')}</td>
+            <td>
+                {#if user.email != user:email}
+                    <form action="/admin/delete-user" method="POST"
+                          onsubmit="return confirm('Are you sure you want to delete this user?');">
+                        <input type="hidden" name="id" value="{user.id}">
+                        <button type="submit" class="outline">Delete</button>
+                    </form>
+                {#else}
+                    <i>Current user</i>
+                {/if}
+            </td>
         </tr>
     {/for}
     </tbody>
