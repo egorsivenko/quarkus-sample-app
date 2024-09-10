@@ -4,8 +4,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.admin.request.EditUserRequest;
 import org.acme.user.exception.EmailAlreadyTakenException;
+import org.acme.user.exception.IncorrectPasswordException;
 import org.acme.user.exception.UserNotFoundException;
 import org.acme.user.repository.UserRepository;
+import org.acme.user.request.ChangePasswordRequest;
 
 import java.util.List;
 import java.util.UUID;
@@ -55,13 +57,12 @@ public class UserService {
         userRepository.delete(id);
     }
 
-    public boolean verifyPassword(String email, String password) {
+    public void changePassword(String email, ChangePasswordRequest request) {
         User user = getByEmail(email);
-        return user.verifyPassword(password);
-    }
 
-    public void changePassword(String email, String newPassword) {
-        User user = getByEmail(email);
-        user.changePassword(newPassword);
+        if (!user.verifyPassword(request.currentPassword())) {
+            throw new IncorrectPasswordException();
+        }
+        user.changePassword(request.newPassword());
     }
 }

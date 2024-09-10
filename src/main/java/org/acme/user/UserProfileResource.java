@@ -11,7 +11,6 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import org.acme.user.request.ChangePasswordRequest;
 
@@ -45,14 +44,9 @@ public class UserProfileResource {
     @POST
     @Path("/change-password")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response changePassword(@Context SecurityContext securityContext,
-                                   ChangePasswordRequest request) {
+    public void changePassword(@Context SecurityContext securityContext,
+                               ChangePasswordRequest request) {
         String email = securityContext.getUserPrincipal().getName();
-
-        if (!userService.verifyPassword(email, request.currentPassword())) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
-        }
-        userService.changePassword(email, request.newPassword());
-        return Response.ok().build();
+        userService.changePassword(email, request);
     }
 }
