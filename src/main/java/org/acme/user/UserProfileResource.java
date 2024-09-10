@@ -1,6 +1,6 @@
 package org.acme.user;
 
-import io.quarkus.qute.Template;
+import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
@@ -20,11 +20,11 @@ import org.acme.user.request.ChangePasswordRequest;
 @Authenticated
 public class UserProfileResource {
 
-    @Inject
-    Template profile;
-
-    @Inject
-    Template changePassword;
+    @CheckedTemplate
+    static class Templates {
+        public static native TemplateInstance profile(User user);
+        public static native TemplateInstance changePassword();
+    }
 
     @Inject
     UserService userService;
@@ -33,13 +33,13 @@ public class UserProfileResource {
     public TemplateInstance profileTemplate(@Context SecurityContext securityContext) {
         String email = securityContext.getUserPrincipal().getName();
         User user = userService.getByEmail(email);
-        return profile.data("user", user);
+        return Templates.profile(user);
     }
 
     @GET
     @Path("/change-password")
     public TemplateInstance changePasswordTemplate() {
-        return changePassword.instance();
+        return Templates.changePassword();
     }
 
     @POST

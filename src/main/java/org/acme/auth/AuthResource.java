@@ -1,6 +1,6 @@
 package org.acme.auth;
 
-import io.quarkus.qute.Template;
+import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -18,11 +18,11 @@ import org.acme.user.UserService;
 @Produces(MediaType.TEXT_HTML)
 public class AuthResource {
 
-    @Inject
-    Template login;
-
-    @Inject
-    Template register;
+    @CheckedTemplate
+    static class Templates {
+        public static native TemplateInstance login();
+        public static native TemplateInstance register();
+    }
 
     @Inject
     UserService userService;
@@ -33,13 +33,13 @@ public class AuthResource {
     @GET
     @Path("/login")
     public TemplateInstance login() {
-        return login.instance();
+        return Templates.login();
     }
 
     @GET
     @Path("/register")
     public TemplateInstance register() {
-        return register.instance();
+        return Templates.register();
     }
 
     @POST

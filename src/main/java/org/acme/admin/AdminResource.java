@@ -1,6 +1,6 @@
 package org.acme.admin;
 
-import io.quarkus.qute.Template;
+import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -12,12 +12,14 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.admin.request.EditUserRequest;
+import org.acme.user.User;
 import org.acme.user.UserRole;
 import org.acme.user.UserService;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestQuery;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 @Path("/admin")
@@ -25,11 +27,11 @@ import java.util.UUID;
 @RolesAllowed("admin")
 public class AdminResource {
 
-    @Inject
-    Template usersList;
-
-    @Inject
-    Template editUser;
+    @CheckedTemplate
+    static class Templates {
+        public static native TemplateInstance usersList(List<User> users);
+        public static native TemplateInstance editUser(User user, UserRole[] roles);
+    }
 
     @Inject
     UserService userService;
@@ -37,13 +39,13 @@ public class AdminResource {
     @GET
     @Path("/users")
     public TemplateInstance usersList() {
-        return usersList.data("users", userService.listAll());
+        return Templates.usersList(userService.listAll());
     }
 
     @GET
     @Path("/edit-user")
     public TemplateInstance editUserTemplate(@RestQuery UUID id) {
-        return editUser.data("user", userService.getById(id), "roles", UserRole.values());
+        return Templates.editUser(userService.getById(id), UserRole.values());
     }
 
     @POST
