@@ -14,9 +14,12 @@ public class User {
 
     @Setter
     private UUID id;
+    @Setter
     private String fullName;
+    @Setter
     private String email;
     private String password;
+    @Setter
     private UserRole role;
     private LocalDateTime createdAt;
 

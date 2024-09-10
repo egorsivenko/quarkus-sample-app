@@ -2,6 +2,7 @@ package org.acme.user;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.acme.admin.request.EditUserRequest;
 import org.acme.user.exception.EmailAlreadyTakenException;
 import org.acme.user.exception.UserNotFoundException;
 import org.acme.user.repository.UserRepository;
@@ -19,6 +20,11 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    public User getById(UUID id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+    }
+
     public User getByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(email));
@@ -29,6 +35,20 @@ public class UserService {
             throw new EmailAlreadyTakenException(user.getEmail());
         }
         userRepository.save(user);
+    }
+
+    public void edit(EditUserRequest request) {
+        User user = getById(request.id());
+        String newEmail = request.email();
+
+        if (!user.getEmail().equals(newEmail) && userRepository.existsByEmail(newEmail)) {
+            throw new EmailAlreadyTakenException(newEmail);
+        }
+        user.setEmail(newEmail);
+        user.setFullName(request.fullName());
+        user.setRole(UserRole.valueOf(request.role().toUpperCase()));
+
+        userRepository.update(request.id(), user);
     }
 
     public void delete(UUID id) {
