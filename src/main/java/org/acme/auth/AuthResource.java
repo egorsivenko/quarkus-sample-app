@@ -13,6 +13,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
+import org.acme.auth.request.LoginRequest;
 import org.acme.auth.request.RegisterRequest;
 import org.acme.email.EmailSender;
 import org.acme.mapper.UserMapper;
@@ -20,6 +21,7 @@ import org.acme.user.User;
 import org.acme.user.UserService;
 import org.acme.verification.VerificationTokenStorage;
 
+import java.net.URI;
 import java.util.UUID;
 
 @Path("/auth")
@@ -52,6 +54,21 @@ public class AuthResource {
     @Path("/login")
     public TemplateInstance login() {
         return Templates.login();
+    }
+
+    @POST
+    @Path("/login")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response login(LoginRequest request) {
+        User user = userService.getByEmail(request.email());
+        if (!user.verifyPassword(request.password())) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+        if (!user.isVerified()) {
+            sendConfirmationEmail(user);
+            return Response.seeOther(URI.create("/auth/confirmation/" + user.getId())).build();
+        }
+        return Response.ok().build();
     }
 
     @GET
