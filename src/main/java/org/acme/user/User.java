@@ -21,6 +21,8 @@ public class User {
     private String password;
     @Setter
     private UserRole role;
+    @Setter
+    private boolean isVerified;
     private LocalDateTime createdAt;
 
     public User(String fullName, String email, String password) {
@@ -32,6 +34,8 @@ public class User {
         this.email = email;
         this.password = BcryptUtil.bcryptHash(password);
         this.role = role;
+
+        this.isVerified = false;
         this.createdAt = LocalDateTime.now();
     }
 
