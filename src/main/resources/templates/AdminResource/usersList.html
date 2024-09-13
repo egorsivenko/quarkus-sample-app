@@ -16,6 +16,7 @@
         <tr>
             <th scope="col">Full name</th>
             <th scope="col">Email</th>
+            <th scope="col">Verified</th>
             <th scope="col">Role</th>
             <th scope="col">Registration date</th>
             <th scope="col">Actions</th>
@@ -26,6 +27,7 @@
         <tr>
             <th scope="row">{user.fullName}</th>
             <td>{user.email}</td>
+            <td>{user.isVerified}</td>
             <td>{user.role}</td>
             <td>{user.createdAt.format('dd-MM-yyyy HH:mm:ss')}</td>
             <td>
