@@ -13,6 +13,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
+import org.acme.auth.request.ForgotPasswordRequest;
 import org.acme.auth.request.LoginRequest;
 import org.acme.auth.request.RegisterRequest;
 import org.acme.email.EmailSender;
@@ -20,6 +21,7 @@ import org.acme.mapper.UserMapper;
 import org.acme.user.User;
 import org.acme.user.UserService;
 import org.acme.verification.VerificationTokenStorage;
+import org.jboss.resteasy.reactive.RestForm;
 
 import java.net.URI;
 import java.util.UUID;
@@ -32,7 +34,12 @@ public class AuthResource {
     static class Templates {
         public static native TemplateInstance login();
         public static native TemplateInstance register();
-        public static native TemplateInstance confirmation(UUID userId);
+
+        public static native TemplateInstance registrationConfirmation(UUID userId);
+        public static native TemplateInstance resetPasswordConfirmation(UUID userId);
+
+        public static native TemplateInstance forgotPassword();
+        public static native TemplateInstance resetPassword(UUID userId);
     }
 
     @Inject
@@ -65,8 +72,8 @@ public class AuthResource {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
         if (!user.isVerified()) {
-            sendConfirmationEmail(user);
-            return Response.seeOther(URI.create("/auth/confirmation/" + user.getId())).build();
+            sendRegistrationEmail(user);
+            return Response.seeOther(URI.create("/auth/registration-confirmation/" + user.getId())).build();
         }
         return Response.ok().build();
     }
@@ -77,38 +84,88 @@ public class AuthResource {
         return Templates.register();
     }
 
-    @GET
-    @Path("/confirmation/{userId}")
-    public TemplateInstance confirmation(@PathParam("userId") UUID userId) {
-        User user = userService.getById(userId);
-        if (user.isVerified()) {
-            return Templates.login();
-        }
-        return Templates.confirmation(userId);
-    }
-
     @POST
     @Path("/register")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response register(RegisterRequest request) {
         User user = userMapper.mapToUser(request);
         userService.create(user);
-        sendConfirmationEmail(user);
+        sendRegistrationEmail(user);
         return Response.ok().entity(user.getId()).build();
     }
 
-    @POST
-    @Path("/resend-email/{userId}")
-    public void resendEmail(@PathParam("userId") UUID userId) {
+    @GET
+    @Path("/registration-confirmation/{userId}")
+    public TemplateInstance registrationConfirmation(@PathParam("userId") UUID userId) {
         User user = userService.getById(userId);
-        sendConfirmationEmail(user);
+        if (user.isVerified()) {
+            return Templates.login();
+        }
+        return Templates.registrationConfirmation(userId);
     }
 
-    private void sendConfirmationEmail(User user) {
+    @GET
+    @Path("/forgot-password")
+    public TemplateInstance forgotPassword() {
+        return Templates.forgotPassword();
+    }
+
+    @POST
+    @Path("/forgot-password")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response forgotPassword(ForgotPasswordRequest request) {
+        User user = userService.getByEmail(request.email());
+        sendResetPasswordEmail(user);
+        return Response.ok().entity(user.getId()).build();
+    }
+
+    @GET
+    @Path("/reset-password-confirmation/{userId}")
+    public TemplateInstance resetPasswordConfirmation(@PathParam("userId") UUID userId) {
+        return Templates.resetPasswordConfirmation(userId);
+    }
+
+    @GET
+    @Path("/reset-password/{userId}")
+    public TemplateInstance resetPassword(@PathParam("userId") UUID userId) {
+        return Templates.resetPassword(userId);
+    }
+
+    @POST
+    @Path("/reset-password")
+    public Response resetPassword(@RestForm UUID userId, @RestForm String password) {
+        User user = userService.getById(userId);
+        user.changePassword(password);
+        return Response.seeOther(URI.create("/auth/login")).build();
+    }
+
+    @POST
+    @Path("/resend-registration-email/{userId}")
+    public void resendRegistrationEmail(@PathParam("userId") UUID userId) {
+        User user = userService.getById(userId);
+        sendRegistrationEmail(user);
+    }
+
+    @POST
+    @Path("/resend-reset-password-email/{userId}")
+    public void resendResetPasswordEmail(@PathParam("userId") UUID userId) {
+        User user = userService.getById(userId);
+        sendResetPasswordEmail(user);
+    }
+
+    private void sendRegistrationEmail(User user) {
         String token = UUID.randomUUID().toString();
         verificationTokenStorage.create(token, user);
 
-        String url = uriInfo.getBaseUri().toString() + "/verify?token=" + token;
+        String url = uriInfo.getBaseUri().toString() + "verify/registration?token=" + token;
+        emailSender.send(user.getEmail(), url);
+    }
+
+    private void sendResetPasswordEmail(User user) {
+        String token = UUID.randomUUID().toString();
+        verificationTokenStorage.create(token, user);
+
+        String url = uriInfo.getBaseUri().toString() + "verify/reset-password?token=" + token;
         emailSender.send(user.getEmail(), url);
     }
 }

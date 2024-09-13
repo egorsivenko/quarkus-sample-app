@@ -1,7 +1,9 @@
 package org.acme.verification;
 
 import jakarta.inject.Inject;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
 import org.acme.user.User;
@@ -16,19 +18,40 @@ public class VerificationResource {
     VerificationTokenStorage verificationTokenStorage;
 
     @GET
-    public Response verifyEmail(@RestQuery String token) {
-        VerificationToken verificationToken = verificationTokenStorage.get(token);
+    @Path("/registration")
+    public Response verifyRegistration(@RestQuery String token) {
+        VerificationToken verificationToken = validateAndGetToken(token);
 
-        if (verificationToken == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
-        if (verificationToken.isExpired()) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
-        }
         User user = verificationToken.user();
         user.setVerified(true);
         verificationTokenStorage.remove(token);
 
         return Response.seeOther(URI.create("/auth/login")).build();
+    }
+
+    @GET
+    @Path("/reset-password")
+    public Response verifyResetPassword(@RestQuery String token) {
+        VerificationToken verificationToken = validateAndGetToken(token);
+
+        User user = verificationToken.user();
+        if (!user.isVerified()) {
+            user.setVerified(true);
+        }
+        verificationTokenStorage.remove(token);
+
+        return Response.seeOther(URI.create("/auth/reset-password/" + user.getId())).build();
+    }
+
+    private VerificationToken validateAndGetToken(String token) {
+        VerificationToken verificationToken = verificationTokenStorage.get(token);
+
+        if (verificationToken == null) {
+            throw new NotFoundException();
+        }
+        if (verificationToken.isExpired()) {
+            throw new BadRequestException();
+        }
+        return verificationToken;
     }
 }
