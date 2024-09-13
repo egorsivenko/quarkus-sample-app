@@ -26,16 +26,15 @@ public class User {
     private LocalDateTime createdAt;
 
     public User(String fullName, String email, String password) {
-        this(fullName, email, password, UserRole.USER);
+        this(fullName, email, password, UserRole.USER, false);
     }
 
-    public User(String fullName, String email, String password, UserRole role) {
+    public User(String fullName, String email, String password, UserRole role, boolean isVerified) {
         this.fullName = fullName;
         this.email = email;
         this.password = BcryptUtil.bcryptHash(password);
         this.role = role;
-
-        this.isVerified = false;
+        this.isVerified = isVerified;
         this.createdAt = LocalDateTime.now();
     }
 

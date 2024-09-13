@@ -15,10 +15,10 @@ public class Startup {
     UserService userService;
 
     public void saveAdminUser(@Observes StartupEvent event) {
-        userService.create(new User("Egor", "egor@gmail.com", "password", UserRole.ADMIN));
+        userService.create(new User("Egor", "egor@gmail.com", "password", UserRole.ADMIN, true));
     }
 
     public void saveRegularUser(@Observes StartupEvent event) {
-        userService.create(new User("John", "john@gmail.com", "password"));
+        userService.create(new User("John", "john@gmail.com", "password", UserRole.USER, true));
     }
 }
