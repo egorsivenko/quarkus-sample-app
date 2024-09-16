@@ -18,9 +18,11 @@ import org.acme.auth.request.LoginRequest;
 import org.acme.auth.request.RegisterRequest;
 import org.acme.email.EmailSender;
 import org.acme.mapper.UserMapper;
+import org.acme.recaptcha.RecaptchaService;
 import org.acme.user.User;
 import org.acme.user.UserService;
 import org.acme.verification.VerificationTokenStorage;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.RestForm;
 
 import java.net.URI;
@@ -32,15 +34,20 @@ public class AuthResource {
 
     @CheckedTemplate
     static class Templates {
-        public static native TemplateInstance login();
-        public static native TemplateInstance register();
+        public static native TemplateInstance login(String recaptchaSiteKey);
+        public static native TemplateInstance register(String recaptchaSiteKey);
 
         public static native TemplateInstance registrationConfirmation(UUID userId);
         public static native TemplateInstance resetPasswordConfirmation(UUID userId);
 
-        public static native TemplateInstance forgotPassword();
+        public static native TemplateInstance forgotPassword(String recaptchaSiteKey);
         public static native TemplateInstance resetPassword(UUID userId);
     }
+
+    private static final String RECAPTCHA_ERROR = "reCAPTCHA verification failed.";
+
+    @ConfigProperty(name = "recaptcha.site.key")
+    String siteKey;
 
     @Inject
     UserService userService;
@@ -54,19 +61,26 @@ public class AuthResource {
     @Inject
     VerificationTokenStorage verificationTokenStorage;
 
+    @Inject
+    RecaptchaService recaptchaService;
+
     @Context
     UriInfo uriInfo;
 
     @GET
     @Path("/login")
     public TemplateInstance login() {
-        return Templates.login();
+        return Templates.login(siteKey);
     }
 
     @POST
     @Path("/login")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response login(LoginRequest request) {
+        if (!recaptchaService.verifyToken(request.recaptchaToken())) {
+            return Response.status(Response.Status.FORBIDDEN).entity(RECAPTCHA_ERROR).build();
+        }
+
         User user = userService.getByEmail(request.email());
         if (!user.verifyPassword(request.password())) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
@@ -81,13 +95,17 @@ public class AuthResource {
     @GET
     @Path("/register")
     public TemplateInstance register() {
-        return Templates.register();
+        return Templates.register(siteKey);
     }
 
     @POST
     @Path("/register")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response register(RegisterRequest request) {
+        if (!recaptchaService.verifyToken(request.recaptchaToken())) {
+            return Response.status(Response.Status.FORBIDDEN).entity(RECAPTCHA_ERROR).build();
+        }
+
         User user = userMapper.mapToUser(request);
         userService.create(user);
         sendRegistrationEmail(user);
@@ -99,7 +117,7 @@ public class AuthResource {
     public TemplateInstance registrationConfirmation(@PathParam("userId") UUID userId) {
         User user = userService.getById(userId);
         if (user.isVerified()) {
-            return Templates.login();
+            return Templates.login(siteKey);
         }
         return Templates.registrationConfirmation(userId);
     }
@@ -107,13 +125,17 @@ public class AuthResource {
     @GET
     @Path("/forgot-password")
     public TemplateInstance forgotPassword() {
-        return Templates.forgotPassword();
+        return Templates.forgotPassword(siteKey);
     }
 
     @POST
     @Path("/forgot-password")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response forgotPassword(ForgotPasswordRequest request) {
+        if (!recaptchaService.verifyToken(request.recaptchaToken())) {
+            return Response.status(Response.Status.FORBIDDEN).entity(RECAPTCHA_ERROR).build();
+        }
+
         User user = userService.getByEmail(request.email());
         sendResetPasswordEmail(user);
         return Response.ok().entity(user.getId()).build();

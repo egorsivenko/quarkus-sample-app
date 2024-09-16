@@ -9,6 +9,8 @@
     <link rel="shortcut icon" href="https://picocss.com/favicon.ico" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
     <link rel="stylesheet" href="/css/styles.css" />
+
+    <script src="https://www.google.com/recaptcha/api.js?render={recaptchaSiteKey}"></script>
 </head>
 
 <body>
@@ -44,43 +46,48 @@
             submitButton.setAttribute('aria-busy', 'true');
             submitButton.textContent = 'Please wait...';
 
-            const fullNameInput = document.getElementById('full-name');
-            const emailInput = document.getElementById('email');
-            const passwordInput = document.getElementById('password');
+            grecaptcha.ready(function() {
+                grecaptcha.execute('{recaptchaSiteKey}', {@action: 'submit'}).then(function(token) {
+                    const fullNameInput = document.getElementById('full-name');
+                    const emailInput = document.getElementById('email');
+                    const passwordInput = document.getElementById('password');
 
-            const userData = {
-                fullName: fullNameInput.value,
-                email: emailInput.value,
-                password: passwordInput.value
-            };
+                    const userData = {
+                        fullName: fullNameInput.value,
+                        email: emailInput.value,
+                        password: passwordInput.value,
+                        recaptchaToken: token
+                    };
 
-            fetch("/auth/register", {
-                method: "POST",
-                body: JSON.stringify(userData),
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            })
-            .then((response) => {
-                submitButton.setAttribute('aria-busy', 'false');
-                submitButton.textContent = 'Register';
+                    fetch("/auth/register", {
+                        method: "POST",
+                        body: JSON.stringify(userData),
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    })
+                    .then((response) => {
+                        submitButton.setAttribute('aria-busy', 'false');
+                        submitButton.textContent = 'Register';
 
-                if (response.ok) {
-                    response.text().then((userId) => {
-                        window.location.href = '/auth/registration-confirmation/' + userId;
+                        if (response.ok) {
+                            response.text().then((userId) => {
+                                window.location.href = '/auth/registration-confirmation/' + userId;
+                            });
+                        } else {
+                            const invalidHelper = document.getElementById('invalid-helper');
+                            invalidHelper.style.display = 'block';
+
+                            emailInput.setAttribute('aria-invalid', 'true');
+                            emailInput.focus();
+
+                            passwordInput.value = '';
+                        }
+                    })
+                    .catch((error) => {
+                        console.error(error);
                     });
-                } else {
-                    const invalidHelper = document.getElementById('invalid-helper');
-                    invalidHelper.style.display = 'block';
-
-                    emailInput.setAttribute('aria-invalid', 'true');
-                    emailInput.focus();
-
-                    passwordInput.value = '';
-                }
-            })
-            .catch((error) => {
-                console.error(error);
+                });
             });
         });
     </script>
