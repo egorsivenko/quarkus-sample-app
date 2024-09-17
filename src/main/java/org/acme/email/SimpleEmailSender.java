@@ -22,13 +22,16 @@ public class SimpleEmailSender implements EmailSender {
     @ConfigProperty(name = "sender.email")
     String email;
 
+    @ConfigProperty(name = "sender.username")
+    String username;
+
     @ConfigProperty(name = "sender.password")
     String password;
 
-    @ConfigProperty(name = "sender.host", defaultValue = "smtp.gmail.com")
+    @ConfigProperty(name = "sender.host")
     String host;
 
-    @ConfigProperty(name = "sender.port", defaultValue = "465")
+    @ConfigProperty(name = "sender.port")
     String port;
 
     public void send(String to, String link) {
@@ -39,14 +42,14 @@ public class SimpleEmailSender implements EmailSender {
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.ssl.enable", "true");
+        props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.smtp.host", host);
         props.put("mail.smtp.port", port);
 
         Session session = Session.getInstance(props, new Authenticator() {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(email, password);
+                return new PasswordAuthentication(username, password);
             }
         });
 
