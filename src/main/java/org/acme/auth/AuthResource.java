@@ -2,6 +2,8 @@ package org.acme.auth;
 
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
+import io.quarkus.security.UnauthorizedException;
+import io.quarkus.security.identity.CurrentIdentityAssociation;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -11,6 +13,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import org.acme.auth.request.ForgotPasswordRequest;
@@ -26,6 +29,8 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.RestForm;
 
 import java.net.URI;
+import java.time.Instant;
+import java.util.Date;
 import java.util.UUID;
 
 @Path("/auth")
@@ -48,6 +53,12 @@ public class AuthResource {
 
     @ConfigProperty(name = "recaptcha.site.key")
     String siteKey;
+
+    @ConfigProperty(name = "quarkus.http.auth.form.cookie-name")
+    String cookieName;
+
+    @Inject
+    CurrentIdentityAssociation identity;
 
     @Inject
     UserService userService;
@@ -90,6 +101,20 @@ public class AuthResource {
             return Response.seeOther(URI.create("/auth/registration-confirmation/" + user.getId())).build();
         }
         return Response.ok().build();
+    }
+
+    @POST
+    @Path("/logout")
+    public Response logout() {
+        if (identity.getIdentity().isAnonymous()) {
+            throw new UnauthorizedException("Not authenticated");
+        }
+        final NewCookie removeCookie = new NewCookie.Builder(cookieName)
+                .maxAge(0)
+                .expiry(Date.from(Instant.EPOCH))
+                .path("/")
+                .build();
+        return Response.seeOther(URI.create("/")).cookie(removeCookie).build();
     }
 
     @GET

@@ -15,13 +15,9 @@
     <a href="/admin/users" role="button" class="outline contrast">Users list</a>
 {/if}
 <a href="/profile/change-password" role="button" class="outline contrast">Change password</a>
-<button class="outline" onclick="logout()">Logout</button>
-
-<script>
-    const logout = () => {
-        document.cookie = 'quarkus-credential=; Max-Age=0;path=/';
-        window.location.href = '/auth/login';
-    };
-</script>
+<form action="/auth/logout" method="POST" style="margin-top: 15px; width: 150px">
+    <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
+    <button type="submit" class="outline">Logout</button>
+</form>
 </body>
 </html>
