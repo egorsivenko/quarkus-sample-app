@@ -13,11 +13,15 @@ import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
 @ApplicationScoped
 public class SimpleEmailSender implements EmailSender {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SimpleEmailSender.class);
 
     @ConfigProperty(name = "sender.email")
     String email;
@@ -74,7 +78,7 @@ public class SimpleEmailSender implements EmailSender {
             Transport.send(message);
 
         } catch (MessagingException e) {
-            throw new RuntimeException(e);
+            LOGGER.error("Error sending an email", e);
         }
     }
 }

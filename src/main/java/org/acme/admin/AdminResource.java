@@ -3,7 +3,6 @@ package org.acme.admin;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -29,12 +28,20 @@ public class AdminResource {
 
     @CheckedTemplate
     static class Templates {
+
+        private Templates() {
+            throw new IllegalStateException("Utility class");
+        }
+
         public static native TemplateInstance usersList(List<User> users);
         public static native TemplateInstance editUser(User user, UserRole[] roles);
     }
 
-    @Inject
-    UserService userService;
+    private final UserService userService;
+
+    public AdminResource(UserService userService) {
+        this.userService = userService;
+    }
 
     @GET
     @Path("/users")

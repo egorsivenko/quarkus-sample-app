@@ -9,7 +9,6 @@ import io.quarkus.security.runtime.QuarkusPrincipal;
 import io.quarkus.security.runtime.QuarkusSecurityIdentity;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.acme.user.User;
 import org.acme.user.UserService;
 import org.acme.user.exception.UserNotFoundException;
@@ -17,8 +16,11 @@ import org.acme.user.exception.UserNotFoundException;
 @ApplicationScoped
 public class UsernamePasswordIdentityProvider implements IdentityProvider<UsernamePasswordAuthenticationRequest> {
 
-    @Inject
-    UserService userService;
+    private final UserService userService;
+
+    public UsernamePasswordIdentityProvider(UserService userService) {
+        this.userService = userService;
+    }
 
     @Override
     public Class<UsernamePasswordAuthenticationRequest> getRequestType() {

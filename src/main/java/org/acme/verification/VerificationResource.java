@@ -1,6 +1,5 @@
 package org.acme.verification;
 
-import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
@@ -14,8 +13,11 @@ import java.net.URI;
 @Path("/verify")
 public class VerificationResource {
 
-    @Inject
-    VerificationTokenStorage verificationTokenStorage;
+    private final VerificationTokenStorage verificationTokenStorage;
+
+    public VerificationResource(VerificationTokenStorage verificationTokenStorage) {
+        this.verificationTokenStorage = verificationTokenStorage;
+    }
 
     @GET
     @Path("/registration")

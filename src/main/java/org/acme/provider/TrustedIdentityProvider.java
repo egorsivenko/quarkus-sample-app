@@ -9,15 +9,17 @@ import io.quarkus.security.runtime.QuarkusPrincipal;
 import io.quarkus.security.runtime.QuarkusSecurityIdentity;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.acme.user.User;
 import org.acme.user.UserService;
 
 @ApplicationScoped
 public class TrustedIdentityProvider implements IdentityProvider<TrustedAuthenticationRequest> {
 
-    @Inject
-    UserService userService;
+    private final UserService userService;
+
+    public TrustedIdentityProvider(UserService userService) {
+        this.userService = userService;
+    }
 
     @Override
     public Class<TrustedAuthenticationRequest> getRequestType() {

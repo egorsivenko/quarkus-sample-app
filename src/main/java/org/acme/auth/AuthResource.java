@@ -4,7 +4,6 @@ import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.UnauthorizedException;
 import io.quarkus.security.identity.CurrentIdentityAssociation;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -39,6 +38,11 @@ public class AuthResource {
 
     @CheckedTemplate
     static class Templates {
+
+        private Templates() {
+            throw new IllegalStateException("Utility class");
+        }
+
         public static native TemplateInstance login(String recaptchaSiteKey);
         public static native TemplateInstance register(String recaptchaSiteKey);
 
@@ -57,26 +61,29 @@ public class AuthResource {
     @ConfigProperty(name = "quarkus.http.auth.form.cookie-name")
     String cookieName;
 
-    @Inject
-    CurrentIdentityAssociation identity;
-
-    @Inject
-    UserService userService;
-
-    @Inject
-    UserMapper userMapper;
-
-    @Inject
-    EmailSender emailSender;
-
-    @Inject
-    VerificationTokenStorage verificationTokenStorage;
-
-    @Inject
-    RecaptchaService recaptchaService;
-
     @Context
     UriInfo uriInfo;
+
+    private final CurrentIdentityAssociation identity;
+    private final UserService userService;
+    private final UserMapper userMapper;
+    private final EmailSender emailSender;
+    private final VerificationTokenStorage verificationTokenStorage;
+    private final RecaptchaService recaptchaService;
+
+    public AuthResource(CurrentIdentityAssociation identity,
+                        UserService userService,
+                        UserMapper userMapper,
+                        EmailSender emailSender,
+                        VerificationTokenStorage verificationTokenStorage,
+                        RecaptchaService recaptchaService) {
+        this.identity = identity;
+        this.userService = userService;
+        this.userMapper = userMapper;
+        this.emailSender = emailSender;
+        this.verificationTokenStorage = verificationTokenStorage;
+        this.recaptchaService = recaptchaService;
+    }
 
     @GET
     @Path("/login")
