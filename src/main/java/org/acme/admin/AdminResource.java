@@ -28,6 +28,11 @@ public class AdminResource {
 
     @CheckedTemplate
     static class Templates {
+
+        private Templates() {
+            throw new IllegalStateException("Utility class");
+        }
+
         public static native TemplateInstance usersList(List<User> users);
         public static native TemplateInstance editUser(User user, UserRole[] roles);
     }

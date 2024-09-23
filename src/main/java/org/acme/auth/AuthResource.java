@@ -38,6 +38,11 @@ public class AuthResource {
 
     @CheckedTemplate
     static class Templates {
+
+        private Templates() {
+            throw new IllegalStateException("Utility class");
+        }
+
         public static native TemplateInstance login(String recaptchaSiteKey);
         public static native TemplateInstance register(String recaptchaSiteKey);
 

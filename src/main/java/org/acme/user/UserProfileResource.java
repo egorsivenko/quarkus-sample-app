@@ -20,6 +20,11 @@ public class UserProfileResource {
 
     @CheckedTemplate
     static class Templates {
+
+        private Templates() {
+            throw new IllegalStateException("Utility class");
+        }
+
         public static native TemplateInstance profile(User user);
         public static native TemplateInstance changePassword();
     }
