@@ -20,13 +20,10 @@
                     <input type="hidden" id="user-id" name="user-id" value="{user.id}" />
                     <label for="fullName">Full name</label>
                     <input type="text" id="full-name" name="full-name" minlength="4" maxlength="50" value="{user.fullName}"
-                           placeholder="Full name" pattern="^[A-Za-z]+(?: [A-Za-z]+)?$" required
-                           title="Full name shouldn't include special characters." autofocus />
+                           placeholder="Full name" required autofocus />
                     <label for="email">Email</label>
                     <input type="email" id="email" name="email" maxlength="50" value="{user.email}"
-                           placeholder="Email" pattern="^[^\s@]+@([^\s@.,]+\.)+[^\s@.,][^\s@.,]+$" required
-                           title="Invalid email address format."
-                           aria-describedby="invalid-helper" />
+                           placeholder="Email" required aria-describedby="invalid-helper" />
                     <small id="invalid-helper" style="display: none;">Email is already taken.</small>
                     <label for="role">Role</label>
                     <select id="role" name="role" required>

@@ -19,16 +19,11 @@
             <div>
                 <h1>Register</h1>
                 <form id="register-form" autocomplete="off">
-                    <input type="text" id="full-name" minlength="4" maxlength="50" placeholder="Full name" required
-                        pattern="^[A-Za-z]+(?: [A-Za-z]+)?$" title="Full name shouldn't include special characters."
-                        autofocus />
+                    <input type="text" id="full-name" minlength="4" maxlength="50" placeholder="Full name" required autofocus />
                     <input type="email" id="email" maxlength="50" placeholder="Email" required
-                        pattern="^[^\s@]+@([^\s@.,]+\.)+[^\s@.,][^\s@.,]+$" title="Invalid email address format."
-                        aria-describedby="invalid-helper" />
+                           aria-describedby="invalid-helper" />
                     <small id="invalid-helper" style="display: none;">Email is already taken.</small>
-                    <input type="password" id="password" minlength="6" maxlength="50" placeholder="Password" required
-                        pattern="^[A-Za-z0-9]+$"
-                        title="Password shouldn't include special characters and whitespaces." />
+                    <input type="password" id="password" minlength="6" maxlength="50" placeholder="Password" required />
                     <button type="submit" class="contrast" id="submit-button">Register</button>
                     <label align="center">
                         Already have an account? <a href="/auth/login">Login</a>
