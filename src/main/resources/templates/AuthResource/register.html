@@ -73,7 +73,7 @@
 
                         if (response.ok) {
                             response.text().then((userId) => {
-                                window.location.href = '/auth/registration-confirmation/' + userId;
+                                window.location.replace('/auth/registration-confirmation/' + userId);
                             });
                         } else {
                             const invalidHelper = document.getElementById('invalid-helper');

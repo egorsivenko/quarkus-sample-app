@@ -66,7 +66,7 @@
                         submitButton.textContent = 'Login';
 
                         if (response.redirected) {
-                            window.location.href = response.url;
+                            window.location.replace(response.url);
                         } else if (response.ok) {
                             const formData = new URLSearchParams();
                             formData.append("j_email", emailInput.value);
@@ -79,7 +79,7 @@
                                     "Content-Type": "application/x-www-form-urlencoded",
                                 },
                             })
-                            .then(() => window.location.href = '/profile')
+                            .then(() => window.location.replace('/profile'));
                         } else {
                             const errorMessage = document.getElementById('error-message');
                             errorMessage.style.display = 'block';

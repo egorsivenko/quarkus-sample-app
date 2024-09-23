@@ -67,7 +67,7 @@
             })
             .then((response) => {
                 if (response.ok) {
-                    window.location.href = '/admin/users';
+                    window.location.replace('/admin/users');
                 } else {
                     const invalidHelper = document.getElementById('invalid-helper');
                     invalidHelper.style.display = 'block';
