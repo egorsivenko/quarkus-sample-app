@@ -2,7 +2,6 @@ package org.acme.recaptcha;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -23,8 +22,11 @@ public class RecaptchaService {
     @ConfigProperty(name = "recaptcha.secret.key")
     String secretKey;
 
-    @Inject
-    ObjectMapper mapper;
+    private final ObjectMapper mapper;
+
+    public RecaptchaService(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
 
     public boolean verifyToken(String token) {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {

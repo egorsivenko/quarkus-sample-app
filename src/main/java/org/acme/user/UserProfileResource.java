@@ -3,7 +3,6 @@ package org.acme.user;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.Authenticated;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -25,8 +24,11 @@ public class UserProfileResource {
         public static native TemplateInstance changePassword();
     }
 
-    @Inject
-    UserService userService;
+    private final UserService userService;
+
+    public UserProfileResource(UserService userService) {
+        this.userService = userService;
+    }
 
     @GET
     public TemplateInstance profileTemplate(@Context SecurityContext securityContext) {

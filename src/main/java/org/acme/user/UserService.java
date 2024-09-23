@@ -1,7 +1,6 @@
 package org.acme.user;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.acme.admin.request.EditUserRequest;
 import org.acme.user.exception.EmailAlreadyTakenException;
 import org.acme.user.exception.IncorrectPasswordException;
@@ -15,8 +14,11 @@ import java.util.UUID;
 @ApplicationScoped
 public class UserService {
 
-    @Inject
-    UserRepository userRepository;
+    private final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     public List<User> listAll() {
         return userRepository.findAll();
