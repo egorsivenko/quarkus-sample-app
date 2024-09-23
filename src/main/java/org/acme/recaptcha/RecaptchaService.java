@@ -9,6 +9,8 @@ import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.net.URIBuilder;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -16,6 +18,8 @@ import java.nio.charset.StandardCharsets;
 
 @ApplicationScoped
 public class RecaptchaService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RecaptchaService.class);
 
     private static final String SITE_VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify";
 
@@ -44,7 +48,8 @@ public class RecaptchaService {
             return response.success();
 
         } catch (IOException | URISyntaxException e) {
-            throw new RuntimeException(e);
+            LOGGER.error("Error verifying a token", e);
+            return false;
         }
     }
 }
