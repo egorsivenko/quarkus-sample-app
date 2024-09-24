@@ -24,6 +24,9 @@
                            aria-describedby="invalid-helper" />
                     <small id="invalid-helper" style="display: none;">Email is already taken.</small>
                     <input type="password" id="password" minlength="6" maxlength="50" placeholder="Password" required />
+                    <input type="password" id="confirm-password" minlength="6" maxlength="50" required
+                           placeholder="Confirm password" aria-describedby="invalid-helper-confirm" />
+                    <small id="invalid-helper-confirm" style="display: none;">Passwords don’t match.</small>
                     <button type="submit" class="contrast" id="submit-button">Register</button>
                     <label align="center">
                         Already have an account? <a href="/auth/login">Login</a>
@@ -34,6 +37,27 @@
     </main>
 
     <script>
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirm-password');
+        const submitButton = document.getElementById('submit-button');
+        const invalidHelper = document.getElementById('invalid-helper-confirm');
+
+        function validatePasswords() {
+            if (password.value && confirmPassword.value) {
+                if (password.value === confirmPassword.value) {
+                    submitButton.disabled = false;
+                    invalidHelper.style.display = 'none';
+                    confirmPassword.removeAttribute('aria-invalid');
+                } else {
+                    submitButton.disabled = true;
+                    invalidHelper.style.display = 'block';
+                    confirmPassword.setAttribute('aria-invalid', 'true');
+                }
+            }
+        }
+        password.addEventListener('input', validatePasswords);
+        confirmPassword.addEventListener('input', validatePasswords);
+
         document.getElementById('register-form').addEventListener('submit', (event) => {
             event.preventDefault();
 
