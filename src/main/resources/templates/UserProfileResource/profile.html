@@ -11,7 +11,7 @@
 <body>
 <h4>Hello, {user.fullName} &#x1F44B;</h4>
 <h4>Email: {user.email}</h4>
-{#if user:isAdmin}
+{#if cdi:userService.isUserAdmin(user)}
     <a href="/admin/users" role="button" class="outline contrast">Users list</a>
 {/if}
 <a href="/profile/change-password" role="button" class="outline contrast">Change password</a>

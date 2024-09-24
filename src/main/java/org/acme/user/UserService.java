@@ -1,6 +1,7 @@
 package org.acme.user;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 import org.acme.admin.request.EditUserRequest;
 import org.acme.user.exception.EmailAlreadyTakenException;
 import org.acme.user.exception.IncorrectPasswordException;
@@ -11,6 +12,7 @@ import org.acme.user.request.ChangePasswordRequest;
 import java.util.List;
 import java.util.UUID;
 
+@Named("userService")
 @ApplicationScoped
 public class UserService {
 
@@ -66,5 +68,9 @@ public class UserService {
             throw new IncorrectPasswordException();
         }
         user.changePassword(request.newPassword());
+    }
+
+    public boolean isUserAdmin(User user) {
+        return user.getRole() == UserRole.ADMIN;
     }
 }
