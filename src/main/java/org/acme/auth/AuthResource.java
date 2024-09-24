@@ -19,7 +19,6 @@ import org.acme.auth.request.ForgotPasswordRequest;
 import org.acme.auth.request.LoginRequest;
 import org.acme.auth.request.RegisterRequest;
 import org.acme.email.EmailSender;
-import org.acme.mapper.UserMapper;
 import org.acme.recaptcha.RecaptchaService;
 import org.acme.user.User;
 import org.acme.user.UserService;
@@ -66,20 +65,17 @@ public class AuthResource {
 
     private final CurrentIdentityAssociation identity;
     private final UserService userService;
-    private final UserMapper userMapper;
     private final EmailSender emailSender;
     private final VerificationTokenStorage verificationTokenStorage;
     private final RecaptchaService recaptchaService;
 
     public AuthResource(CurrentIdentityAssociation identity,
                         UserService userService,
-                        UserMapper userMapper,
                         EmailSender emailSender,
                         VerificationTokenStorage verificationTokenStorage,
                         RecaptchaService recaptchaService) {
         this.identity = identity;
         this.userService = userService;
-        this.userMapper = userMapper;
         this.emailSender = emailSender;
         this.verificationTokenStorage = verificationTokenStorage;
         this.recaptchaService = recaptchaService;
@@ -138,7 +134,7 @@ public class AuthResource {
             return Response.status(Response.Status.FORBIDDEN).entity(RECAPTCHA_ERROR).build();
         }
 
-        User user = userMapper.mapToUser(request);
+        User user = request.mapToUser();
         userService.create(user);
         sendRegistrationEmail(user);
         return Response.ok().entity(user.getId()).build();
