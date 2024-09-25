@@ -1,29 +1,19 @@
 package org.acme.user;
 
 import io.quarkus.elytron.security.common.BcryptUtil;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Getter
-@NoArgsConstructor
 public class User {
 
-    @Setter
     private UUID id;
-    @Setter
     private String fullName;
-    @Setter
     private String email;
     private String password;
-    @Setter
     private UserRole role;
-    @Setter
     private boolean isVerified;
-    private LocalDateTime createdAt;
+    private final LocalDateTime createdAt;
 
     public User(String fullName, String email, String password) {
         this(fullName, email, password, UserRole.USER, false);
@@ -44,5 +34,53 @@ public class User {
 
     public void changePassword(String newPassword) {
         this.password = BcryptUtil.bcryptHash(newPassword);
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setRole(UserRole role) {
+        this.role = role;
+    }
+
+    public void setVerified(boolean verified) {
+        isVerified = verified;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public UserRole getRole() {
+        return role;
+    }
+
+    public boolean isVerified() {
+        return isVerified;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 }
