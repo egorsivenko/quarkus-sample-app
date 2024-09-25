@@ -24,6 +24,7 @@ import org.acme.user.User;
 import org.acme.user.UserService;
 import org.acme.verification.VerificationTokenStorage;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.RestForm;
 
 import java.net.URI;
@@ -57,28 +58,31 @@ public class AuthResource {
     @ConfigProperty(name = "recaptcha.site.key")
     String siteKey;
 
+    @ConfigProperty(name = "recaptcha.secret.key")
+    String secretKey;
+
     @ConfigProperty(name = "quarkus.http.auth.form.cookie-name")
     String cookieName;
 
     @Context
     UriInfo uriInfo;
 
+    @RestClient
+    RecaptchaService recaptchaService;
+
     private final CurrentIdentityAssociation identity;
     private final UserService userService;
     private final EmailSender emailSender;
     private final VerificationTokenStorage verificationTokenStorage;
-    private final RecaptchaService recaptchaService;
 
     public AuthResource(CurrentIdentityAssociation identity,
                         UserService userService,
                         EmailSender emailSender,
-                        VerificationTokenStorage verificationTokenStorage,
-                        RecaptchaService recaptchaService) {
+                        VerificationTokenStorage verificationTokenStorage) {
         this.identity = identity;
         this.userService = userService;
         this.emailSender = emailSender;
         this.verificationTokenStorage = verificationTokenStorage;
-        this.recaptchaService = recaptchaService;
     }
 
     @GET
@@ -91,7 +95,7 @@ public class AuthResource {
     @Path("/login")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response login(LoginRequest request) {
-        if (!recaptchaService.verifyToken(request.recaptchaToken())) {
+        if (!recaptchaService.verifyToken(secretKey, request.recaptchaToken()).success()) {
             return Response.status(Response.Status.FORBIDDEN).entity(RECAPTCHA_ERROR).build();
         }
 
@@ -130,7 +134,7 @@ public class AuthResource {
     @Path("/register")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response register(RegisterRequest request) {
-        if (!recaptchaService.verifyToken(request.recaptchaToken())) {
+        if (!recaptchaService.verifyToken(secretKey, request.recaptchaToken()).success()) {
             return Response.status(Response.Status.FORBIDDEN).entity(RECAPTCHA_ERROR).build();
         }
 
@@ -160,7 +164,7 @@ public class AuthResource {
     @Path("/forgot-password")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response forgotPassword(ForgotPasswordRequest request) {
-        if (!recaptchaService.verifyToken(request.recaptchaToken())) {
+        if (!recaptchaService.verifyToken(secretKey, request.recaptchaToken()).success()) {
             return Response.status(Response.Status.FORBIDDEN).entity(RECAPTCHA_ERROR).build();
         }
 
