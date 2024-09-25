@@ -19,7 +19,8 @@ import org.acme.auth.request.ForgotPasswordRequest;
 import org.acme.auth.request.LoginRequest;
 import org.acme.auth.request.RegisterRequest;
 import org.acme.email.EmailSender;
-import org.acme.recaptcha.RecaptchaService;
+import org.acme.turnstile.TurnstileRequest;
+import org.acme.turnstile.TurnstileService;
 import org.acme.user.User;
 import org.acme.user.UserService;
 import org.acme.verification.VerificationTokenStorage;
@@ -43,22 +44,22 @@ public class AuthResource {
             throw new IllegalStateException("Utility class");
         }
 
-        public static native TemplateInstance login(String recaptchaSiteKey);
-        public static native TemplateInstance register(String recaptchaSiteKey);
+        public static native TemplateInstance login(String siteKey);
+        public static native TemplateInstance register(String siteKey);
 
         public static native TemplateInstance registrationConfirmation(UUID userId);
         public static native TemplateInstance resetPasswordConfirmation(UUID userId);
 
-        public static native TemplateInstance forgotPassword(String recaptchaSiteKey);
+        public static native TemplateInstance forgotPassword(String siteKey);
         public static native TemplateInstance resetPassword(UUID userId);
     }
 
-    private static final String RECAPTCHA_ERROR = "reCAPTCHA verification failed.";
+    private static final String TURNSTILE_ERROR = "Turnstile verification failed.";
 
-    @ConfigProperty(name = "recaptcha.site.key")
+    @ConfigProperty(name = "turnstile.site.key")
     String siteKey;
 
-    @ConfigProperty(name = "recaptcha.secret.key")
+    @ConfigProperty(name = "turnstile.secret.key")
     String secretKey;
 
     @ConfigProperty(name = "quarkus.http.auth.form.cookie-name")
@@ -68,7 +69,7 @@ public class AuthResource {
     UriInfo uriInfo;
 
     @RestClient
-    RecaptchaService recaptchaService;
+    TurnstileService turnstileService;
 
     private final CurrentIdentityAssociation identity;
     private final UserService userService;
@@ -95,8 +96,9 @@ public class AuthResource {
     @Path("/login")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response login(LoginRequest request) {
-        if (!recaptchaService.verifyToken(secretKey, request.recaptchaToken()).success()) {
-            return Response.status(Response.Status.FORBIDDEN).entity(RECAPTCHA_ERROR).build();
+        TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, request.token());
+        if (!turnstileService.verifyToken(turnstileRequest).success()) {
+            return Response.status(Response.Status.FORBIDDEN).entity(TURNSTILE_ERROR).build();
         }
 
         User user = userService.getByEmail(request.email());
@@ -134,8 +136,9 @@ public class AuthResource {
     @Path("/register")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response register(RegisterRequest request) {
-        if (!recaptchaService.verifyToken(secretKey, request.recaptchaToken()).success()) {
-            return Response.status(Response.Status.FORBIDDEN).entity(RECAPTCHA_ERROR).build();
+        TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, request.token());
+        if (!turnstileService.verifyToken(turnstileRequest).success()) {
+            return Response.status(Response.Status.FORBIDDEN).entity(TURNSTILE_ERROR).build();
         }
 
         User user = request.mapToUser();
@@ -164,8 +167,9 @@ public class AuthResource {
     @Path("/forgot-password")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response forgotPassword(ForgotPasswordRequest request) {
-        if (!recaptchaService.verifyToken(secretKey, request.recaptchaToken()).success()) {
-            return Response.status(Response.Status.FORBIDDEN).entity(RECAPTCHA_ERROR).build();
+        TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, request.token());
+        if (!turnstileService.verifyToken(turnstileRequest).success()) {
+            return Response.status(Response.Status.FORBIDDEN).entity(TURNSTILE_ERROR).build();
         }
 
         User user = userService.getByEmail(request.email());
