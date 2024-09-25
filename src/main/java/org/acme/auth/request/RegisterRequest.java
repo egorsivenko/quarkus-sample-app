@@ -6,7 +6,7 @@ public record RegisterRequest(
         String fullName,
         String email,
         String password,
-        String recaptchaToken
+        String token
 ) {
     public User mapToUser() {
         return new User(fullName, email, password);
