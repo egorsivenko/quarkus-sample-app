@@ -23,7 +23,7 @@ import org.acme.turnstile.TurnstileRequest;
 import org.acme.turnstile.TurnstileService;
 import org.acme.user.User;
 import org.acme.user.UserService;
-import org.acme.verification.VerificationTokenStorage;
+import org.acme.verification.TokenService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.RestForm;
@@ -74,16 +74,16 @@ public class AuthResource {
     private final CurrentIdentityAssociation identity;
     private final UserService userService;
     private final EmailSender emailSender;
-    private final VerificationTokenStorage verificationTokenStorage;
+    private final TokenService tokenService;
 
     public AuthResource(CurrentIdentityAssociation identity,
                         UserService userService,
                         EmailSender emailSender,
-                        VerificationTokenStorage verificationTokenStorage) {
+                        TokenService tokenService) {
         this.identity = identity;
         this.userService = userService;
         this.emailSender = emailSender;
-        this.verificationTokenStorage = verificationTokenStorage;
+        this.tokenService = tokenService;
     }
 
     @GET
@@ -212,16 +212,14 @@ public class AuthResource {
     }
 
     private void sendRegistrationEmail(User user) {
-        String token = UUID.randomUUID().toString();
-        verificationTokenStorage.create(token, user);
+        String token = tokenService.generate(user);
 
         String url = uriInfo.getBaseUri().toString() + "verify/registration?token=" + token;
         emailSender.send(user.getEmail(), url);
     }
 
     private void sendResetPasswordEmail(User user) {
-        String token = UUID.randomUUID().toString();
-        verificationTokenStorage.create(token, user);
+        String token = tokenService.generate(user);
 
         String url = uriInfo.getBaseUri().toString() + "verify/reset-password?token=" + token;
         emailSender.send(user.getEmail(), url);
