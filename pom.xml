@@ -16,7 +16,6 @@
         <quarkus.platform.version>3.14.1</quarkus.platform.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.3.1</surefire-plugin.version>
-        <angus-mail.version>2.0.3</angus-mail.version>
         <nimbus.version>9.41.1</nimbus.version>
     </properties>
 
@@ -63,9 +62,8 @@
             <artifactId>quarkus-elytron-security-properties-file</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.angus</groupId>
-            <artifactId>angus-mail</artifactId>
-            <version>${angus-mail.version}</version>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-mailer</artifactId>
         </dependency>
 
         <dependency>
