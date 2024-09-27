@@ -23,7 +23,6 @@ import org.acme.turnstile.TurnstileRequest;
 import org.acme.turnstile.TurnstileService;
 import org.acme.user.User;
 import org.acme.user.UserService;
-import org.acme.jwt.TokenService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.RestForm;
@@ -74,16 +73,13 @@ public class AuthResource {
     private final CurrentIdentityAssociation identity;
     private final UserService userService;
     private final EmailSender emailSender;
-    private final TokenService tokenService;
 
     public AuthResource(CurrentIdentityAssociation identity,
                         UserService userService,
-                        EmailSender emailSender,
-                        TokenService tokenService) {
+                        EmailSender emailSender) {
         this.identity = identity;
         this.userService = userService;
         this.emailSender = emailSender;
-        this.tokenService = tokenService;
     }
 
     @GET
@@ -106,7 +102,7 @@ public class AuthResource {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
         if (!user.isVerified()) {
-            sendRegistrationEmail(user);
+            emailSender.sendRegistrationEmail(user);
             return Response.seeOther(URI.create("/auth/registration-confirmation/" + user.getId())).build();
         }
         return Response.ok().build();
@@ -143,7 +139,7 @@ public class AuthResource {
 
         User user = request.mapToUser();
         userService.create(user);
-        sendRegistrationEmail(user);
+        emailSender.sendRegistrationEmail(user);
         return Response.ok().entity(user.getId()).build();
     }
 
@@ -173,7 +169,7 @@ public class AuthResource {
         }
 
         User user = userService.getByEmail(request.email());
-        sendResetPasswordEmail(user);
+        emailSender.sendResetPasswordEmail(user);
         return Response.ok().entity(user.getId()).build();
     }
 
@@ -201,27 +197,13 @@ public class AuthResource {
     @Path("/resend-registration-email/{userId}")
     public void resendRegistrationEmail(@PathParam("userId") UUID userId) {
         User user = userService.getById(userId);
-        sendRegistrationEmail(user);
+        emailSender.sendRegistrationEmail(user);
     }
 
     @POST
     @Path("/resend-reset-password-email/{userId}")
     public void resendResetPasswordEmail(@PathParam("userId") UUID userId) {
         User user = userService.getById(userId);
-        sendResetPasswordEmail(user);
-    }
-
-    private void sendRegistrationEmail(User user) {
-        String token = tokenService.generate(user);
-
-        String url = uriInfo.getBaseUri().toString() + "verify/registration?token=" + token;
-        emailSender.send(user.getEmail(), url);
-    }
-
-    private void sendResetPasswordEmail(User user) {
-        String token = tokenService.generate(user);
-
-        String url = uriInfo.getBaseUri().toString() + "verify/reset-password?token=" + token;
-        emailSender.send(user.getEmail(), url);
+        emailSender.sendResetPasswordEmail(user);
     }
 }
