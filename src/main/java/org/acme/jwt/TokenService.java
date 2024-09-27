@@ -59,7 +59,7 @@ public class TokenService {
             if (!signedJWT.verify(new RSASSAVerifier(rsaPublicJWK))) {
                 throw new BadRequestException("Invalid token");
             }
-            if (new Date().before(signedJWT.getJWTClaimsSet().getExpirationTime())) {
+            if (new Date().after(signedJWT.getJWTClaimsSet().getExpirationTime())) {
                 throw new BadRequestException("Token is expired");
             }
             return signedJWT.getJWTClaimsSet().getSubject();
