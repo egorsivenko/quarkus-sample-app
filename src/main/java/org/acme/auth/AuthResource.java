@@ -23,7 +23,7 @@ import org.acme.turnstile.TurnstileRequest;
 import org.acme.turnstile.TurnstileService;
 import org.acme.user.User;
 import org.acme.user.UserService;
-import org.acme.verification.TokenService;
+import org.acme.jwt.TokenService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.RestForm;

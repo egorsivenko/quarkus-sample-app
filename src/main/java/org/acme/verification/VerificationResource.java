@@ -3,6 +3,7 @@ package org.acme.verification;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
+import org.acme.jwt.TokenService;
 import org.acme.user.User;
 import org.acme.user.UserService;
 import org.jboss.resteasy.reactive.RestQuery;
