@@ -6,6 +6,7 @@ import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
 import org.acme.jwt.TokenService;
 import org.acme.user.User;
@@ -40,7 +41,7 @@ public class SimpleEmailSender implements EmailSender {
 
     @Override
     public void sendRegistrationEmail(User recipient) {
-        String link = formatLink(recipient, "verify/registration?token=");
+        String link = formatLink(recipient, "registration");
 
         String htmlContent = Templates.registrationEmail(link).render();
         String plainTextContent = Templates.registrationEmailPlain(link).render();
@@ -50,7 +51,7 @@ public class SimpleEmailSender implements EmailSender {
 
     @Override
     public void sendResetPasswordEmail(User recipient) {
-        String link = formatLink(recipient, "verify/reset-password?token=");
+        String link = formatLink(recipient, "reset-password");
 
         String htmlContent = Templates.resetPasswordEmail(link).render();
         String plainTextContent = Templates.resetPasswordEmailPlain(link).render();
@@ -60,7 +61,12 @@ public class SimpleEmailSender implements EmailSender {
 
     private String formatLink(User recipient, String linkPart) {
         String token = tokenService.generate(recipient);
-        return uriInfo.getBaseUri().toString() + linkPart + token;
+        String path = uriInfo.getBaseUri().toString() + "verify/" + linkPart;
+
+        return UriBuilder.fromPath(path)
+                .queryParam("token", token)
+                .build()
+                .toString();
     }
 
     private void sendMultipartEmail(String to, String subject,
