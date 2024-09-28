@@ -1,7 +1,10 @@
 package org.acme.email;
 
-@FunctionalInterface
+import org.acme.user.User;
+
 public interface EmailSender {
 
-    void send(String to, String link);
+    void sendRegistrationEmail(User recipient);
+
+    void sendResetPasswordEmail(User recipient);
 }
