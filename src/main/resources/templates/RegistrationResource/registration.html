@@ -17,7 +17,7 @@
     <main class="container">
         <article>
             <div>
-                <h1>Register</h1>
+                <h1>Registration</h1>
                 <form id="register-form" autocomplete="off">
                     <input type="text" id="full-name" minlength="4" maxlength="50" placeholder="Full name" required autofocus />
                     <input type="email" id="email" maxlength="50" placeholder="Email" required
@@ -80,7 +80,7 @@
                             token: token
                         };
 
-                        fetch("/auth/register", {
+                        fetch("/auth/registration", {
                             method: "POST",
                             body: JSON.stringify(userData),
                             headers: {
