@@ -12,24 +12,22 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import org.acme.auth.request.ForgotPasswordRequest;
-import org.acme.auth.request.LoginRequest;
 import org.acme.auth.request.RegisterRequest;
 import org.acme.email.EmailSender;
 import org.acme.turnstile.TurnstileRequest;
 import org.acme.turnstile.TurnstileService;
 import org.acme.user.User;
 import org.acme.user.UserService;
+import org.acme.util.CookieUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.RestQuery;
 
 import java.net.URI;
-import java.time.Instant;
-import java.util.Date;
 import java.util.UUID;
 
 @Path("/auth")
@@ -43,7 +41,7 @@ public class AuthResource {
             throw new IllegalStateException("Utility class");
         }
 
-        public static native TemplateInstance login(String siteKey);
+        public static native TemplateInstance login(String siteKey, boolean error);
         public static native TemplateInstance register(String siteKey);
 
         public static native TemplateInstance registrationConfirmation(UUID userId);
@@ -84,28 +82,8 @@ public class AuthResource {
 
     @GET
     @Path("/login")
-    public TemplateInstance login() {
-        return Templates.login(siteKey);
-    }
-
-    @POST
-    @Path("/login")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response login(LoginRequest request) {
-        TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, request.token());
-        if (!turnstileService.verifyToken(turnstileRequest).success()) {
-            return Response.status(Response.Status.FORBIDDEN).entity(TURNSTILE_ERROR).build();
-        }
-
-        User user = userService.getByEmail(request.email());
-        if (!user.verifyPassword(request.password())) {
-            return Response.status(Response.Status.UNAUTHORIZED).build();
-        }
-        if (!user.isVerified()) {
-            emailSender.sendRegistrationEmail(user);
-            return Response.seeOther(URI.create("/auth/registration-confirmation/" + user.getId())).build();
-        }
-        return Response.ok().build();
+    public TemplateInstance login(@RestQuery boolean error) {
+        return Templates.login(siteKey, error);
     }
 
     @POST
@@ -114,11 +92,7 @@ public class AuthResource {
         if (identity.getIdentity().isAnonymous()) {
             throw new UnauthorizedException("Not authenticated");
         }
-        final NewCookie removeCookie = new NewCookie.Builder(cookieName)
-                .maxAge(0)
-                .expiry(Date.from(Instant.EPOCH))
-                .path("/")
-                .build();
+        var removeCookie = CookieUtils.buildRemoveCookie(cookieName);
         return Response.seeOther(URI.create("/")).cookie(removeCookie).build();
     }
 
@@ -145,12 +119,12 @@ public class AuthResource {
 
     @GET
     @Path("/registration-confirmation/{userId}")
-    public TemplateInstance registrationConfirmation(@PathParam("userId") UUID userId) {
+    public Response registrationConfirmation(@PathParam("userId") UUID userId) {
         User user = userService.getById(userId);
         if (user.isVerified()) {
-            return Templates.login(siteKey);
+            return Response.seeOther(URI.create("/auth/login")).build();
         }
-        return Templates.registrationConfirmation(userId);
+        return Response.ok(Templates.registrationConfirmation(userId)).build();
     }
 
     @GET
