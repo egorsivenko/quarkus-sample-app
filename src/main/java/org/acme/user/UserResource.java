@@ -10,13 +10,19 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
+import org.acme.email.EmailSender;
 import org.acme.user.request.ChangePasswordRequest;
+import org.acme.util.CookieUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import java.net.URI;
 
 @Path("/profile")
 @Produces(MediaType.TEXT_HTML)
 @Authenticated
-public class UserProfileResource {
+public class UserResource {
 
     @CheckedTemplate
     static class Templates {
@@ -29,22 +35,34 @@ public class UserProfileResource {
         public static native TemplateInstance changePassword();
     }
 
-    private final UserService userService;
+    @ConfigProperty(name = "quarkus.http.auth.form.cookie-name")
+    String cookieName;
 
-    public UserProfileResource(UserService userService) {
+    private final UserService userService;
+    private final EmailSender emailSender;
+
+    public UserResource(UserService userService, EmailSender emailSender) {
         this.userService = userService;
+        this.emailSender = emailSender;
     }
 
     @GET
-    public TemplateInstance profileTemplate(@Context SecurityContext securityContext) {
+    public Response profile(@Context SecurityContext securityContext) {
         String email = securityContext.getUserPrincipal().getName();
         User user = userService.getByEmail(email);
-        return Templates.profile(user);
+
+        if (!user.isVerified()) {
+            emailSender.sendRegistrationEmail(user);
+            return Response.seeOther(URI.create("/auth/registration-confirmation/" + user.getId()))
+                    .cookie(CookieUtils.buildRemoveCookie(cookieName))
+                    .build();
+        }
+        return Response.ok(Templates.profile(user)).build();
     }
 
     @GET
     @Path("/change-password")
-    public TemplateInstance changePasswordTemplate() {
+    public TemplateInstance changePassword() {
         return Templates.changePassword();
     }
 

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+
+    <link rel="shortcut icon" href="https://picocss.com/favicon.ico" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</head>
+
+<body>
+    <main class="container">
+        <article>
+            <div>
+                <h1>Login</h1>
+                <form action="/j_security_check" method="post" autocomplete="off">
+                    <p style="color: red;" {#if !error}hidden{/if}>Invalid credentials. Please try again.</p>
+                    <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
+                    <input type="email" name="j_email" maxlength="50" placeholder="Email" autofocus required />
+                    <input type="password" name="j_password" maxlength="50" placeholder="Password" required />
+                    <a href="/auth/forgot-password">Forgot Password?</a>
+                    <div class="cf-turnstile" data-sitekey="{siteKey}" data-language="en-US"></div>
+                    <button type="submit" class="contrast">Login</button>
+                    <label align="center">
+                        Don't have an account? <a href="/auth/registration">Register</a>
+                    </label>
+                </form>
+            </div>
+        </article>
+    </main>
+</body>
+
+</html>
