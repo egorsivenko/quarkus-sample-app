@@ -1,5 +1,6 @@
 package org.acme.user;
 
+import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.Authenticated;
@@ -12,19 +13,21 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
+import jakarta.ws.rs.core.UriBuilder;
 import org.acme.email.EmailSender;
-import org.acme.user.request.ChangePasswordRequest;
 import org.acme.util.CookieUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.resteasy.reactive.RestForm;
 
 import java.net.URI;
 
 @Path("/profile")
+@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 @Produces(MediaType.TEXT_HTML)
 @Authenticated
-public class UserResource {
+public class UserProfileResource extends Controller {
 
-    @CheckedTemplate
+    @CheckedTemplate(requireTypeSafeExpressions = false)
     static class Templates {
 
         private Templates() {
@@ -32,6 +35,7 @@ public class UserResource {
         }
 
         public static native TemplateInstance profile(User user);
+
         public static native TemplateInstance changePassword();
     }
 
@@ -41,19 +45,25 @@ public class UserResource {
     private final UserService userService;
     private final EmailSender emailSender;
 
-    public UserResource(UserService userService, EmailSender emailSender) {
+    public UserProfileResource(UserService userService, EmailSender emailSender) {
         this.userService = userService;
         this.emailSender = emailSender;
     }
 
     @GET
+    @Path("/")
     public Response profile(@Context SecurityContext securityContext) {
         String email = securityContext.getUserPrincipal().getName();
         User user = userService.getByEmail(email);
 
         if (!user.isVerified()) {
             emailSender.sendRegistrationEmail(user);
-            return Response.seeOther(URI.create("/auth/registration-confirmation/" + user.getId()))
+
+            URI uri = UriBuilder.fromPath("/auth/registration-confirmation")
+                    .queryParam("userId", user.getId())
+                    .build();
+
+            return Response.seeOther(uri)
                     .cookie(CookieUtils.buildRemoveCookie(cookieName))
                     .build();
         }
@@ -68,10 +78,17 @@ public class UserResource {
 
     @POST
     @Path("/change-password")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public void changePassword(@Context SecurityContext securityContext,
-                               ChangePasswordRequest request) {
+    public Response changePassword(@Context SecurityContext securityContext,
+                                   @RestForm String currentPassword,
+                                   @RestForm String newPassword) {
         String email = securityContext.getUserPrincipal().getName();
-        userService.changePassword(email, request);
+        User user = userService.getByEmail(email);
+
+        if (!user.verifyPassword(currentPassword)) {
+            flash("error", "Incorrect current password.");
+            changePassword();
+        }
+        user.changePassword(newPassword);
+        return Response.seeOther(URI.create("/profile")).build();
     }
 }

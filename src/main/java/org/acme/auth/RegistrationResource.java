@@ -1,16 +1,14 @@
 package org.acme.auth;
 
+import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import org.acme.auth.request.RegisterRequest;
 import org.acme.email.EmailSender;
 import org.acme.turnstile.TurnstileRequest;
 import org.acme.turnstile.TurnstileService;
@@ -18,15 +16,17 @@ import org.acme.user.User;
 import org.acme.user.UserService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.RestQuery;
 
-import java.net.URI;
 import java.util.UUID;
 
 @Path("/auth")
+@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 @Produces(MediaType.TEXT_HTML)
-public class RegistrationResource {
+public class RegistrationResource extends Controller {
 
-    @CheckedTemplate
+    @CheckedTemplate(requireTypeSafeExpressions = false)
     static class Templates {
 
         private Templates() {
@@ -64,33 +64,42 @@ public class RegistrationResource {
 
     @POST
     @Path("/registration")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response registration(RegisterRequest request) {
-        TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, request.token());
+    public void registration(@RestForm String fullName,
+                             @RestForm String email,
+                             @RestForm String password,
+                             @RestForm("cf-turnstile-response") String token) {
+        TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, token);
         if (!turnstileService.verifyToken(turnstileRequest).success()) {
-            return Response.status(Response.Status.FORBIDDEN).build();
+            flash("error", "Turnstile verification failed.");
+            registration();
         }
 
-        User user = request.mapToUser();
+        if (userService.existsByEmail(email)) {
+            flash("error", "Email address is already registered.");
+            registration();
+        }
+        User user = new User(email, password, fullName);
         userService.create(user);
         emailSender.sendRegistrationEmail(user);
-        return Response.ok().entity(user.getId()).build();
+
+        registrationConfirmation(user.getId());
     }
 
     @GET
-    @Path("/registration-confirmation/{userId}")
-    public Response registrationConfirmation(@PathParam("userId") UUID userId) {
+    @Path("/registration-confirmation")
+    public TemplateInstance registrationConfirmation(@RestQuery UUID userId) {
         User user = userService.getById(userId);
         if (user.isVerified()) {
-            return Response.seeOther(URI.create("/auth/login")).build();
+            redirect(LoginResource.class).login(false);
         }
-        return Response.ok(Templates.registrationConfirmation(userId)).build();
+        return Templates.registrationConfirmation(user.getId());
     }
 
     @POST
-    @Path("/resend-registration-email/{userId}")
-    public void resendRegistrationEmail(@PathParam("userId") UUID userId) {
+    @Path("/resend-registration-email")
+    public void resendRegistrationEmail(@RestForm UUID userId) {
         User user = userService.getById(userId);
         emailSender.sendRegistrationEmail(user);
+        registrationConfirmation(user.getId());
     }
 }

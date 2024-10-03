@@ -12,9 +12,13 @@
     <h4>You need to confirm your email address.</h4>
     <h5>Email with confirmation link was sent, please check your inbox.</h5>
 
-    <a href="/auth/login" role="button" class="secondary">Cancel</a>
-    <button id="resendButton" onclick="resendEmail()">Resend Email</button>
     <p id="countdown"></p>
+    <form action="/auth/resend-registration-email" method="POST" style="margin-top: 15px; width: 200px">
+        <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
+        <input type="hidden" name="userId" value="{userId}">
+        <button type="submit" id="resendButton">Resend Email</button>
+    </form>
+    <a href="/auth/login" role="button" class="secondary">Cancel</a>
 
     <script>
         const resendButton = document.getElementById('resendButton');
@@ -36,32 +40,6 @@
                 }
             }, 1000);
         }
-
-        function resendEmail() {
-            resendButton.setAttribute('aria-busy', 'true');
-            resendButton.textContent = 'Please wait...';
-
-            fetch('/auth/resend-registration-email/' + "{userId}", {
-                method: "POST",
-                headers: {
-                    "{inject:csrf.headerName}": "{inject:csrf.token}"
-                },
-            })
-            .then(response => {
-                resendButton.setAttribute('aria-busy', 'false');
-                resendButton.textContent = 'Resend Email';
-
-                if (response.ok) {
-                    startCountdown();
-                } else {
-                    alert('Error resending email!');
-                }
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-        }
-
         window.onload = startCountdown;
     </script>
 </body>

@@ -4,13 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
+    <title>Registration</title>
 
     <link rel="shortcut icon" href="https://picocss.com/favicon.ico" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
     <link rel="stylesheet" href="/css/styles.css" />
 
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 
 <body>
@@ -18,16 +18,16 @@
         <article>
             <div>
                 <h1>Registration</h1>
-                <form id="register-form" autocomplete="off">
-                    <input type="text" id="full-name" minlength="4" maxlength="50" placeholder="Full name" required autofocus />
-                    <input type="email" id="email" maxlength="50" placeholder="Email" required
-                           aria-describedby="invalid-helper" />
-                    <small id="invalid-helper" style="display: none;">Email is already taken.</small>
-                    <input type="password" id="password" minlength="6" maxlength="50" placeholder="Password" required />
-                    <input type="password" id="confirm-password" minlength="6" maxlength="50" required
+                <form action="/auth/registration" method="post" autocomplete="off">
+                    {#if flash:error} <p style="color: red;">{flash:error}</p> {/if}
+                    <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
+                    <input type="text" id="full-name" name="fullName" minlength="4" maxlength="50" placeholder="Full name" required autofocus />
+                    <input type="email" id="email" name="email" maxlength="50" placeholder="Email" required />
+                    <input type="password" id="password" name="password" minlength="6" maxlength="50" placeholder="Password" required />
+                    <input type="password" id="confirm-password" name="confirmPassword" minlength="6" maxlength="50" required
                            placeholder="Confirm password" aria-describedby="invalid-helper-confirm" />
                     <small id="invalid-helper-confirm" style="display: none;">Passwords don’t match.</small>
-                    <div id="example-container" data-sitekey="{siteKey}" data-language="en-US"></div>
+                    <div class="cf-turnstile" data-sitekey="{siteKey}" data-language="en-US"></div>
                     <button type="submit" class="contrast" id="submit-button">Register</button>
                     <label align="center">
                         Already have an account? <a href="/auth/login">Login</a>
@@ -58,61 +58,6 @@
         }
         password.addEventListener('input', validatePasswords);
         confirmPassword.addEventListener('input', validatePasswords);
-
-        document.getElementById('register-form').addEventListener('submit', (event) => {
-            event.preventDefault();
-
-            const submitButton = document.getElementById('submit-button');
-            submitButton.setAttribute('aria-busy', 'true');
-            submitButton.textContent = 'Please wait...';
-
-            turnstile.ready(function () {
-                turnstile.render("#example-container", {
-                    sitekey: "{siteKey}", callback: function (token) {
-                        const fullNameInput = document.getElementById('full-name');
-                        const emailInput = document.getElementById('email');
-                        const passwordInput = document.getElementById('password');
-
-                        const userData = {
-                            fullName: fullNameInput.value,
-                            email: emailInput.value,
-                            password: passwordInput.value,
-                            token: token
-                        };
-
-                        fetch("/auth/registration", {
-                            method: "POST",
-                            body: JSON.stringify(userData),
-                            headers: {
-                                "Content-Type": "application/json",
-                                "{inject:csrf.headerName}": "{inject:csrf.token}"
-                            },
-                        })
-                        .then((response) => {
-                            submitButton.setAttribute('aria-busy', 'false');
-                            submitButton.textContent = 'Register';
-
-                            if (response.ok) {
-                                response.text().then((userId) => {
-                                    window.location.replace('/auth/registration-confirmation/' + userId);
-                                });
-                            } else {
-                                const invalidHelper = document.getElementById('invalid-helper');
-                                invalidHelper.style.display = 'block';
-
-                                emailInput.setAttribute('aria-invalid', 'true');
-                                emailInput.focus();
-
-                                passwordInput.value = '';
-                            }
-                        })
-                        .catch((error) => {
-                            console.error(error);
-                        });
-                    },
-                });
-            });
-        });
     </script>
 </body>
 
