@@ -4,8 +4,8 @@ import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.Authenticated;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -17,13 +17,11 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriBuilder;
 import org.acme.email.EmailSender;
+import org.acme.user.form.ChangePasswordForm;
 import org.acme.util.CookieUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.resteasy.reactive.RestForm;
 
 import java.net.URI;
-
-import static org.acme.util.ValidationConstraints.PASSWORD_SIZE_MESSAGE;
 
 @Path("/profile")
 @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -84,8 +82,7 @@ public class UserProfileResource extends Controller {
     @Path("/change-password")
     public Response changePassword(
             @Context SecurityContext securityContext,
-            @RestForm @NotBlank @Size(min = 6, max = 50, message = PASSWORD_SIZE_MESSAGE) String currentPassword,
-            @RestForm @NotBlank @Size(min = 6, max = 50, message = PASSWORD_SIZE_MESSAGE) String newPassword
+            @BeanParam @Valid ChangePasswordForm form
     ) {
         if (validationFailed()) {
             changePassword();
@@ -93,11 +90,11 @@ public class UserProfileResource extends Controller {
         String email = securityContext.getUserPrincipal().getName();
         User user = userService.getByEmail(email);
 
-        if (!user.verifyPassword(currentPassword)) {
+        if (!user.verifyPassword(form.getCurrentPassword())) {
             flash("error", "Incorrect current password.");
             changePassword();
         }
-        user.changePassword(newPassword);
+        user.changePassword(form.getNewPassword());
         return Response.seeOther(URI.create("/profile")).build();
     }
 }

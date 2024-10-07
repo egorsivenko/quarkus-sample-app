@@ -3,8 +3,8 @@ package org.acme.auth;
 import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -13,6 +13,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.acme.auth.form.ResetPasswordForm;
 import org.acme.email.EmailSender;
 import org.acme.user.User;
 import org.acme.user.UserService;
@@ -21,8 +22,6 @@ import org.jboss.resteasy.reactive.RestQuery;
 
 import java.net.URI;
 import java.util.UUID;
-
-import static org.acme.util.ValidationConstraints.PASSWORD_SIZE_MESSAGE;
 
 @Path("/auth")
 @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -58,15 +57,12 @@ public class ResetPasswordResource extends Controller {
 
     @POST
     @Path("/reset-password")
-    public Response resetPassword(
-            @RestForm UUID userId,
-            @RestForm @NotBlank @Size(min = 6, max = 50, message = PASSWORD_SIZE_MESSAGE) String password
-    ) {
+    public Response resetPassword(@BeanParam @Valid ResetPasswordForm form) {
         if (validationFailed()) {
-            resetPassword(userId);
+            resetPassword(form.getUserId());
         }
-        User user = userService.getById(userId);
-        user.changePassword(password);
+        User user = userService.getById(form.getUserId());
+        user.changePassword(form.getPassword());
         return Response.seeOther(URI.create("/auth/login")).build();
     }
 

@@ -3,14 +3,15 @@ package org.acme.auth;
 import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import org.acme.auth.form.ForgotPasswordForm;
 import org.acme.email.EmailSender;
 import org.acme.turnstile.TurnstileRequest;
 import org.acme.turnstile.TurnstileService;
@@ -19,8 +20,6 @@ import org.acme.user.UserService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.RestForm;
-
-import static org.acme.util.ValidationConstraints.EMAIL_SIZE_MESSAGE;
 
 @Path("/auth")
 @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -64,7 +63,7 @@ public class ForgotPasswordResource extends Controller {
     @POST
     @Path("/forgot-password")
     public void forgotPassword(
-            @RestForm @NotBlank @Size(min = 6, max = 50, message = EMAIL_SIZE_MESSAGE) String email,
+            @BeanParam @Valid ForgotPasswordForm form,
             @RestForm("cf-turnstile-response") String token
     ) {
         TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, token);
@@ -75,11 +74,11 @@ public class ForgotPasswordResource extends Controller {
         if (validationFailed()) {
             forgotPassword();
         }
-        if (!userService.existsByEmail(email)) {
+        if (!userService.existsByEmail(form.getEmail())) {
             flash("error", "Account with this email is not registered.");
             forgotPassword();
         }
-        User user = userService.getByEmail(email);
+        User user = userService.getByEmail(form.getEmail());
         emailSender.sendResetPasswordEmail(user);
 
         redirect(ResetPasswordResource.class).resetPasswordConfirmation(user.getId());
