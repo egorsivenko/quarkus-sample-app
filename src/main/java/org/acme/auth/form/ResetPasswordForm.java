@@ -18,11 +18,20 @@ public class ResetPasswordForm {
     @Size(min = 6, max = 50, message = PASSWORD_SIZE_MESSAGE)
     String password;
 
+    @RestForm
+    @NotBlank
+    @Size(min = 6, max = 50, message = PASSWORD_SIZE_MESSAGE)
+    String confirmPassword;
+
     public UUID getUserId() {
         return userId;
     }
 
     public String getPassword() {
         return password;
+    }
+
+    public String getConfirmPassword() {
+        return confirmPassword;
     }
 }

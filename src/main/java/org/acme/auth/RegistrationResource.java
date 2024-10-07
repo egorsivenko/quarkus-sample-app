@@ -76,6 +76,7 @@ public class RegistrationResource extends Controller {
             flash("error", "Turnstile verification failed.");
             registration();
         }
+        validation.equals("passwordMatch", form.getPassword(), form.getConfirmPassword());
         if (validationFailed()) {
             registration();
         }

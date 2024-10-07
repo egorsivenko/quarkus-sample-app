@@ -58,6 +58,7 @@ public class ResetPasswordResource extends Controller {
     @POST
     @Path("/reset-password")
     public Response resetPassword(@BeanParam @Valid ResetPasswordForm form) {
+        validation.equals("passwordMatch", form.getPassword(), form.getConfirmPassword());
         if (validationFailed()) {
             resetPassword(form.getUserId());
         }

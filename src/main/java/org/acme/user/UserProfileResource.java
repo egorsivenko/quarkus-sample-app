@@ -84,6 +84,7 @@ public class UserProfileResource extends Controller {
             @Context SecurityContext securityContext,
             @BeanParam @Valid ChangePasswordForm form
     ) {
+        validation.equals("passwordMatch", form.getNewPassword(), form.getConfirmPassword());
         if (validationFailed()) {
             changePassword();
         }
