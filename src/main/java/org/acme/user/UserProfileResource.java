@@ -4,6 +4,8 @@ import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.Authenticated;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -20,6 +22,8 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.RestForm;
 
 import java.net.URI;
+
+import static org.acme.util.ValidationConstraints.PASSWORD_SIZE_MESSAGE;
 
 @Path("/profile")
 @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -78,9 +82,14 @@ public class UserProfileResource extends Controller {
 
     @POST
     @Path("/change-password")
-    public Response changePassword(@Context SecurityContext securityContext,
-                                   @RestForm String currentPassword,
-                                   @RestForm String newPassword) {
+    public Response changePassword(
+            @Context SecurityContext securityContext,
+            @RestForm @NotBlank @Size(min = 6, max = 50, message = PASSWORD_SIZE_MESSAGE) String currentPassword,
+            @RestForm @NotBlank @Size(min = 6, max = 50, message = PASSWORD_SIZE_MESSAGE) String newPassword
+    ) {
+        if (validationFailed()) {
+            changePassword();
+        }
         String email = securityContext.getUserPrincipal().getName();
         User user = userService.getByEmail(email);
 

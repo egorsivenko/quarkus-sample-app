@@ -3,6 +3,8 @@ package org.acme.auth;
 import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -19,6 +21,8 @@ import org.jboss.resteasy.reactive.RestQuery;
 
 import java.net.URI;
 import java.util.UUID;
+
+import static org.acme.util.ValidationConstraints.PASSWORD_SIZE_MESSAGE;
 
 @Path("/auth")
 @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -54,8 +58,13 @@ public class ResetPasswordResource extends Controller {
 
     @POST
     @Path("/reset-password")
-    public Response resetPassword(@RestForm UUID userId,
-                                  @RestForm String password) {
+    public Response resetPassword(
+            @RestForm UUID userId,
+            @RestForm @NotBlank @Size(min = 6, max = 50, message = PASSWORD_SIZE_MESSAGE) String password
+    ) {
+        if (validationFailed()) {
+            resetPassword(userId);
+        }
         User user = userService.getById(userId);
         user.changePassword(password);
         return Response.seeOther(URI.create("/auth/login")).build();

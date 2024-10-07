@@ -3,6 +3,8 @@ package org.acme.auth;
 import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -17,6 +19,8 @@ import org.acme.user.UserService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.RestForm;
+
+import static org.acme.util.ValidationConstraints.EMAIL_SIZE_MESSAGE;
 
 @Path("/auth")
 @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -59,14 +63,18 @@ public class ForgotPasswordResource extends Controller {
 
     @POST
     @Path("/forgot-password")
-    public void forgotPassword(@RestForm String email,
-                               @RestForm("cf-turnstile-response") String token) {
+    public void forgotPassword(
+            @RestForm @NotBlank @Size(min = 6, max = 50, message = EMAIL_SIZE_MESSAGE) String email,
+            @RestForm("cf-turnstile-response") String token
+    ) {
         TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, token);
         if (!turnstileService.verifyToken(turnstileRequest).success()) {
             flash("error", "Turnstile verification failed.");
             forgotPassword();
         }
-
+        if (validationFailed()) {
+            forgotPassword();
+        }
         if (!userService.existsByEmail(email)) {
             flash("error", "Account with this email is not registered.");
             forgotPassword();

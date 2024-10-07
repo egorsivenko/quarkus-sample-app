@@ -4,6 +4,7 @@ import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -60,8 +61,11 @@ public class AdminResource extends Controller {
 
     @POST
     @Path("/edit-user")
-    public void editUser(@BeanParam EditUserForm form) {
+    public void editUser(@BeanParam @Valid EditUserForm form) {
         try {
+            if (validationFailed()) {
+                editUser(form.getId());
+            }
             userService.edit(form);
             usersList();
         } catch (EmailAlreadyTakenException e) {

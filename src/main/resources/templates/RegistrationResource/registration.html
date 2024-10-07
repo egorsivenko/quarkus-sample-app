@@ -19,6 +19,9 @@
             <div>
                 <h1>Registration</h1>
                 <form action="/auth/registration" method="post" autocomplete="off">
+                    {#ifError 'fullName'} <p style="color: red;">{#error 'fullName'/}</p> {/ifError}
+                    {#ifError 'email'} <p style="color: red;">{#error 'email'/}</p> {/ifError}
+                    {#ifError 'password'} <p style="color: red;">{#error 'password'/}</p> {/ifError}
                     {#if flash:error} <p style="color: red;">{flash:error}</p> {/if}
                     <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
                     <input type="text" id="full-name" name="fullName" minlength="4" maxlength="50" placeholder="Full name" required autofocus />

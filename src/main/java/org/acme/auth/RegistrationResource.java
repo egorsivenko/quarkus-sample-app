@@ -3,6 +3,8 @@ package org.acme.auth;
 import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -20,6 +22,10 @@ import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestQuery;
 
 import java.util.UUID;
+
+import static org.acme.util.ValidationConstraints.EMAIL_SIZE_MESSAGE;
+import static org.acme.util.ValidationConstraints.FULL_NAME_SIZE_MESSAGE;
+import static org.acme.util.ValidationConstraints.PASSWORD_SIZE_MESSAGE;
 
 @Path("/auth")
 @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -64,16 +70,20 @@ public class RegistrationResource extends Controller {
 
     @POST
     @Path("/registration")
-    public void registration(@RestForm String fullName,
-                             @RestForm String email,
-                             @RestForm String password,
-                             @RestForm("cf-turnstile-response") String token) {
+    public void registration(
+            @RestForm @NotBlank @Size(min = 4, max = 50, message = FULL_NAME_SIZE_MESSAGE) String fullName,
+            @RestForm @NotBlank @Size(min = 6, max = 50, message = EMAIL_SIZE_MESSAGE) String email,
+            @RestForm @NotBlank @Size(min = 6, max = 50, message = PASSWORD_SIZE_MESSAGE) String password,
+            @RestForm("cf-turnstile-response") String token
+    ) {
         TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, token);
         if (!turnstileService.verifyToken(turnstileRequest).success()) {
             flash("error", "Turnstile verification failed.");
             registration();
         }
-
+        if (validationFailed()) {
+            registration();
+        }
         if (userService.existsByEmail(email)) {
             flash("error", "Email address is already registered.");
             registration();

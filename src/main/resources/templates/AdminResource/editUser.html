@@ -17,6 +17,8 @@
             <div>
                 <h1>Edit user</h1>
                 <form action="/admin/edit-user" method="post" autocomplete="off">
+                    {#ifError 'fullName'} <p style="color: red;">{#error 'fullName'/}</p> {/ifError}
+                    {#ifError 'email'} <p style="color: red;">{#error 'email'/}</p> {/ifError}
                     {#if flash:error} <p style="color: red;">{flash:error}</p> {/if}
                     <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
                     <input type="hidden" name="id" value="{user.id}" />
