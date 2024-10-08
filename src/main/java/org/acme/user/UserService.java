@@ -2,12 +2,10 @@ package org.acme.user;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Named;
-import org.acme.admin.request.EditUserRequest;
+import org.acme.admin.form.EditUserForm;
 import org.acme.user.exception.EmailAlreadyTakenException;
-import org.acme.user.exception.IncorrectPasswordException;
 import org.acme.user.exception.UserNotFoundException;
 import org.acme.user.repository.UserRepository;
-import org.acme.user.request.ChangePasswordRequest;
 
 import java.util.List;
 import java.util.UUID;
@@ -36,6 +34,10 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException(email));
     }
 
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
     public void create(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new EmailAlreadyTakenException(user.getEmail());
@@ -43,31 +45,22 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public void edit(EditUserRequest request) {
-        User user = getById(request.id());
-        String newEmail = request.email();
+    public void edit(EditUserForm form) {
+        User user = getById(form.getId());
+        String newEmail = form.getEmail();
 
         if (!user.getEmail().equals(newEmail) && userRepository.existsByEmail(newEmail)) {
             throw new EmailAlreadyTakenException(newEmail);
         }
         user.setEmail(newEmail);
-        user.setFullName(request.fullName());
-        user.setRole(UserRole.valueOf(request.role().toUpperCase()));
+        user.setFullName(form.getFullName());
+        user.setRole(UserRole.valueOf(form.getRole().toUpperCase()));
 
-        userRepository.update(request.id(), user);
+        userRepository.update(form.getId(), user);
     }
 
     public void delete(UUID id) {
         userRepository.delete(id);
-    }
-
-    public void changePassword(String email, ChangePasswordRequest request) {
-        User user = getByEmail(email);
-
-        if (!user.verifyPassword(request.currentPassword())) {
-            throw new IncorrectPasswordException();
-        }
-        user.changePassword(request.newPassword());
     }
 
     public boolean isUserAdmin(User user) {

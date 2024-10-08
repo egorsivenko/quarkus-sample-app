@@ -1,15 +1,17 @@
 package org.acme.auth;
 
+import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import org.acme.auth.request.ForgotPasswordRequest;
+import org.acme.auth.form.ForgotPasswordForm;
 import org.acme.email.EmailSender;
 import org.acme.turnstile.TurnstileRequest;
 import org.acme.turnstile.TurnstileService;
@@ -17,12 +19,14 @@ import org.acme.user.User;
 import org.acme.user.UserService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.resteasy.reactive.RestForm;
 
 @Path("/auth")
+@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 @Produces(MediaType.TEXT_HTML)
-public class ForgotPasswordResource {
+public class ForgotPasswordResource extends Controller {
 
-    @CheckedTemplate
+    @CheckedTemplate(requireTypeSafeExpressions = false)
     static class Templates {
 
         private Templates() {
@@ -58,15 +62,25 @@ public class ForgotPasswordResource {
 
     @POST
     @Path("/forgot-password")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response forgotPassword(ForgotPasswordRequest request) {
-        TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, request.token());
+    public void forgotPassword(
+            @BeanParam @Valid ForgotPasswordForm form,
+            @RestForm("cf-turnstile-response") String token
+    ) {
+        TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, token);
         if (!turnstileService.verifyToken(turnstileRequest).success()) {
-            return Response.status(Response.Status.FORBIDDEN).build();
+            flash("error", "Turnstile verification failed.");
+            forgotPassword();
         }
-
-        User user = userService.getByEmail(request.email());
+        if (validationFailed()) {
+            forgotPassword();
+        }
+        if (!userService.existsByEmail(form.getEmail())) {
+            flash("error", "Account with this email is not registered.");
+            forgotPassword();
+        }
+        User user = userService.getByEmail(form.getEmail());
         emailSender.sendResetPasswordEmail(user);
-        return Response.ok().entity(user.getId()).build();
+
+        redirect(ResetPasswordResource.class).resetPasswordConfirmation(user.getId());
     }
 }

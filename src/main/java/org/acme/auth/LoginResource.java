@@ -1,7 +1,9 @@
 package org.acme.auth;
 
+import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -10,10 +12,11 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.RestQuery;
 
 @Path("/auth")
+@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 @Produces(MediaType.TEXT_HTML)
-public class LoginResource {
+public class LoginResource extends Controller {
 
-    @CheckedTemplate
+    @CheckedTemplate(requireTypeSafeExpressions = false)
     static class Templates {
 
         private Templates() {

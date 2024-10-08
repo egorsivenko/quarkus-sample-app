@@ -1,32 +1,35 @@
 package org.acme.admin;
 
+import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import org.acme.admin.request.EditUserRequest;
+import org.acme.admin.form.EditUserForm;
 import org.acme.user.User;
 import org.acme.user.UserRole;
 import org.acme.user.UserService;
+import org.acme.user.exception.EmailAlreadyTakenException;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestQuery;
 
-import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
 @Path("/admin")
+@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 @Produces(MediaType.TEXT_HTML)
 @RolesAllowed("admin")
-public class AdminResource {
+public class AdminResource extends Controller {
 
-    @CheckedTemplate
+    @CheckedTemplate(requireTypeSafeExpressions = false)
     static class Templates {
 
         private Templates() {
@@ -34,6 +37,7 @@ public class AdminResource {
         }
 
         public static native TemplateInstance usersList(List<User> users);
+
         public static native TemplateInstance editUser(User user, UserRole[] roles);
     }
 
@@ -44,28 +48,36 @@ public class AdminResource {
     }
 
     @GET
-    @Path("/users")
+    @Path("/users-list")
     public TemplateInstance usersList() {
         return Templates.usersList(userService.listAll());
     }
 
     @GET
     @Path("/edit-user")
-    public TemplateInstance editUserTemplate(@RestQuery UUID id) {
+    public TemplateInstance editUser(@RestQuery UUID id) {
         return Templates.editUser(userService.getById(id), UserRole.values());
     }
 
     @POST
     @Path("/edit-user")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public void editUser(EditUserRequest request) {
-        userService.edit(request);
+    public void editUser(@BeanParam @Valid EditUserForm form) {
+        try {
+            if (validationFailed()) {
+                editUser(form.getId());
+            }
+            userService.edit(form);
+            usersList();
+        } catch (EmailAlreadyTakenException e) {
+            flash("error", "Email is already taken.");
+            editUser(form.getId());
+        }
     }
 
     @POST
     @Path("/delete-user")
-    public Response deleteUser(@RestForm UUID id) {
+    public void deleteUser(@RestForm UUID id) {
         userService.delete(id);
-        return Response.seeOther(URI.create("/admin/users")).build();
+        usersList();
     }
 }

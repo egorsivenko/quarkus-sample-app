@@ -1,7 +1,11 @@
 package org.acme.auth;
 
+import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -9,19 +13,22 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.acme.auth.form.ResetPasswordForm;
 import org.acme.email.EmailSender;
 import org.acme.user.User;
 import org.acme.user.UserService;
 import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.RestQuery;
 
 import java.net.URI;
 import java.util.UUID;
 
 @Path("/auth")
+@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 @Produces(MediaType.TEXT_HTML)
-public class ResetPasswordResource {
+public class ResetPasswordResource extends Controller {
 
-    @CheckedTemplate
+    @CheckedTemplate(requireTypeSafeExpressions = false)
     static class Templates {
 
         private Templates() {
@@ -50,22 +57,27 @@ public class ResetPasswordResource {
 
     @POST
     @Path("/reset-password")
-    public Response resetPassword(@RestForm UUID userId, @RestForm String password) {
-        User user = userService.getById(userId);
-        user.changePassword(password);
+    public Response resetPassword(@BeanParam @Valid ResetPasswordForm form) {
+        validation.equals("passwordMatch", form.getPassword(), form.getConfirmPassword());
+        if (validationFailed()) {
+            resetPassword(form.getUserId());
+        }
+        User user = userService.getById(form.getUserId());
+        user.changePassword(form.getPassword());
         return Response.seeOther(URI.create("/auth/login")).build();
     }
 
     @GET
-    @Path("/reset-password-confirmation/{userId}")
-    public TemplateInstance resetPasswordConfirmation(@PathParam("userId") UUID userId) {
+    @Path("/reset-password-confirmation")
+    public TemplateInstance resetPasswordConfirmation(@RestQuery UUID userId) {
         return Templates.resetPasswordConfirmation(userId);
     }
 
     @POST
-    @Path("/resend-reset-password-email/{userId}")
-    public void resendResetPasswordEmail(@PathParam("userId") UUID userId) {
+    @Path("/resend-reset-password-email")
+    public void resendResetPasswordEmail(@RestForm UUID userId) {
         User user = userService.getById(userId);
         emailSender.sendResetPasswordEmail(user);
+        resetPasswordConfirmation(userId);
     }
 }

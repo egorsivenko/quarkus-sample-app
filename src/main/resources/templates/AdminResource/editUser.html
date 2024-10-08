@@ -1,83 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
+{#include main.html}
+    {#title}Edit user{/title}
+    {#styles}
+        <link rel="stylesheet" href="/css/styles.css" />
+    {/styles}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit user</title>
-
-    <link rel="shortcut icon" href="https://picocss.com/favicon.ico" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
-    <link rel="stylesheet" href="/css/styles.css" />
-</head>
-
-<body>
     <main class="container">
         <article>
             <div>
                 <h1>Edit user</h1>
-                <form id="edit-user-form" autocomplete="off">
-                    <input type="hidden" id="user-id" name="user-id" value="{user.id}" />
+                <form action="/admin/edit-user" method="post" autocomplete="off">
+                    {#ifError 'fullName'} <p style="color: red;">{#error 'fullName'/}</p> {/ifError}
+                    {#ifError 'email'} <p style="color: red;">{#error 'email'/}</p> {/ifError}
+                    {#if flash:error} <p style="color: red;">{flash:error}</p> {/if}
+                    <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
+                    <input type="hidden" name="id" value="{user.id}" />
                     <label for="fullName">Full name</label>
-                    <input type="text" id="full-name" name="full-name" minlength="4" maxlength="50" value="{user.fullName}"
+                    <input type="text" id="fullName" name="fullName" minlength="4" maxlength="50" value="{user.fullName}"
                            placeholder="Full name" required autofocus />
                     <label for="email">Email</label>
                     <input type="email" id="email" name="email" maxlength="50" value="{user.email}"
-                           placeholder="Email" required aria-describedby="invalid-helper" />
-                    <small id="invalid-helper" style="display: none;">Email is already taken.</small>
+                           placeholder="Email" required />
                     <label for="role">Role</label>
                     <select id="role" name="role" required>
                         {#for role in roles}
                             <option value="{role}" {#if role == user.role}selected{/if}>{role}</option>
                         {/for}
                     </select>
-                    <button type="submit" class="contrast" id="submit-button">Edit user</button>
-                    <a href="/admin/users" role="button" class="outline contrast" style="width: 100%">Cancel</a>
+                    <button type="submit" class="contrast">Edit user</button>
+                    <a href="/admin/users-list" role="button" class="outline contrast" style="width: 100%">Cancel</a>
                 </form>
             </div>
         </article>
     </main>
-
-    <script>
-        document.getElementById('edit-user-form').addEventListener('submit', (event) => {
-            event.preventDefault();
-
-            const userIdInput = document.getElementById('user-id');
-            const fullNameInput = document.getElementById('full-name');
-            const emailInput = document.getElementById('email');
-            const roleSelect = document.getElementById('role');
-
-            const userData = {
-                id: userIdInput.value,
-                fullName: fullNameInput.value,
-                email: emailInput.value,
-                role: roleSelect.value
-            };
-
-            fetch("/admin/edit-user", {
-                method: "POST",
-                body: JSON.stringify(userData),
-                headers: {
-                    "Content-Type": "application/json",
-                    "{inject:csrf.headerName}": "{inject:csrf.token}"
-                },
-            })
-            .then((response) => {
-                if (response.ok) {
-                    window.location.replace('/admin/users');
-                } else {
-                    const invalidHelper = document.getElementById('invalid-helper');
-                    invalidHelper.style.display = 'block';
-
-                    emailInput.setAttribute('aria-invalid', 'true');
-                    emailInput.focus();
-                }
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-        });
-    </script>
-</body>
-
-</html>
+{/include}
