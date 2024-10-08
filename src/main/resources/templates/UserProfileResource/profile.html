@@ -1,23 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile</title>
+{#include main.html}
+    {#title}Profile{/title}
 
-    <link rel="shortcut icon" href="https://picocss.com/favicon.ico" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
-</head>
-<body>
-<h4>Hello, {user.fullName} &#x1F44B;</h4>
-<h4>Email: {user.email}</h4>
-{#if cdi:userService.isUserAdmin(user)}
-    <a href="/admin/users-list" role="button" class="outline contrast">Users list</a>
-{/if}
-<a href="/profile/change-password" role="button" class="outline contrast">Change password</a>
-<form action="/auth/logout" method="POST" style="margin-top: 15px; width: 150px">
-    <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
-    <button type="submit" class="outline">Logout</button>
-</form>
-</body>
-</html>
+    <h4>Hello, {user.fullName} &#x1F44B;</h4>
+    <h4>Email: {user.email}</h4>
+    {#if cdi:userService.isUserAdmin(user)}
+        <a href="/admin/users-list" role="button" class="outline contrast">Users list</a>
+    {/if}
+    <a href="/profile/change-password" role="button" class="outline contrast">Change password</a>
+    <form action="/auth/logout" method="POST" style="margin-top: 15px; width: 150px" aligh="left">
+        <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
+        <button type="submit" class="outline">Logout</button>
+    </form>
+{/include}
