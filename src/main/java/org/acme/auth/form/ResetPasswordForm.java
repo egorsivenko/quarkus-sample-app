@@ -6,6 +6,7 @@ import org.jboss.resteasy.reactive.RestForm;
 
 import java.util.UUID;
 
+import static org.acme.util.ValidationConstraints.PASSWORD_NOT_BLANK_MESSAGE;
 import static org.acme.util.ValidationConstraints.PASSWORD_SIZE_MESSAGE;
 
 public class ResetPasswordForm {
@@ -14,12 +15,12 @@ public class ResetPasswordForm {
     UUID userId;
 
     @RestForm
-    @NotBlank
+    @NotBlank(message = PASSWORD_NOT_BLANK_MESSAGE)
     @Size(min = 6, max = 50, message = PASSWORD_SIZE_MESSAGE)
     String password;
 
     @RestForm
-    @NotBlank
+    @NotBlank(message = PASSWORD_NOT_BLANK_MESSAGE)
     @Size(min = 6, max = 50, message = PASSWORD_SIZE_MESSAGE)
     String confirmPassword;
 

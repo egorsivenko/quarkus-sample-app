@@ -6,8 +6,11 @@ import org.jboss.resteasy.reactive.RestForm;
 
 import java.util.UUID;
 
+import static org.acme.util.ValidationConstraints.EMAIL_NOT_BLANK_MESSAGE;
 import static org.acme.util.ValidationConstraints.EMAIL_SIZE_MESSAGE;
+import static org.acme.util.ValidationConstraints.FULL_NAME_NOT_BLANK_MESSAGE;
 import static org.acme.util.ValidationConstraints.FULL_NAME_SIZE_MESSAGE;
+import static org.acme.util.ValidationConstraints.ROLE_NOT_BLANK_MESSAGE;
 
 public class EditUserForm {
 
@@ -15,17 +18,17 @@ public class EditUserForm {
     UUID id;
 
     @RestForm
-    @NotBlank
+    @NotBlank(message = FULL_NAME_NOT_BLANK_MESSAGE)
     @Size(min = 4, max = 50, message = FULL_NAME_SIZE_MESSAGE)
     String fullName;
 
     @RestForm
-    @NotBlank
+    @NotBlank(message = EMAIL_NOT_BLANK_MESSAGE)
     @Size(min = 6, max = 50, message = EMAIL_SIZE_MESSAGE)
     String email;
 
     @RestForm
-    @NotBlank
+    @NotBlank(message = ROLE_NOT_BLANK_MESSAGE)
     String role;
 
     public UUID getId() {
