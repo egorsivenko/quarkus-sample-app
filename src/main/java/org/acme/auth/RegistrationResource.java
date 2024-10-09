@@ -17,6 +17,8 @@ import org.acme.turnstile.TurnstileRequest;
 import org.acme.turnstile.TurnstileService;
 import org.acme.user.User;
 import org.acme.user.UserService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.RestForm;
@@ -40,6 +42,8 @@ public class RegistrationResource extends Controller {
 
         public static native TemplateInstance registrationConfirmation(UUID userId);
     }
+
+    private static final Logger LOGGER = LogManager.getLogger(RegistrationResource.class);
 
     @ConfigProperty(name = "turnstile.site.key")
     String siteKey;
@@ -71,6 +75,8 @@ public class RegistrationResource extends Controller {
             @BeanParam @Valid RegistrationForm form,
             @RestForm("cf-turnstile-response") String token
     ) {
+        LOGGER.info("Registration attempt with email `{}`", form.getEmail());
+
         TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, token);
         if (!turnstileService.verifyToken(turnstileRequest).success()) {
             flash("error", "Turnstile verification failed.");
@@ -88,6 +94,7 @@ public class RegistrationResource extends Controller {
         userService.create(user);
         emailSender.sendRegistrationEmail(user);
 
+        LOGGER.info("Registration confirmation for email `{}`", form.getEmail());
         registrationConfirmation(user.getId());
     }
 

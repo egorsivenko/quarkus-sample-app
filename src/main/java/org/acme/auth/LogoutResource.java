@@ -8,6 +8,8 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.util.CookieUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.net.URI;
@@ -15,6 +17,8 @@ import java.net.URI;
 @Path("/auth")
 @Produces(MediaType.TEXT_HTML)
 public class LogoutResource {
+
+    private static final Logger LOGGER = LogManager.getLogger(LogoutResource.class);
 
     @ConfigProperty(name = "quarkus.http.auth.form.cookie-name")
     String cookieName;
@@ -31,6 +35,7 @@ public class LogoutResource {
         if (identity.getIdentity().isAnonymous()) {
             throw new UnauthorizedException("Not authenticated");
         }
+        LOGGER.info("Logout via email `{}`", identity.getIdentity().getPrincipal().getName());
         var removeCookie = CookieUtils.buildRemoveCookie(cookieName);
         return Response.seeOther(URI.create("/")).cookie(removeCookie).build();
     }

@@ -17,6 +17,8 @@ import org.acme.turnstile.TurnstileRequest;
 import org.acme.turnstile.TurnstileService;
 import org.acme.user.User;
 import org.acme.user.UserService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.RestForm;
@@ -35,6 +37,8 @@ public class ForgotPasswordResource extends Controller {
 
         public static native TemplateInstance forgotPassword(String siteKey);
     }
+
+    private static final Logger LOGGER = LogManager.getLogger(ForgotPasswordResource.class);
 
     @ConfigProperty(name = "turnstile.site.key")
     String siteKey;
@@ -66,6 +70,8 @@ public class ForgotPasswordResource extends Controller {
             @BeanParam @Valid ForgotPasswordForm form,
             @RestForm("cf-turnstile-response") String token
     ) {
+        LOGGER.info("Forgot password attempt via email `{}`", form.getEmail());
+
         TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, token);
         if (!turnstileService.verifyToken(turnstileRequest).success()) {
             flash("error", "Turnstile verification failed.");
@@ -81,6 +87,7 @@ public class ForgotPasswordResource extends Controller {
         User user = userService.getByEmail(form.getEmail());
         emailSender.sendResetPasswordEmail(user);
 
+        LOGGER.info("Password reset confirmation for email `{}`", form.getEmail());
         redirect(ResetPasswordResource.class).resetPasswordConfirmation(user.getId());
     }
 }
