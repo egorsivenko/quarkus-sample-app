@@ -19,6 +19,7 @@
         <nimbus.version>9.41.1</nimbus.version>
         <quarkus-renarde.version>3.0.18</quarkus-renarde.version>
         <log4j.version>2.23.1</log4j.version>
+        <owasp-dependency-check-plugin.version>10.0.4</owasp-dependency-check-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -82,6 +83,22 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>${owasp-dependency-check-plugin.version}</version>
+                <configuration>
+                    <failBuildOnCVSS>8</failBuildOnCVSS>
+                    <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
