@@ -18,6 +18,7 @@
         <surefire-plugin.version>3.3.1</surefire-plugin.version>
         <nimbus.version>9.41.1</nimbus.version>
         <quarkus-renarde.version>3.0.18</quarkus-renarde.version>
+        <log4j.version>2.23.1</log4j.version>
     </properties>
 
     <dependencyManagement>
@@ -54,6 +55,17 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-mailer</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j.version}</version>
         </dependency>
 
         <dependency>

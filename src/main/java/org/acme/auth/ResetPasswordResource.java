@@ -17,6 +17,8 @@ import org.acme.auth.form.ResetPasswordForm;
 import org.acme.email.EmailSender;
 import org.acme.user.User;
 import org.acme.user.UserService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestQuery;
 
@@ -39,6 +41,8 @@ public class ResetPasswordResource extends Controller {
 
         public static native TemplateInstance resetPasswordConfirmation(UUID userId);
     }
+
+    private static final Logger LOGGER = LogManager.getLogger(ResetPasswordResource.class);
 
     private final UserService userService;
     private final EmailSender emailSender;
@@ -64,6 +68,8 @@ public class ResetPasswordResource extends Controller {
         }
         User user = userService.getById(form.getUserId());
         user.changePassword(form.getPassword());
+
+        LOGGER.info("Successful password reset for email `{}`", user.getEmail());
         return Response.seeOther(URI.create("/auth/login")).build();
     }
 

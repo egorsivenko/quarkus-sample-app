@@ -45,3 +45,5 @@ nb-configuration.xml
 .certs/
 # RSA key pair
 .key-pair/
+# Logging
+logs/

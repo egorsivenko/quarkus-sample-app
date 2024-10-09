@@ -6,6 +6,8 @@ import jakarta.ws.rs.core.Response;
 import org.acme.jwt.TokenService;
 import org.acme.user.User;
 import org.acme.user.UserService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jboss.resteasy.reactive.RestQuery;
 
 import java.net.URI;
@@ -13,6 +15,8 @@ import java.util.UUID;
 
 @Path("/verify")
 public class VerificationResource {
+
+    private static final Logger LOGGER = LogManager.getLogger(VerificationResource.class);
 
     private final UserService userService;
     private final TokenService tokenService;
@@ -28,6 +32,8 @@ public class VerificationResource {
         String subj = tokenService.extractSubject(token);
         User user = userService.getById(UUID.fromString(subj));
         user.setVerified(true);
+
+        LOGGER.info("Successful email verification after registration: `{}`", user.getEmail());
         return Response.seeOther(URI.create("/auth/login")).build();
     }
 
@@ -39,6 +45,7 @@ public class VerificationResource {
         if (!user.isVerified()) {
             user.setVerified(true);
         }
+        LOGGER.info("Successful email verification for password reset: `{}`", user.getEmail());
         return Response.seeOther(URI.create("/auth/reset-password/" + user.getId())).build();
     }
 }
