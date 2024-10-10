@@ -26,6 +26,11 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.RestForm;
 
+import static org.acme.util.FlashScopeConstants.EMAIL_NOT_REGISTERED_MESSAGE;
+import static org.acme.util.FlashScopeConstants.ERROR;
+import static org.acme.util.FlashScopeConstants.RATE_LIMITED_MESSAGE;
+import static org.acme.util.FlashScopeConstants.TURNSTILE_MESSAGE;
+
 @Path("/auth")
 @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 @Produces(MediaType.TEXT_HTML)
@@ -85,19 +90,19 @@ public class ForgotPasswordResource extends Controller {
         Bucket bucket = rateLimitService.resolveBucket(clientIp);
 
         if (!bucket.tryConsume(1)) {
-            flash("error", "Rate limit exceeded.");
+            flash(ERROR, RATE_LIMITED_MESSAGE);
             forgotPassword();
         }
         TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, token);
         if (!turnstileService.verifyToken(turnstileRequest).success()) {
-            flash("error", "Turnstile verification failed.");
+            flash(ERROR, TURNSTILE_MESSAGE);
             forgotPassword();
         }
         if (validationFailed()) {
             forgotPassword();
         }
         if (!userService.existsByEmail(form.getEmail())) {
-            flash("error", "Account with this email is not registered.");
+            flash(ERROR, EMAIL_NOT_REGISTERED_MESSAGE);
             forgotPassword();
         }
         User user = userService.getByEmail(form.getEmail());

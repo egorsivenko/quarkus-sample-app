@@ -14,6 +14,9 @@ import org.acme.util.RequestDetails;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.RestQuery;
 
+import static org.acme.util.FlashScopeConstants.RATE_LIMITED;
+import static org.acme.util.FlashScopeConstants.RATE_LIMITED_MESSAGE;
+
 @Path("/auth")
 @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 @Produces(MediaType.TEXT_HTML)
@@ -48,7 +51,7 @@ public class LoginResource extends Controller {
         Bucket bucket = rateLimitService.resolveBucket(clientIp);
 
         if ((error && !bucket.tryConsume(1)) || (bucket.getAvailableTokens() == 0)) {
-            validation.addError("rateLimited", "Rate limit exceeded. Please try again soon.");
+            validation.addError(RATE_LIMITED, RATE_LIMITED_MESSAGE);
         }
         return Templates.login(siteKey, error);
     }

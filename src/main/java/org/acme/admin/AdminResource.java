@@ -23,6 +23,9 @@ import org.jboss.resteasy.reactive.RestQuery;
 import java.util.List;
 import java.util.UUID;
 
+import static org.acme.util.FlashScopeConstants.EMAIL_ALREADY_REGISTERED;
+import static org.acme.util.FlashScopeConstants.ERROR;
+
 @Path("/admin")
 @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 @Produces(MediaType.TEXT_HTML)
@@ -69,7 +72,7 @@ public class AdminResource extends Controller {
             userService.edit(form);
             usersList();
         } catch (EmailAlreadyTakenException e) {
-            flash("error", "Email is already taken.");
+            flash(ERROR, EMAIL_ALREADY_REGISTERED);
             editUser(form.getId());
         }
     }

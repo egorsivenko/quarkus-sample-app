@@ -22,6 +22,12 @@ import org.acme.util.CookieUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.net.URI;
+import java.util.Objects;
+
+import static org.acme.util.FlashScopeConstants.ERROR;
+import static org.acme.util.FlashScopeConstants.INCORRECT_PASSWORD_MESSAGE;
+import static org.acme.util.FlashScopeConstants.PASSWORDS_MATCH;
+import static org.acme.util.FlashScopeConstants.PASSWORDS_MATCH_MESSAGE;
 
 @Path("/profile")
 @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -84,7 +90,9 @@ public class UserProfileResource extends Controller {
             @Context SecurityContext securityContext,
             @BeanParam @Valid ChangePasswordForm form
     ) {
-        validation.equals("passwordMatch", form.getNewPassword(), form.getConfirmPassword());
+        if (!Objects.equals(form.getNewPassword(), form.getConfirmPassword())) {
+            validation.addError(PASSWORDS_MATCH, PASSWORDS_MATCH_MESSAGE);
+        }
         if (validationFailed()) {
             changePassword();
         }
@@ -92,7 +100,7 @@ public class UserProfileResource extends Controller {
         User user = userService.getByEmail(email);
 
         if (!user.verifyPassword(form.getCurrentPassword())) {
-            flash("error", "Incorrect current password.");
+            flash(ERROR, INCORRECT_PASSWORD_MESSAGE);
             changePassword();
         }
         user.changePassword(form.getNewPassword());

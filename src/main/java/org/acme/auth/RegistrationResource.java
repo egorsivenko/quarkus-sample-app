@@ -29,6 +29,11 @@ import org.jboss.resteasy.reactive.RestQuery;
 
 import java.util.UUID;
 
+import static org.acme.util.FlashScopeConstants.EMAIL_ALREADY_REGISTERED;
+import static org.acme.util.FlashScopeConstants.ERROR;
+import static org.acme.util.FlashScopeConstants.RATE_LIMITED_MESSAGE;
+import static org.acme.util.FlashScopeConstants.TURNSTILE_MESSAGE;
+
 @Path("/auth")
 @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 @Produces(MediaType.TEXT_HTML)
@@ -90,12 +95,12 @@ public class RegistrationResource extends Controller {
         Bucket bucket = rateLimitService.resolveBucket(clientIp);
 
         if (!bucket.tryConsume(1)) {
-            flash("error", "Rate limit exceeded.");
+            flash(ERROR, RATE_LIMITED_MESSAGE);
             registration();
         }
         TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, token);
         if (!turnstileService.verifyToken(turnstileRequest).success()) {
-            flash("error", "Turnstile verification failed.");
+            flash(ERROR, TURNSTILE_MESSAGE);
             registration();
         }
         validation.equals("passwordMatch", form.getPassword(), form.getConfirmPassword());
@@ -103,7 +108,7 @@ public class RegistrationResource extends Controller {
             registration();
         }
         if (userService.existsByEmail(form.getEmail())) {
-            flash("error", "Email address is already registered.");
+            flash(ERROR, EMAIL_ALREADY_REGISTERED);
             registration();
         }
         User user = form.mapToUser();
