@@ -1,5 +1,6 @@
 package org.acme.auth;
 
+import io.github.bucket4j.Bucket;
 import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
@@ -13,10 +14,12 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import org.acme.auth.form.ForgotPasswordForm;
 import org.acme.email.EmailSender;
+import org.acme.ratelimit.RateLimitService;
 import org.acme.turnstile.TurnstileRequest;
 import org.acme.turnstile.TurnstileService;
 import org.acme.user.User;
 import org.acme.user.UserService;
+import org.acme.util.RequestDetails;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -51,11 +54,17 @@ public class ForgotPasswordResource extends Controller {
 
     private final UserService userService;
     private final EmailSender emailSender;
+    private final RequestDetails requestDetails;
+    private final RateLimitService rateLimitService;
 
     public ForgotPasswordResource(UserService userService,
-                                  EmailSender emailSender) {
+                                  EmailSender emailSender,
+                                  RequestDetails requestDetails,
+                                  RateLimitService rateLimitService) {
         this.userService = userService;
         this.emailSender = emailSender;
+        this.requestDetails = requestDetails;
+        this.rateLimitService = rateLimitService;
     }
 
     @GET
@@ -72,6 +81,13 @@ public class ForgotPasswordResource extends Controller {
     ) {
         LOGGER.info("Forgot password attempt via email `{}`", form.getEmail());
 
+        String clientIp = requestDetails.getClientIpAddress();
+        Bucket bucket = rateLimitService.resolveBucket(clientIp);
+
+        if (!bucket.tryConsume(1)) {
+            flash("error", "Rate limit exceeded.");
+            forgotPassword();
+        }
         TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, token);
         if (!turnstileService.verifyToken(turnstileRequest).success()) {
             flash("error", "Turnstile verification failed.");
