@@ -23,7 +23,11 @@ import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestQuery;
 
 import java.net.URI;
+import java.util.Objects;
 import java.util.UUID;
+
+import static org.acme.util.FlashScopeConstants.PASSWORDS_MATCH;
+import static org.acme.util.FlashScopeConstants.PASSWORDS_MATCH_MESSAGE;
 
 @Path("/auth")
 @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -62,7 +66,9 @@ public class ResetPasswordResource extends Controller {
     @POST
     @Path("/reset-password")
     public Response resetPassword(@BeanParam @Valid ResetPasswordForm form) {
-        validation.equals("passwordMatch", form.getPassword(), form.getConfirmPassword());
+        if (!Objects.equals(form.getPassword(), form.getConfirmPassword())) {
+            validation.addError(PASSWORDS_MATCH, PASSWORDS_MATCH_MESSAGE);
+        }
         if (validationFailed()) {
             resetPassword(form.getUserId());
         }

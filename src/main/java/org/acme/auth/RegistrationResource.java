@@ -1,5 +1,6 @@
 package org.acme.auth;
 
+import io.github.bucket4j.Bucket;
 import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
@@ -13,10 +14,12 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import org.acme.auth.form.RegistrationForm;
 import org.acme.email.EmailSender;
+import org.acme.ratelimit.RateLimitService;
 import org.acme.turnstile.TurnstileRequest;
 import org.acme.turnstile.TurnstileService;
 import org.acme.user.User;
 import org.acme.user.UserService;
+import org.acme.util.RequestDetails;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -25,6 +28,11 @@ import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestQuery;
 
 import java.util.UUID;
+
+import static org.acme.util.FlashScopeConstants.EMAIL_ALREADY_REGISTERED;
+import static org.acme.util.FlashScopeConstants.ERROR;
+import static org.acme.util.FlashScopeConstants.RATE_LIMITED_MESSAGE;
+import static org.acme.util.FlashScopeConstants.TURNSTILE_MESSAGE;
 
 @Path("/auth")
 @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -56,11 +64,17 @@ public class RegistrationResource extends Controller {
 
     private final UserService userService;
     private final EmailSender emailSender;
+    private final RequestDetails requestDetails;
+    private final RateLimitService rateLimitService;
 
     public RegistrationResource(UserService userService,
-                                EmailSender emailSender) {
+                                EmailSender emailSender,
+                                RequestDetails requestDetails,
+                                RateLimitService rateLimitService) {
         this.userService = userService;
         this.emailSender = emailSender;
+        this.requestDetails = requestDetails;
+        this.rateLimitService = rateLimitService;
     }
 
     @GET
@@ -77,9 +91,16 @@ public class RegistrationResource extends Controller {
     ) {
         LOGGER.info("Registration attempt with email `{}`", form.getEmail());
 
+        String clientIp = requestDetails.getClientIpAddress();
+        Bucket bucket = rateLimitService.resolveBucket(clientIp);
+
+        if (!bucket.tryConsume(1)) {
+            flash(ERROR, RATE_LIMITED_MESSAGE);
+            registration();
+        }
         TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, token);
         if (!turnstileService.verifyToken(turnstileRequest).success()) {
-            flash("error", "Turnstile verification failed.");
+            flash(ERROR, TURNSTILE_MESSAGE);
             registration();
         }
         validation.equals("passwordMatch", form.getPassword(), form.getConfirmPassword());
@@ -87,7 +108,7 @@ public class RegistrationResource extends Controller {
             registration();
         }
         if (userService.existsByEmail(form.getEmail())) {
-            flash("error", "Email address is already registered.");
+            flash(ERROR, EMAIL_ALREADY_REGISTERED);
             registration();
         }
         User user = form.mapToUser();

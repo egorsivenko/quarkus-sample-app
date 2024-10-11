@@ -20,6 +20,7 @@
         <quarkus-renarde.version>3.0.18</quarkus-renarde.version>
         <log4j.version>2.23.1</log4j.version>
         <owasp-dependency-check-plugin.version>10.0.4</owasp-dependency-check-plugin.version>
+        <bucket4j.version>8.10.1</bucket4j.version>
     </properties>
 
     <dependencyManagement>
@@ -56,6 +57,11 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-mailer</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j-core</artifactId>
+            <version>${bucket4j.version}</version>
         </dependency>
 
         <dependency>
