@@ -48,7 +48,7 @@ class AdminResourceTest {
 
     @Test
     void testSuccessfulEditUser() {
-        String authCookie = extractAuthCookieFromLogin();
+        String authCookie = TestDataUtil.extractAuthCookieFromLogin(cookieName, adminEmail, adminPassword);
 
         given()
                 .formParam("id", testUser.getId())
@@ -70,7 +70,7 @@ class AdminResourceTest {
 
     @Test
     void testEditUserWithAlreadyTakenEmail() {
-        String authCookie = extractAuthCookieFromLogin();
+        String authCookie = TestDataUtil.extractAuthCookieFromLogin(cookieName, adminEmail, adminPassword);
 
         given()
                 .formParam("id", testUser.getId())
@@ -92,7 +92,7 @@ class AdminResourceTest {
 
     @Test
     void testDeleteUser() {
-        String authCookie = extractAuthCookieFromLogin();
+        String authCookie = TestDataUtil.extractAuthCookieFromLogin(cookieName, adminEmail, adminPassword);
 
         given()
                 .formParam("id", testUser.getId())
@@ -105,16 +105,5 @@ class AdminResourceTest {
                 .body(containsString("Users list"));
 
         assertFalse(userService.existsByEmail(testUser.getEmail()));
-    }
-
-    private String extractAuthCookieFromLogin() {
-        return given()
-                .formParam("j_email", adminEmail)
-                .formParam("j_password", adminPassword)
-                .contentType(ContentType.URLENC)
-                .when().post("/j_security_check")
-                .then()
-                .extract()
-                .cookie(cookieName);
     }
 }

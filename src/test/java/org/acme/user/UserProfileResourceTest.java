@@ -3,6 +3,7 @@ package org.acme.user;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import jakarta.inject.Inject;
+import org.acme.TestDataUtil;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -36,7 +37,7 @@ class UserProfileResourceTest {
 
     @Test
     void testSuccessfulPasswordChange() {
-        String authCookie = extractAuthCookieFromLogin();
+        String authCookie = TestDataUtil.extractAuthCookieFromLogin(cookieName, adminEmail, adminPassword);
         String newPassword = "NewPassword789";
 
         given()
@@ -56,7 +57,7 @@ class UserProfileResourceTest {
 
     @Test
     void testPasswordChangeWithPasswordMismatch() {
-        String authCookie = extractAuthCookieFromLogin();
+        String authCookie = TestDataUtil.extractAuthCookieFromLogin(cookieName, adminEmail, adminPassword);
 
         given()
                 .formParam("currentPassword", adminPassword)
@@ -73,7 +74,7 @@ class UserProfileResourceTest {
 
     @Test
     void testPasswordChangeWithIncorrectCurrentPassword() {
-        String authCookie = extractAuthCookieFromLogin();
+        String authCookie = TestDataUtil.extractAuthCookieFromLogin(cookieName, adminEmail, adminPassword);
         String newPassword = "NewPassword789";
 
         given()
@@ -87,16 +88,5 @@ class UserProfileResourceTest {
                 .statusCode(200)
                 .contentType(ContentType.HTML)
                 .body(containsString("Change password"));
-    }
-
-    private String extractAuthCookieFromLogin() {
-        return given()
-                .formParam("j_email", adminEmail)
-                .formParam("j_password", adminPassword)
-                .contentType(ContentType.URLENC)
-                .when().post("/j_security_check")
-                .then()
-                .extract()
-                .cookie(cookieName);
     }
 }
