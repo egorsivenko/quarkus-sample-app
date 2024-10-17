@@ -27,13 +27,16 @@ public class TrustedIdentityProvider implements IdentityProvider<TrustedAuthenti
     }
 
     @Override
-    public Uni<SecurityIdentity> authenticate(TrustedAuthenticationRequest request, AuthenticationRequestContext context) {
-        User user = userService.getByEmail(request.getPrincipal());
+    public Uni<SecurityIdentity> authenticate(TrustedAuthenticationRequest request,
+                                              AuthenticationRequestContext context) {
+        return context.runBlocking(() -> {
+            User user = userService.getByEmail(request.getPrincipal());
 
-        return Uni.createFrom().item(QuarkusSecurityIdentity.builder()
-                .setPrincipal(new QuarkusPrincipal(user.getEmail()))
-                .addCredential(new PasswordCredential(user.getPassword().toCharArray()))
-                .addRole(user.getRole().toString())
-                .build());
+            return QuarkusSecurityIdentity.builder()
+                    .setPrincipal(new QuarkusPrincipal(user.getEmail()))
+                    .addCredential(new PasswordCredential(user.getPassword().toCharArray()))
+                    .addRole(user.getRole().toString())
+                    .build();
+        });
     }
 }
