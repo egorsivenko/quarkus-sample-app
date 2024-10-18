@@ -36,6 +36,11 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException(email));
     }
 
+    public boolean existsById(UUID id) {
+        return userRepository.findByIdOptional(id)
+                .isPresent();
+    }
+
     public boolean existsByEmail(String email) {
         return userRepository.findByEmailOptional(email)
                 .isPresent();
@@ -64,6 +69,11 @@ public class UserService {
 
     public void delete(UUID id) {
         userRepository.deleteById(id);
+    }
+
+    public void changePassword(User user, String newPassword) {
+        user.changePassword(newPassword);
+        userRepository.persist(user);
     }
 
     public User verifyUser(UUID id) {

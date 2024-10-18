@@ -63,9 +63,11 @@ class AdminResourceTest {
                 .contentType(ContentType.HTML)
                 .body(containsString("Users list"));
 
-        assertEquals("Tom Brown", testUser.getFullName());
-        assertEquals("tom.brown@example.com", testUser.getEmail());
-        assertEquals(UserRole.ADMIN, testUser.getRole());
+        User user = userService.getById(testUser.getId());
+
+        assertEquals("Tom Brown", user.getFullName());
+        assertEquals("tom.brown@example.com", user.getEmail());
+        assertEquals(UserRole.ADMIN, user.getRole());
     }
 
     @Test
@@ -85,9 +87,11 @@ class AdminResourceTest {
                 .contentType(ContentType.HTML)
                 .body(containsString("Edit user"));
 
-        assertNotEquals("Tom Brown", testUser.getFullName());
-        assertNotEquals("tom.brown@example.com", testUser.getEmail());
-        assertNotEquals(UserRole.ADMIN, testUser.getRole());
+        User user = userService.getById(testUser.getId());
+
+        assertNotEquals("Tom Brown", user.getFullName());
+        assertNotEquals(adminEmail, user.getEmail());
+        assertNotEquals(UserRole.ADMIN, user.getRole());
     }
 
     @Test
@@ -104,6 +108,6 @@ class AdminResourceTest {
                 .contentType(ContentType.HTML)
                 .body(containsString("Users list"));
 
-        assertFalse(userService.existsByEmail(testUser.getEmail()));
+        assertFalse(userService.existsById(testUser.getId()));
     }
 }
