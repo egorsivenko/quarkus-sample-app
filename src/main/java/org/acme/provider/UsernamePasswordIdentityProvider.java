@@ -33,25 +33,27 @@ public class UsernamePasswordIdentityProvider implements IdentityProvider<Userna
 
     @Override
     public Uni<SecurityIdentity> authenticate(UsernamePasswordAuthenticationRequest request,
-                                              AuthenticationRequestContext authenticationRequestContext) {
-        try {
-            User user = userService.getByEmail(request.getUsername());
-            String password = String.valueOf(request.getPassword().getPassword());
+                                              AuthenticationRequestContext context) {
+        return context.runBlocking(() -> {
+            try {
+                User user = userService.getByEmail(request.getUsername());
+                String password = String.valueOf(request.getPassword().getPassword());
 
-            if (!user.verifyPassword(password)) {
-                LOGGER.info("Login failure with email `{}` due to incorrect password", user.getEmail());
-                throw new AuthenticationFailedException("Invalid credentials: password verification failed.");
+                if (!user.verifyPassword(password)) {
+                    LOGGER.info("Login failure with email `{}` due to incorrect password", user.getEmail());
+                    throw new AuthenticationFailedException("Invalid credentials: password verification failed.");
+                }
+                LOGGER.info("Successful login via email `{}`", user.getEmail());
+                return QuarkusSecurityIdentity.builder()
+                        .setPrincipal(new QuarkusPrincipal(request.getUsername()))
+                        .addCredential(request.getPassword())
+                        .addRole(user.getRole().toString())
+                        .build();
+
+            } catch (UserNotFoundException e) {
+                LOGGER.info("Login failure with non-existent email `{}`", request.getUsername());
+                throw new AuthenticationFailedException("Invalid credentials.", e);
             }
-            LOGGER.info("Successful login via email `{}`", user.getEmail());
-            return Uni.createFrom().item(QuarkusSecurityIdentity.builder()
-                    .setPrincipal(new QuarkusPrincipal(request.getUsername()))
-                    .addCredential(request.getPassword())
-                    .addRole(user.getRole().toString())
-                    .build());
-
-        } catch (UserNotFoundException e) {
-            LOGGER.info("Login failure with non-existent email `{}`", request.getUsername());
-            throw new AuthenticationFailedException("Invalid credentials.", e);
-        }
+        });
     }
 }

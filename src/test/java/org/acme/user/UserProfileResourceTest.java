@@ -31,7 +31,9 @@ class UserProfileResourceTest {
     void resetPassword() {
         User admin = userService.getByEmail(adminEmail);
         if (!admin.verifyPassword(adminPassword)) {
-            admin.changePassword(adminPassword);
+            userService.delete(admin.getId());
+            admin.setId(null);
+            userService.changePassword(admin, adminPassword);
         }
     }
 
