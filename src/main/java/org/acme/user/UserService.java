@@ -66,6 +66,14 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
+    public User verifyUser(UUID id) {
+        User user = getById(id);
+        user.setVerified(true);
+
+        userRepository.persist(user);
+        return user;
+    }
+
     public boolean isUserAdmin(User user) {
         return user.getRole() == UserRole.ADMIN;
     }

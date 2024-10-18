@@ -30,8 +30,7 @@ public class VerificationResource {
     @Path("/registration")
     public Response verifyRegistration(@RestQuery String token) {
         String subj = tokenService.extractSubject(token);
-        User user = userService.getById(UUID.fromString(subj));
-        user.setVerified(true);
+        User user = userService.verifyUser(UUID.fromString(subj));
 
         LOGGER.info("Successful email verification after registration: `{}`", user.getEmail());
         return Response.seeOther(URI.create("/auth/login")).build();
@@ -41,10 +40,8 @@ public class VerificationResource {
     @Path("/reset-password")
     public Response verifyResetPassword(@RestQuery String token) {
         String subj = tokenService.extractSubject(token);
-        User user = userService.getById(UUID.fromString(subj));
-        if (!user.isVerified()) {
-            user.setVerified(true);
-        }
+        User user = userService.verifyUser(UUID.fromString(subj));
+
         LOGGER.info("Successful email verification for password reset: `{}`", user.getEmail());
         return Response.seeOther(URI.create("/auth/reset-password/" + user.getId())).build();
     }
