@@ -1,5 +1,8 @@
 {#include main.html}
     {#title}Users list{/title}
+    {#styles}
+        <link rel="stylesheet" href="/css/extra-styles.css" />
+    {/styles}
 
     <h3>Users list</h3>
     <a href="/profile" role="button" class="outline contrast">Back</a>
@@ -30,7 +33,7 @@
                             <input type="hidden" name="id" value="{user.id}" />
                             <button type="submit" class="outline">Delete</button>
                         </form>
-                        <a href="/admin/edit-user?id={user.id}" role="button" class="outline" style="width: 100%">Edit</a>
+                        <a href="/admin/edit-user?id={user.id}" role="button" class="outline wide">Edit</a>
                     {#else}
                         <i>User is an admin</i>
                     {/if}
