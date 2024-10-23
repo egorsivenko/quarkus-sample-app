@@ -1,5 +1,8 @@
 {#include main.html}
     {#title}Profile{/title}
+    {#styles}
+        <link rel="stylesheet" href="/css/extra-styles.css" />
+    {/styles}
 
     <h4>Hello, {user.fullName} &#x1F44B;</h4>
     <h4>Email: {user.email}</h4>
@@ -7,7 +10,7 @@
         <a href="/admin/users-list" role="button" class="outline contrast">Users list</a>
     {/if}
     <a href="/profile/change-password" role="button" class="outline contrast">Change password</a>
-    <form action="/auth/logout" method="POST" style="margin-top: 15px; width: 150px" aligh="left">
+    <form action="/auth/logout" class="logout-form" method="POST">
         <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
         <button type="submit" class="outline">Logout</button>
     </form>

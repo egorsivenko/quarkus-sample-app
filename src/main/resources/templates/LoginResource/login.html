@@ -2,6 +2,7 @@
     {#title}Login{/title}
     {#styles}
         <link rel="stylesheet" href="/css/styles.css" />
+        <link rel="stylesheet" href="/css/extra-styles.css" />
     {/styles}
     {#scripts}
         <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
@@ -12,8 +13,8 @@
             <div>
                 <h1>Login</h1>
                 <form action="/j_security_check" method="post" autocomplete="off">
-                    <p style="color: red;" {#if !error}hidden{/if}>Invalid Credentials.</p>
-                    {#ifError 'rateLimited'} <p style="color: red;">{#error 'rateLimited'/}</p> {/ifError}
+                    <p class="flash-error" {#if !error}hidden{/if}>Invalid Credentials.</p>
+                    {#ifError 'rateLimited'} <p class="flash-error">{#error 'rateLimited'/}</p> {/ifError}
                     <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
                     <input type="email" name="j_email" maxlength="50" placeholder="Email" autofocus required />
                     <input type="password" name="j_password" maxlength="50" placeholder="Password" required />

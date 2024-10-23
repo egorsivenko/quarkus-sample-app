@@ -2,6 +2,7 @@
     {#title}Registration{/title}
     {#styles}
         <link rel="stylesheet" href="/css/styles.css" />
+        <link rel="stylesheet" href="/css/extra-styles.css" />
     {/styles}
     {#scripts}
         <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
@@ -12,19 +13,19 @@
             <div>
                 <h1>Registration</h1>
                 <form action="/auth/registration" method="post" autocomplete="off">
-                    {#ifError 'fullName'} <p style="color: red;">{#error 'fullName'/}</p> {/ifError}
-                    {#ifError 'email'} <p style="color: red;">{#error 'email'/}</p> {/ifError}
-                    {#ifError 'password'} <p style="color: red;">{#error 'password'/}</p> {/ifError}
-                    {#ifError 'confirmPassword'} <p style="color: red;">{#error 'confirmPassword'/}</p> {/ifError}
-                    {#ifError 'passwordMatch'} <p style="color: red;">Passwords must match.</p> {/ifError}
-                    {#if flash:error} <p style="color: red;">{flash:error}</p> {/if}
+                    {#ifError 'fullName'} <p class="flash-error">{#error 'fullName'/}</p> {/ifError}
+                    {#ifError 'email'} <p class="flash-error">{#error 'email'/}</p> {/ifError}
+                    {#ifError 'password'} <p class="flash-error">{#error 'password'/}</p> {/ifError}
+                    {#ifError 'confirmPassword'} <p class="flash-error">{#error 'confirmPassword'/}</p> {/ifError}
+                    {#ifError 'passwordMatch'} <p class="flash-error">Passwords must match.</p> {/ifError}
+                    {#if flash:error} <p class="flash-error">{flash:error}</p> {/if}
                     <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
                     <input type="text" id="full-name" name="fullName" minlength="4" maxlength="50" placeholder="Full name" required autofocus />
                     <input type="email" id="email" name="email" maxlength="50" placeholder="Email" required />
                     <input type="password" id="password" name="password" minlength="6" maxlength="50" placeholder="Password" required />
                     <input type="password" id="confirm-password" name="confirmPassword" minlength="6" maxlength="50" required
                            placeholder="Confirm password" aria-describedby="invalid-helper-confirm" />
-                    <small id="invalid-helper-confirm" style="display: none;">Passwords don’t match.</small>
+                    <small id="invalid-helper-confirm">Passwords don’t match.</small>
                     <div class="cf-turnstile" data-sitekey="{siteKey}" data-language="en-US"></div>
                     <button type="submit" class="contrast" id="submit-button">Register</button>
                     <label align="center">

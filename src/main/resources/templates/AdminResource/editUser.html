@@ -2,6 +2,7 @@
     {#title}Edit user{/title}
     {#styles}
         <link rel="stylesheet" href="/css/styles.css" />
+        <link rel="stylesheet" href="/css/extra-styles.css" />
     {/styles}
 
     <main class="container">
@@ -9,9 +10,9 @@
             <div>
                 <h1>Edit user</h1>
                 <form action="/admin/edit-user" method="post" autocomplete="off">
-                    {#ifError 'fullName'} <p style="color: red;">{#error 'fullName'/}</p> {/ifError}
-                    {#ifError 'email'} <p style="color: red;">{#error 'email'/}</p> {/ifError}
-                    {#if flash:error} <p style="color: red;">{flash:error}</p> {/if}
+                    {#ifError 'fullName'} <p class="flash-error">{#error 'fullName'/}</p> {/ifError}
+                    {#ifError 'email'} <p class="flash-error">{#error 'email'/}</p> {/ifError}
+                    {#if flash:error} <p class="flash-error">{flash:error}</p> {/if}
                     <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
                     <input type="hidden" name="id" value="{user.id}" />
                     <label for="fullName">Full name</label>
@@ -27,7 +28,7 @@
                         {/for}
                     </select>
                     <button type="submit" class="contrast">Edit user</button>
-                    <a href="/admin/users-list" role="button" class="outline contrast" style="width: 100%">Cancel</a>
+                    <a href="/admin/users-list" role="button" class="outline contrast wide">Cancel</a>
                 </form>
             </div>
         </article>
