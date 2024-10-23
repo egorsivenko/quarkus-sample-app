@@ -80,7 +80,7 @@ public class UserProfileResource extends Controller {
 
     @GET
     @Path("/change-password")
-    public TemplateInstance changePassword() {
+    public TemplateInstance changePasswordTemplate() {
         return Templates.changePassword();
     }
 
@@ -94,14 +94,14 @@ public class UserProfileResource extends Controller {
             validation.addError(PASSWORDS_MATCH, PASSWORDS_MATCH_MESSAGE);
         }
         if (validationFailed()) {
-            changePassword();
+            changePasswordTemplate();
         }
         String email = securityContext.getUserPrincipal().getName();
         User user = userService.getByEmail(email);
 
         if (!user.verifyPassword(form.getCurrentPassword())) {
             flash(ERROR, INCORRECT_PASSWORD_MESSAGE);
-            changePassword();
+            changePasswordTemplate();
         }
         user.changePassword(form.getNewPassword());
         return Response.seeOther(URI.create("/profile")).build();

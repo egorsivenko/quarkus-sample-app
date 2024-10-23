@@ -59,7 +59,7 @@ public class ResetPasswordResource extends Controller {
 
     @GET
     @Path("/reset-password/{userId}")
-    public TemplateInstance resetPassword(@PathParam("userId") UUID userId) {
+    public TemplateInstance resetPasswordTemplate(@PathParam("userId") UUID userId) {
         return Templates.resetPassword(userId);
     }
 
@@ -70,7 +70,7 @@ public class ResetPasswordResource extends Controller {
             validation.addError(PASSWORDS_MATCH, PASSWORDS_MATCH_MESSAGE);
         }
         if (validationFailed()) {
-            resetPassword(form.getUserId());
+            resetPasswordTemplate(form.getUserId());
         }
         User user = userService.getById(form.getUserId());
         user.changePassword(form.getPassword());

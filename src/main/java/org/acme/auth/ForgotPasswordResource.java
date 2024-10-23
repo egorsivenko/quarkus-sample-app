@@ -74,7 +74,7 @@ public class ForgotPasswordResource extends Controller {
 
     @GET
     @Path("/forgot-password")
-    public TemplateInstance forgotPassword() {
+    public TemplateInstance forgotPasswordTemplate() {
         return Templates.forgotPassword(siteKey);
     }
 
@@ -91,19 +91,19 @@ public class ForgotPasswordResource extends Controller {
 
         if (!bucket.tryConsume(1)) {
             flash(ERROR, RATE_LIMITED_MESSAGE);
-            forgotPassword();
+            forgotPasswordTemplate();
         }
         TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, token);
         if (!turnstileService.verifyToken(turnstileRequest).success()) {
             flash(ERROR, TURNSTILE_MESSAGE);
-            forgotPassword();
+            forgotPasswordTemplate();
         }
         if (validationFailed()) {
-            forgotPassword();
+            forgotPasswordTemplate();
         }
         if (!userService.existsByEmail(form.getEmail())) {
             flash(ERROR, EMAIL_NOT_REGISTERED_MESSAGE);
-            forgotPassword();
+            forgotPasswordTemplate();
         }
         User user = userService.getByEmail(form.getEmail());
         emailSender.sendResetPasswordEmail(user);
