@@ -20,5 +20,14 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
+    - name: Set up environment variables
+      env:
+        QUARKUS_MAILER_HOST: ${{ vars.QUARKUS_MAILER_HOST }}
+        TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
+        TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+        ADMIN_NAME: ${{ secrets.ADMIN_NAME }}
+        ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+        ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+
     - name: Build with Maven
       run: mvn -B package --file pom.xml
