@@ -79,7 +79,7 @@ public class RegistrationResource extends Controller {
 
     @GET
     @Path("/registration")
-    public TemplateInstance registration() {
+    public TemplateInstance registrationTemplate() {
         return Templates.registration(siteKey);
     }
 
@@ -96,20 +96,20 @@ public class RegistrationResource extends Controller {
 
         if (!bucket.tryConsume(1)) {
             flash(ERROR, RATE_LIMITED_MESSAGE);
-            registration();
+            registrationTemplate();
         }
         TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, token);
         if (!turnstileService.verifyToken(turnstileRequest).success()) {
             flash(ERROR, TURNSTILE_MESSAGE);
-            registration();
+            registrationTemplate();
         }
         validation.equals("passwordMatch", form.getPassword(), form.getConfirmPassword());
         if (validationFailed()) {
-            registration();
+            registrationTemplate();
         }
         if (userService.existsByEmail(form.getEmail())) {
             flash(ERROR, EMAIL_ALREADY_REGISTERED);
-            registration();
+            registrationTemplate();
         }
         User user = form.mapToUser();
         userService.create(user);

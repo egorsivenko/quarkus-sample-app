@@ -58,7 +58,7 @@ public class AdminResource extends Controller {
 
     @GET
     @Path("/edit-user")
-    public TemplateInstance editUser(@RestQuery UUID id) {
+    public TemplateInstance editUserTemplate(@RestQuery UUID id) {
         return Templates.editUser(userService.getById(id), UserRole.values());
     }
 
@@ -67,13 +67,13 @@ public class AdminResource extends Controller {
     public void editUser(@BeanParam @Valid EditUserForm form) {
         try {
             if (validationFailed()) {
-                editUser(form.getId());
+                editUserTemplate(form.getId());
             }
             userService.edit(form);
             usersList();
         } catch (EmailAlreadyTakenException e) {
             flash(ERROR, EMAIL_ALREADY_REGISTERED);
-            editUser(form.getId());
+            editUserTemplate(form.getId());
         }
     }
 
