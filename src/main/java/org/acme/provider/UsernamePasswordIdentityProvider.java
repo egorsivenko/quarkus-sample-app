@@ -12,13 +12,13 @@ import jakarta.enterprise.context.ApplicationScoped;
 import org.acme.user.User;
 import org.acme.user.UserService;
 import org.acme.user.exception.UserNotFoundException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @ApplicationScoped
 public class UsernamePasswordIdentityProvider implements IdentityProvider<UsernamePasswordAuthenticationRequest> {
 
-    private static final Logger LOGGER = LogManager.getLogger(UsernamePasswordIdentityProvider.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UsernamePasswordIdentityProvider.class);
 
     private final UserService userService;
 

@@ -18,7 +18,6 @@
         <surefire-plugin.version>3.3.1</surefire-plugin.version>
         <nimbus.version>9.41.1</nimbus.version>
         <quarkus-renarde.version>3.0.18</quarkus-renarde.version>
-        <log4j.version>2.24.1</log4j.version>
         <owasp-dependency-check-plugin.version>10.0.4</owasp-dependency-check-plugin.version>
         <bucket4j.version>8.10.1</bucket4j.version>
     </properties>
@@ -77,9 +76,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-to-slf4j</artifactId>
-            <version>${log4j.version}</version>
+            <groupId>org.jboss.slf4j</groupId>
+            <artifactId>slf4j-jboss-logmanager</artifactId>
         </dependency>
 
         <dependency>

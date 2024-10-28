@@ -8,9 +8,9 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.util.CookieUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 
@@ -18,7 +18,7 @@ import java.net.URI;
 @Produces(MediaType.TEXT_HTML)
 public class LogoutResource {
 
-    private static final Logger LOGGER = LogManager.getLogger(LogoutResource.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LogoutResource.class);
 
     @ConfigProperty(name = "quarkus.http.auth.form.cookie-name")
     String cookieName;
