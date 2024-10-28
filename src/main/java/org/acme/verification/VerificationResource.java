@@ -6,9 +6,9 @@ import jakarta.ws.rs.core.Response;
 import org.acme.jwt.TokenService;
 import org.acme.user.User;
 import org.acme.user.UserService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jboss.resteasy.reactive.RestQuery;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.UUID;
@@ -16,7 +16,7 @@ import java.util.UUID;
 @Path("/verify")
 public class VerificationResource {
 
-    private static final Logger LOGGER = LogManager.getLogger(VerificationResource.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(VerificationResource.class);
 
     private final UserService userService;
     private final TokenService tokenService;

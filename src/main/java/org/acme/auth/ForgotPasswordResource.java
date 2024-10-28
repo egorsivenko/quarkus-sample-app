@@ -20,11 +20,11 @@ import org.acme.turnstile.TurnstileService;
 import org.acme.user.User;
 import org.acme.user.UserService;
 import org.acme.util.RequestDetails;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.RestForm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.acme.util.FlashScopeConstants.EMAIL_NOT_REGISTERED_MESSAGE;
 import static org.acme.util.FlashScopeConstants.ERROR;
@@ -46,7 +46,7 @@ public class ForgotPasswordResource extends Controller {
         public static native TemplateInstance forgotPassword(String siteKey);
     }
 
-    private static final Logger LOGGER = LogManager.getLogger(ForgotPasswordResource.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ForgotPasswordResource.class);
 
     @ConfigProperty(name = "turnstile.site.key")
     String siteKey;
