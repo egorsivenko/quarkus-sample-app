@@ -17,7 +17,7 @@
                     {#ifError 'email'} <p class="flash-error">{#error 'email'/}</p> {/ifError}
                     {#ifError 'password'} <p class="flash-error">{#error 'password'/}</p> {/ifError}
                     {#ifError 'confirmPassword'} <p class="flash-error">{#error 'confirmPassword'/}</p> {/ifError}
-                    {#ifError 'passwordMatch'} <p class="flash-error">Passwords must match.</p> {/ifError}
+                    {#ifError 'passwordsMatch'} <p class="flash-error">{#error 'passwordsMatch'/}</p> {/ifError}
                     {#if flash:error} <p class="flash-error">{flash:error}</p> {/if}
                     <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
                     <input type="text" id="full-name" name="fullName" minlength="4" maxlength="50" placeholder="Full name" required autofocus />
