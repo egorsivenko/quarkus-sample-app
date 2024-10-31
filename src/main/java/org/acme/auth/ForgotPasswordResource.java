@@ -80,10 +80,8 @@ public class ForgotPasswordResource extends Controller {
 
     @POST
     @Path("/forgot-password")
-    public void forgotPassword(
-            @BeanParam @Valid ForgotPasswordForm form,
-            @RestForm("cf-turnstile-response") String token
-    ) {
+    public void forgotPassword(@BeanParam @Valid ForgotPasswordForm form,
+                               @RestForm("cf-turnstile-response") String token) {
         LOGGER.info("Forgot password attempt via email `{}`", form.getEmail());
 
         String clientIp = requestDetails.getClientIpAddress();

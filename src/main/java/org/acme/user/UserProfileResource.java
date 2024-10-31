@@ -86,10 +86,8 @@ public class UserProfileResource extends Controller {
 
     @POST
     @Path("/change-password")
-    public Response changePassword(
-            @Context SecurityContext securityContext,
-            @BeanParam @Valid ChangePasswordForm form
-    ) {
+    public Response changePassword(@Context SecurityContext securityContext,
+                                   @BeanParam @Valid ChangePasswordForm form) {
         if (!Objects.equals(form.getNewPassword(), form.getConfirmPassword())) {
             validation.addError(PASSWORDS_MATCH, PASSWORDS_MATCH_MESSAGE);
         }

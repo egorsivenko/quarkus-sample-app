@@ -88,10 +88,8 @@ public class RegistrationResource extends Controller {
 
     @POST
     @Path("/registration")
-    public void registration(
-            @BeanParam @Valid RegistrationForm form,
-            @RestForm("cf-turnstile-response") String token
-    ) {
+    public void registration(@BeanParam @Valid RegistrationForm form,
+                             @RestForm("cf-turnstile-response") String token) {
         LOGGER.info("Registration attempt with email `{}`", form.getEmail());
 
         String clientIp = requestDetails.getClientIpAddress();
