@@ -27,10 +27,13 @@ import org.jboss.resteasy.reactive.RestQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.acme.util.FlashScopeConstants.EMAIL_ALREADY_REGISTERED;
 import static org.acme.util.FlashScopeConstants.ERROR;
+import static org.acme.util.FlashScopeConstants.PASSWORDS_MATCH;
+import static org.acme.util.FlashScopeConstants.PASSWORDS_MATCH_MESSAGE;
 import static org.acme.util.FlashScopeConstants.RATE_LIMITED_MESSAGE;
 import static org.acme.util.FlashScopeConstants.TURNSTILE_MESSAGE;
 
@@ -85,10 +88,8 @@ public class RegistrationResource extends Controller {
 
     @POST
     @Path("/registration")
-    public void registration(
-            @BeanParam @Valid RegistrationForm form,
-            @RestForm("cf-turnstile-response") String token
-    ) {
+    public void registration(@BeanParam @Valid RegistrationForm form,
+                             @RestForm("cf-turnstile-response") String token) {
         LOGGER.info("Registration attempt with email `{}`", form.getEmail());
 
         String clientIp = requestDetails.getClientIpAddress();
@@ -103,7 +104,9 @@ public class RegistrationResource extends Controller {
             flash(ERROR, TURNSTILE_MESSAGE);
             registrationTemplate();
         }
-        validation.equals("passwordMatch", form.getPassword(), form.getConfirmPassword());
+        if (!Objects.equals(form.getPassword(), form.getConfirmPassword())) {
+            validation.addError(PASSWORDS_MATCH, PASSWORDS_MATCH_MESSAGE);
+        }
         if (validationFailed()) {
             registrationTemplate();
         }
