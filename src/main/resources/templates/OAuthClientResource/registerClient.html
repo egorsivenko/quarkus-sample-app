@@ -1,0 +1,29 @@
+{#include main.html}
+    {#title}Register new OAuth Client{/title}
+    {#styles}
+        <link rel="stylesheet" href="/css/styles.css" />
+        <link rel="stylesheet" href="/css/extra-styles.css" />
+    {/styles}
+
+    <main class="container">
+        <article>
+            <div>
+                <h1>Register new OAuth Client</h1>
+                <form action="/oauth2/clients/new" method="post" autocomplete="off">
+                    <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
+                    <label for="clientName">Client name</label>
+                    <input type="text" id="clientName" name="clientName" minlength="3" maxlength="100"
+                           placeholder="Client name" required autofocus />
+                    <label for="homepageUrl">Homepage URL</label>
+                    <input type="url" id="homepageUrl" name="homepageUrl" maxlength="255"
+                           placeholder="Homepage URL" required />
+                    <label for="callbackUrl">Callback URL</label>
+                    <input type="url" id="callbackUrl" name="callbackUrl" maxlength="255"
+                           placeholder="Callback URL" required />
+                    <button type="submit" class="contrast">Create OAuth Client</button>
+                    <a href="/oauth2/clients" role="button" class="outline contrast wide">Cancel</a>
+                </form>
+            </div>
+        </article>
+    </main>
+{/include}

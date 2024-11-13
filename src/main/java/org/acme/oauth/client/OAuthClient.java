@@ -13,6 +13,7 @@ import org.acme.user.User;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Entity
@@ -42,4 +43,12 @@ public class OAuthClient extends PanacheEntityBase {
     @JoinColumn(name = "user_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     public User user;
+
+    public static Optional<OAuthClient> findByClientIdOptional(String clientId) {
+        return find("clientId", clientId).firstResultOptional();
+    }
+
+    public static void deleteByClientId(String clientId) {
+        delete("clientId", clientId);
+    }
 }
