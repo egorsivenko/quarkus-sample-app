@@ -19,3 +19,17 @@
 .wide {
     width: 100%;
 }
+
+table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+td, th {
+    word-wrap: break-word;
+}
+
+caption {
+    margin-top: 20px;
+    caption-side: bottom;
+}
