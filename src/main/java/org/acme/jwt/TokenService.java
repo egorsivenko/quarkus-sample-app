@@ -17,6 +17,7 @@ import org.acme.user.User;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @ApplicationScoped
 public class TokenService {
@@ -33,15 +34,19 @@ public class TokenService {
         rsaPublicJWK = rsaJWK.toPublicJWK();
     }
 
-    public String generate(User user) {
+    public String generate(User user, JwtClaim... claims) {
         try {
+            JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder()
+                    .subject(user.getId().toString())
+                    .issueTime(new Date())
+                    .expirationTime(new Date(System.currentTimeMillis() + 60 * 60 * 1000));
+
+            Stream.of(claims)
+                    .forEach(claim -> claimsBuilder.claim(claim.name(), claim.value()));
+
             SignedJWT signedJWT = new SignedJWT(
                     new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(rsaJWK.getKeyID()).build(),
-                    new JWTClaimsSet.Builder()
-                            .subject(user.getId().toString())
-                            .issueTime(new Date())
-                            .expirationTime(new Date(System.currentTimeMillis() + 60 * 60 * 1000))
-                            .build());
+                    claimsBuilder.build());
 
             signedJWT.sign(new RSASSASigner(rsaJWK));
 

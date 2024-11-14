@@ -1,0 +1,29 @@
+{#include main.html}
+    {#title}Access permission{/title}
+    {#styles}
+        <link rel="stylesheet" href="/css/styles.css" />
+        <link rel="stylesheet" href="/css/extra-styles.css" />
+    {/styles}
+
+    <main class="container">
+        <article>
+            <div>
+                <h3><b>{client.name}</b> is requesting permission to access your profile information.</h3>
+                <h4>Do you want to continue?</h4>
+                <form action="/oauth2/consent/true" method="post" autocomplete="off">
+                    <input type="hidden" name="redirectUri" value="{client.callbackUrl}" />
+                    <input type="hidden" name="clientId" value="{client.clientId}" />
+                    <input type="hidden" name="userEmail" value="{userEmail}" />
+                    <input type="hidden" name="state" value="{state}" />
+                    <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
+                    <button type="submit" class="outline">Yes</button>
+                </form>
+                <form action="/oauth2/consent/false" method="post" autocomplete="off">
+                    <input type="hidden" name="redirectUri" value="{client.callbackUrl}" />
+                    <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
+                    <button type="submit" class="outline">No</button>
+                </form>
+            </div>
+        </article>
+    </main>
+{/include}
