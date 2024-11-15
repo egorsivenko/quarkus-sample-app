@@ -6,7 +6,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
-import org.acme.jwt.TokenService;
+import org.acme.jwt.JwtService;
 import org.acme.user.User;
 
 @ApplicationScoped
@@ -30,10 +30,10 @@ public class SimpleEmailSender implements EmailSender {
     @Context
     UriInfo uriInfo;
 
-    private final TokenService tokenService;
+    private final JwtService jwtService;
 
-    public SimpleEmailSender(TokenService tokenService) {
-        this.tokenService = tokenService;
+    public SimpleEmailSender(JwtService jwtService) {
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -57,7 +57,7 @@ public class SimpleEmailSender implements EmailSender {
     }
 
     private String formatLink(User recipient, String linkPart) {
-        String token = tokenService.generate(recipient);
+        String token = jwtService.generate(recipient);
         String path = uriInfo.getBaseUri().toString() + "verify/" + linkPart;
 
         return UriBuilder.fromPath(path)

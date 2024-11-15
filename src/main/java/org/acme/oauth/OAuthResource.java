@@ -15,7 +15,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 import jakarta.ws.rs.core.UriBuilder;
 import org.acme.jwt.JwtClaim;
-import org.acme.jwt.TokenService;
+import org.acme.jwt.JwtService;
 import org.acme.oauth.client.OAuthClient;
 import org.acme.oauth.dto.ErrorResponse;
 import org.acme.oauth.dto.TokenRequest;
@@ -44,14 +44,14 @@ public class OAuthResource {
 
     private final CodeGenerator codeGenerator;
     private final UserService userService;
-    private final TokenService tokenService;
+    private final JwtService jwtService;
 
     public OAuthResource(CodeGenerator codeGenerator,
                          UserService userService,
-                         TokenService tokenService) {
+                         JwtService jwtService) {
         this.codeGenerator = codeGenerator;
         this.userService = userService;
-        this.tokenService = tokenService;
+        this.jwtService = jwtService;
     }
 
     @GET
@@ -166,7 +166,7 @@ public class OAuthResource {
         AuthCode.deleteByCode(authCode.code);
 
         return buildResponse(Status.OK, new TokenResponse(
-                tokenService.generate(
+                jwtService.generate(
                         resourceOwner,
                         new JwtClaim("email", resourceOwner.getEmail()),
                         new JwtClaim("full_name", resourceOwner.getFullName())),

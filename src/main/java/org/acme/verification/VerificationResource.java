@@ -3,7 +3,7 @@ package org.acme.verification;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
-import org.acme.jwt.TokenService;
+import org.acme.jwt.JwtService;
 import org.acme.user.User;
 import org.acme.user.UserService;
 import org.jboss.resteasy.reactive.RestQuery;
@@ -19,17 +19,17 @@ public class VerificationResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(VerificationResource.class);
 
     private final UserService userService;
-    private final TokenService tokenService;
+    private final JwtService jwtService;
 
-    public VerificationResource(UserService userService, TokenService tokenService) {
+    public VerificationResource(UserService userService, JwtService jwtService) {
         this.userService = userService;
-        this.tokenService = tokenService;
+        this.jwtService = jwtService;
     }
 
     @GET
     @Path("/registration")
     public Response verifyRegistration(@RestQuery String token) {
-        String subj = tokenService.extractSubject(token);
+        String subj = jwtService.extractSubject(token);
         User user = userService.verifyUser(UUID.fromString(subj));
 
         LOGGER.info("Successful email verification after registration: `{}`", user.getEmail());
@@ -39,7 +39,7 @@ public class VerificationResource {
     @GET
     @Path("/reset-password")
     public Response verifyResetPassword(@RestQuery String token) {
-        String subj = tokenService.extractSubject(token);
+        String subj = jwtService.extractSubject(token);
         User user = userService.verifyUser(UUID.fromString(subj));
 
         LOGGER.info("Successful email verification for password reset: `{}`", user.getEmail());

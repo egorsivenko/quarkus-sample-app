@@ -20,7 +20,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 @ApplicationScoped
-public class TokenService {
+public class JwtService {
 
     private RSAKey rsaJWK;
     private RSAKey rsaPublicJWK;
