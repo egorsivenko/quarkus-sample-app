@@ -145,34 +145,55 @@ public class OAuthResource {
     @Transactional
     public Response token(TokenRequest request) {
 
-        if (!"authorization_code".equals(request.grantType())) {
-            return buildResponse(Status.BAD_REQUEST, "Unsupported grant type");
-        }
+        return switch (request.grantType()) {
+            case "authorization_code" -> {
+                Optional<AuthCode> authCodeOptional = AuthCode.findByCodeOptional(request.code());
 
-        Optional<AuthCode> authCodeOptional = AuthCode.findByCodeOptional(request.code());
+                if (authCodeOptional.isEmpty()) {
+                    yield buildResponse(Status.NOT_FOUND, "Auth code does not exist or has already been used");
+                }
 
-        if (authCodeOptional.isEmpty()) {
-            return buildResponse(Status.NOT_FOUND, "Auth code does not exist or has already been used");
-        }
+                AuthCode authCode = authCodeOptional.get();
 
-        AuthCode authCode = authCodeOptional.get();
+                if (!authCode.client.clientId.equals(request.clientId())
+                        || !authCode.client.clientSecret.equals(request.clientSecret())) {
+                    yield buildResponse(Status.BAD_REQUEST, "Invalid client ID or secret");
+                }
 
-        if (!authCode.client.clientId.equals(request.clientId())
-                || !authCode.client.clientSecret.equals(request.clientSecret())) {
-            return buildResponse(Status.BAD_REQUEST, "Invalid client ID or secret");
-        }
+                User resourceOwner = authCode.resourceOwner;
+                AuthCode.deleteByCode(authCode.code);
 
-        User resourceOwner = authCode.resourceOwner;
-        AuthCode.deleteByCode(authCode.code);
-
-        return buildResponse(Status.OK, new TokenResponse(
-                jwtService.generate(
-                        resourceOwner.getId().toString(),
+                yield buildTokenResponse(resourceOwner.getId().toString(),
                         new JwtClaim("email", resourceOwner.getEmail()),
-                        new JwtClaim("full_name", resourceOwner.getFullName())),
-                3600,
-                "Bearer"
-        ));
+                        new JwtClaim("full_name", resourceOwner.getFullName()));
+            }
+            case "client_credentials" -> {
+                Optional<OAuthClient> clientOptional = OAuthClient.findByClientIdOptional(request.clientId());
+
+                if (clientOptional.isEmpty()) {
+                    yield buildResponse(Status.NOT_FOUND, "Client ID not found");
+                }
+
+                OAuthClient client = clientOptional.get();
+
+                if (!client.clientSecret.equals(request.clientSecret())) {
+                    yield buildResponse(Status.BAD_REQUEST, "Invalid client secret");
+                }
+
+                yield buildTokenResponse(client.id.toString(),
+                        new JwtClaim("client_name", client.name),
+                        new JwtClaim("homepage_url", client.homepageUrl),
+                        new JwtClaim("callback_url", client.callbackUrl));
+            }
+            default -> buildResponse(Status.BAD_REQUEST, "Unsupported grant type");
+        };
+    }
+
+    private Response buildTokenResponse(String subject, JwtClaim... claims) {
+        String token = jwtService.generate(subject, claims);
+        TokenResponse tokenResponse = new TokenResponse(token, 3600, "Bearer");
+
+        return Response.ok(tokenResponse).build();
     }
 
     private Response buildResponse(Status status, Object entity) {
