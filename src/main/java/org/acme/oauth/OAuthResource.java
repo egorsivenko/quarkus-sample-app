@@ -167,7 +167,7 @@ public class OAuthResource {
 
         return buildResponse(Status.OK, new TokenResponse(
                 jwtService.generate(
-                        resourceOwner,
+                        resourceOwner.getId().toString(),
                         new JwtClaim("email", resourceOwner.getEmail()),
                         new JwtClaim("full_name", resourceOwner.getFullName())),
                 3600,

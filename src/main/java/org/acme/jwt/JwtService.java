@@ -12,7 +12,6 @@ import com.nimbusds.jwt.SignedJWT;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.BadRequestException;
-import org.acme.user.User;
 
 import java.text.ParseException;
 import java.util.Date;
@@ -34,10 +33,10 @@ public class JwtService {
         rsaPublicJWK = rsaJWK.toPublicJWK();
     }
 
-    public String generate(User user, JwtClaim... claims) {
+    public String generate(String subject, JwtClaim... claims) {
         try {
             JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder()
-                    .subject(user.getId().toString())
+                    .subject(subject)
                     .issueTime(new Date())
                     .expirationTime(new Date(System.currentTimeMillis() + 60 * 60 * 1000));
 
