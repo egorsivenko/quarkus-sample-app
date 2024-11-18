@@ -22,6 +22,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.acme.util.FlashScopeConstants.CLIENT_NAME_ALREADY_REGISTERED;
+import static org.acme.util.FlashScopeConstants.ERROR;
+
 @Path("/oauth2/clients")
 @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 @Produces(MediaType.TEXT_HTML)
@@ -77,6 +80,10 @@ public class OAuthClientResource extends Controller {
                                @RestForm String homepageUrl,
                                @RestForm String callbackUrl,
                                @RestForm String scopes) {
+        if (OAuthClient.findByNameOptional(clientName).isPresent()) {
+            flash(ERROR, CLIENT_NAME_ALREADY_REGISTERED);
+            registerClientTemplate();
+        }
         OAuthClient client = new OAuthClient();
         client.clientId = codeGenerator.generate(30);
         client.clientSecret = codeGenerator.generate(40);
@@ -112,6 +119,11 @@ public class OAuthClientResource extends Controller {
                            @RestForm String homepageUrl,
                            @RestForm String callbackUrl) {
         OAuthClient client = OAuthClient.findByClientIdOptional(clientId).orElseThrow();
+
+        if (!client.name.equals(clientName) && OAuthClient.findByNameOptional(clientName).isPresent()) {
+            flash(ERROR, CLIENT_NAME_ALREADY_REGISTERED);
+            editClientTemplate(clientId);
+        }
         client.name = clientName;
         client.homepageUrl = homepageUrl;
         client.callbackUrl = callbackUrl;

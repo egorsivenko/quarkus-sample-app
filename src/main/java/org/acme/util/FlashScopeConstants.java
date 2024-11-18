@@ -16,4 +16,5 @@ public final class FlashScopeConstants {
     public static final String EMAIL_NOT_REGISTERED_MESSAGE = "Account with this email is not registered.";
     public static final String PASSWORDS_MATCH_MESSAGE = "Passwords must match.";
     public static final String INCORRECT_PASSWORD_MESSAGE = "Incorrect current password.";
+    public static final String CLIENT_NAME_ALREADY_REGISTERED = "OAuth client name is already registered.";
 }

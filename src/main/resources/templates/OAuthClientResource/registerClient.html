@@ -10,6 +10,7 @@
             <div>
                 <h1>Register new OAuth Client</h1>
                 <form action="/oauth2/clients/new" method="post" autocomplete="off">
+                    {#if flash:error} <p class="flash-error">{flash:error}</p> {/if}
                     <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
                     <label for="clientName">Client name</label>
                     <input type="text" id="clientName" name="clientName" minlength="3" maxlength="100"

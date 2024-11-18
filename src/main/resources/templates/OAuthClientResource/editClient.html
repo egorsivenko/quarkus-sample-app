@@ -10,6 +10,7 @@
             <div>
                 <h1>Edit OAuth Client</h1>
                 <form action="/oauth2/clients/edit" method="post" autocomplete="off">
+                    {#if flash:error} <p class="flash-error">{flash:error}</p> {/if}
                     <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
                     <input type="hidden" name="clientId" value="{client.clientId}" />
                     <label for="clientName">Client name</label>

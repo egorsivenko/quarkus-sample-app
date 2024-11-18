@@ -59,6 +59,10 @@ public class OAuthClient extends PanacheEntityBase {
         return find("clientId", clientId).firstResultOptional();
     }
 
+    public static Optional<OAuthClient> findByNameOptional(String name) {
+        return find("name", name).firstResultOptional();
+    }
+
     public static void deleteByClientId(String clientId) {
         delete("clientId", clientId);
     }
