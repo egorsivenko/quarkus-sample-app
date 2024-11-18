@@ -15,6 +15,9 @@ document.addEventListener("DOMContentLoaded", () => {
             scopes.add(scopeName);
             addScopeTile(scopeName);
             updateScopesInput();
+            scopeInput.removeAttribute("aria-invalid");
+        } else {
+            scopeInput.setAttribute("aria-invalid", "true");
         }
         scopeInput.value = "";
         addScopeButton.disabled = true;
