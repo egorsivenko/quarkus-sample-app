@@ -1,5 +1,6 @@
 package org.acme.oauth.client;
 
+import io.hypersistence.utils.hibernate.type.array.ListArrayType;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,8 +13,10 @@ import jakarta.persistence.Table;
 import org.acme.user.User;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.Type;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -43,6 +46,14 @@ public class OAuthClient extends PanacheEntityBase {
     @JoinColumn(name = "user_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     public User user;
+
+    @Type(ListArrayType.class)
+    @Column(
+            name = "scopes",
+            nullable = false,
+            columnDefinition = "varchar(500)[]"
+    )
+    public Set<String> scopes;
 
     public static Optional<OAuthClient> findByClientIdOptional(String clientId) {
         return find("clientId", clientId).firstResultOptional();

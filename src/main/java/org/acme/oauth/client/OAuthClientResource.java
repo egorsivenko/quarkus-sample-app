@@ -18,6 +18,8 @@ import org.acme.user.UserService;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestQuery;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 @Path("/oauth2/clients")
@@ -73,10 +75,8 @@ public class OAuthClientResource extends Controller {
     @Transactional
     public void registerClient(@RestForm String clientName,
                                @RestForm String homepageUrl,
-                               @RestForm String callbackUrl) {
-        String email = identityAssociation.getIdentity().getPrincipal().getName();
-        User user = userService.getByEmail(email);
-
+                               @RestForm String callbackUrl,
+                               @RestForm String scopes) {
         OAuthClient client = new OAuthClient();
         client.clientId = codeGenerator.generate(30);
         client.clientSecret = codeGenerator.generate(40);
@@ -84,7 +84,15 @@ public class OAuthClientResource extends Controller {
         client.name = clientName;
         client.homepageUrl = homepageUrl;
         client.callbackUrl = callbackUrl;
-        client.user = user;
+
+        Set<String> scopeSet = scopes.isBlank()
+                ? new HashSet<>()
+                : new HashSet<>(Arrays.asList(scopes.split(",")));
+        scopeSet.add("openid");
+        client.scopes = scopeSet;
+
+        String email = identityAssociation.getIdentity().getPrincipal().getName();
+        client.user = userService.getByEmail(email);
 
         client.persist();
         clients();

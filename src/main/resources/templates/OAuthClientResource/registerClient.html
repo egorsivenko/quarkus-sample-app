@@ -20,10 +20,19 @@
                     <label for="callbackUrl">Callback URL</label>
                     <input type="url" id="callbackUrl" name="callbackUrl" maxlength="255"
                            placeholder="Callback URL" required />
+                    <label for="scopeInput">Scopes</label>
+                    <fieldset role="group">
+                        <input type="text" id="scopeInput" maxlength="500" placeholder="Scope name" />
+                        <input type="button" id="addScopeButton" value="Add" disabled />
+                    </fieldset>
+                    <span id="scopeContainer" class="scope-container"></span>
+                    <input type="hidden" id="scopesInput" name="scopes" />
                     <button type="submit" class="contrast">Create OAuth Client</button>
                     <a href="/oauth2/clients" role="button" class="outline contrast wide">Cancel</a>
                 </form>
             </div>
         </article>
     </main>
+
+    <script type="text/javascript" src="/js/scopes.js"></script>
 {/include}

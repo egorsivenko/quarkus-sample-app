@@ -20,6 +20,7 @@
         <quarkus-renarde.version>3.0.18</quarkus-renarde.version>
         <owasp-dependency-check-plugin.version>10.0.4</owasp-dependency-check-plugin.version>
         <bucket4j.version>8.10.1</bucket4j.version>
+        <hypersistence.version>3.9.0</hypersistence.version>
     </properties>
 
     <dependencyManagement>
@@ -77,6 +78,11 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.hypersistence</groupId>
+            <artifactId>hypersistence-utils-hibernate-63</artifactId>
+            <version>${hypersistence.version}</version>
         </dependency>
 
         <dependency>

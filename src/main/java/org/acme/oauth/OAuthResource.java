@@ -25,7 +25,10 @@ import org.acme.user.UserService;
 import org.acme.user.exception.UserNotFoundException;
 import org.jboss.resteasy.reactive.RestForm;
 
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Path("/oauth2")
 public class OAuthResource {
@@ -79,7 +82,11 @@ public class OAuthResource {
             return buildResponse(Status.BAD_REQUEST, "Unsupported response type");
         }
 
-        if (!"openid".equals(scope)) {
+        Set<String> scopeSet = Arrays.stream(scope.split(" "))
+                .map(String::strip)
+                .collect(Collectors.toSet());
+
+        if (!client.scopes.containsAll(scopeSet)) {
             return buildResponse(Status.BAD_REQUEST, "Unsupported scope provided");
         }
         return Response.ok(Templates.signIn(clientId, client.name, state, false)).build();
