@@ -1,0 +1,39 @@
+{#include main.html}
+    {#title}Register new OAuth Client{/title}
+    {#styles}
+        <link rel="stylesheet" href="/css/styles.css" />
+        <link rel="stylesheet" href="/css/extra-styles.css" />
+    {/styles}
+
+    <main class="container">
+        <article>
+            <div>
+                <h1>Register new OAuth Client</h1>
+                <form action="/oauth2/clients/new" method="post" autocomplete="off">
+                    {#if flash:error} <p class="flash-error">{flash:error}</p> {/if}
+                    <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
+                    <label for="clientName">Client name</label>
+                    <input type="text" id="clientName" name="clientName" minlength="3" maxlength="100"
+                           placeholder="Client name" required autofocus />
+                    <label for="homepageUrl">Homepage URL</label>
+                    <input type="url" id="homepageUrl" name="homepageUrl" maxlength="255"
+                           placeholder="Homepage URL" required />
+                    <label for="callbackUrl">Callback URL</label>
+                    <input type="url" id="callbackUrl" name="callbackUrl" maxlength="255"
+                           placeholder="Callback URL" required />
+                    <label for="scopeInput">Scopes</label>
+                    <fieldset role="group">
+                        <input type="text" id="scopeInput" maxlength="500" placeholder="Scope name" />
+                        <input type="submit" id="addScopeButton" value="Add" disabled />
+                    </fieldset>
+                    <span id="scopeContainer" class="scope-container"></span>
+                    <input type="hidden" id="scopesInput" name="scopes" />
+                    <button type="submit" class="contrast">Create OAuth Client</button>
+                    <a href="/oauth2/clients" role="button" class="outline contrast wide">Cancel</a>
+                </form>
+            </div>
+        </article>
+    </main>
+
+    <script type="text/javascript" src="/js/scopes.js"></script>
+{/include}

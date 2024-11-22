@@ -6,8 +6,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
-import org.acme.jwt.TokenService;
+import org.acme.jwt.JwtService;
 import org.acme.user.User;
+
+import java.util.UUID;
 
 @ApplicationScoped
 public class SimpleEmailSender implements EmailSender {
@@ -30,15 +32,15 @@ public class SimpleEmailSender implements EmailSender {
     @Context
     UriInfo uriInfo;
 
-    private final TokenService tokenService;
+    private final JwtService jwtService;
 
-    public SimpleEmailSender(TokenService tokenService) {
-        this.tokenService = tokenService;
+    public SimpleEmailSender(JwtService jwtService) {
+        this.jwtService = jwtService;
     }
 
     @Override
     public void sendRegistrationEmail(User recipient) {
-        String link = formatLink(recipient, "registration");
+        String link = formatLink(recipient.getId(), "registration");
 
         Templates.registrationEmail(link)
                 .to(recipient.getEmail())
@@ -48,7 +50,7 @@ public class SimpleEmailSender implements EmailSender {
 
     @Override
     public void sendResetPasswordEmail(User recipient) {
-        String link = formatLink(recipient, "reset-password");
+        String link = formatLink(recipient.getId(), "reset-password");
 
         Templates.resetPasswordEmail(link)
                 .to(recipient.getEmail())
@@ -56,8 +58,8 @@ public class SimpleEmailSender implements EmailSender {
                 .send().await().indefinitely();
     }
 
-    private String formatLink(User recipient, String linkPart) {
-        String token = tokenService.generate(recipient);
+    private String formatLink(UUID userId, String linkPart) {
+        String token = jwtService.generate(userId.toString());
         String path = uriInfo.getBaseUri().toString() + "verify/" + linkPart;
 
         return UriBuilder.fromPath(path)
