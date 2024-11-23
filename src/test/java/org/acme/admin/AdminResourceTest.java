@@ -2,6 +2,7 @@ package org.acme.admin;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import io.restassured.response.ValidatableResponse;
 import jakarta.inject.Inject;
 import org.acme.TestDataUtil;
 import org.acme.user.User;
@@ -48,6 +49,11 @@ class AdminResourceTest {
 
     @Test
     void testSuccessfulEditUser() {
+        ValidatableResponse response = TestDataUtil.getResponseFromSuccessfulGetRequest("/admin/edit-user");
+
+        String csrfTokenCookie = response.extract().cookie("csrf-token");
+        String csrfTokenForm = TestDataUtil.extractCsrfTokenForm(response.extract().body().asString());
+
         String authCookie = TestDataUtil.extractAuthCookieFromLogin(cookieName, adminEmail, adminPassword);
 
         given()
@@ -57,6 +63,8 @@ class AdminResourceTest {
                 .formParam("role", UserRole.ADMIN.toString())
                 .contentType(ContentType.URLENC)
                 .cookie(cookieName, authCookie)
+                .cookie("csrf-token", csrfTokenCookie)
+                .formParam("csrf-token", csrfTokenForm)
                 .when().post("/admin/edit-user")
                 .then()
                 .statusCode(200)
@@ -72,6 +80,11 @@ class AdminResourceTest {
 
     @Test
     void testEditUserWithAlreadyTakenEmail() {
+        ValidatableResponse response = TestDataUtil.getResponseFromSuccessfulGetRequest("/admin/edit-user");
+
+        String csrfTokenCookie = response.extract().cookie("csrf-token");
+        String csrfTokenForm = TestDataUtil.extractCsrfTokenForm(response.extract().body().asString());
+
         String authCookie = TestDataUtil.extractAuthCookieFromLogin(cookieName, adminEmail, adminPassword);
 
         given()
@@ -81,6 +94,8 @@ class AdminResourceTest {
                 .formParam("role", UserRole.ADMIN.toString())
                 .contentType(ContentType.URLENC)
                 .cookie(cookieName, authCookie)
+                .cookie("csrf-token", csrfTokenCookie)
+                .formParam("csrf-token", csrfTokenForm)
                 .when().post("/admin/edit-user")
                 .then()
                 .statusCode(200)
@@ -96,12 +111,19 @@ class AdminResourceTest {
 
     @Test
     void testDeleteUser() {
+        ValidatableResponse response = TestDataUtil.getResponseFromSuccessfulGetRequest("/admin/users-list");
+
+        String csrfTokenCookie = response.extract().cookie("csrf-token");
+        String csrfTokenForm = TestDataUtil.extractCsrfTokenForm(response.extract().body().asString());
+
         String authCookie = TestDataUtil.extractAuthCookieFromLogin(cookieName, adminEmail, adminPassword);
 
         given()
                 .formParam("id", testUser.getId())
                 .contentType(ContentType.URLENC)
                 .cookie(cookieName, authCookie)
+                .cookie("csrf-token", csrfTokenCookie)
+                .formParam("csrf-token", csrfTokenForm)
                 .when().post("/admin/delete-user")
                 .then()
                 .statusCode(200)
