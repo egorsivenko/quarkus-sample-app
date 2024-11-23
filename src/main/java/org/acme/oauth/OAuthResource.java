@@ -1,15 +1,18 @@
 package org.acme.oauth;
 
+import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.CookieParam;
+import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
@@ -23,15 +26,18 @@ import org.acme.oauth.dto.TokenResponse;
 import org.acme.user.User;
 import org.acme.user.UserService;
 import org.acme.user.exception.UserNotFoundException;
+import org.acme.util.CsrfTokenValidator;
 import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.RestQuery;
 
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Path("/oauth2")
-public class OAuthResource {
+public class OAuthResource extends Controller {
 
     @CheckedTemplate(requireTypeSafeExpressions = false)
     static class Templates {
@@ -40,9 +46,11 @@ public class OAuthResource {
             throw new IllegalStateException("Utility class");
         }
 
-        public static native TemplateInstance signIn(String clientId, String clientName, String state, boolean error);
+        public static native TemplateInstance signIn(String clientId, String clientName, String callbackUrl,
+                                                     String state, boolean error);
 
-        public static native TemplateInstance consent(OAuthClient client, String userEmail, String state);
+        public static native TemplateInstance consent(String clientId, String clientName, String callbackUrl,
+                                                      String state, UUID userId);
     }
 
     private final CodeGenerator codeGenerator;
@@ -89,48 +97,66 @@ public class OAuthResource {
         if (!client.scopes.containsAll(scopeSet)) {
             return buildResponse(Status.BAD_REQUEST, "Unsupported scope provided");
         }
-        return Response.ok(Templates.signIn(clientId, client.name, state, false)).build();
+        return Response.ok(Templates.signIn(clientId, client.name, redirectUri, state, false)).build();
     }
 
     @POST
     @Path("/auth")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
     public TemplateInstance signIn(@RestForm String email,
                                    @RestForm String password,
                                    @RestForm String clientId,
                                    @RestForm String clientName,
-                                   @RestForm String state) {
+                                   @RestForm String callbackUrl,
+                                   @RestForm String state,
+                                   @CookieParam("csrf-token") Cookie csrfTokenCookie,
+                                   @FormParam("csrf-token") String csrfTokenForm) {
+        CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
         try {
             User user = userService.getByEmail(email);
 
             if (!user.verifyPassword(password)) {
-                return Templates.signIn(clientId, clientName, state, true);
+                return Templates.signIn(clientId, clientName, callbackUrl, state, true);
             }
-            OAuthClient client = OAuthClient.findByClientIdOptional(clientId).orElseThrow();
-            return Templates.consent(client, user.getEmail(), state);
+            return consentTemplate(clientId, clientName, callbackUrl, state, user.getId());
 
         } catch (UserNotFoundException e) {
-            return Templates.signIn(clientId, clientName, state, true);
+            return Templates.signIn(clientId, clientName, callbackUrl, state, true);
         }
     }
 
+    @GET
+    @Path("/consent")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance consentTemplate(@RestQuery String clientId,
+                                            @RestQuery String clientName,
+                                            @RestQuery String callbackUrl,
+                                            @RestQuery String state,
+                                            @RestQuery UUID userId) {
+        return Templates.consent(clientId, clientName, callbackUrl, state, userId);
+    }
+
     @POST
-    @Path("/consent/{consent}")
+    @Path("/consent")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Transactional
-    public Response consent(@PathParam("consent") boolean userGaveConsent,
+    public Response consent(@RestForm boolean userGaveConsent,
                             @RestForm String clientId,
-                            @RestForm String redirectUri,
-                            @RestForm String userEmail,
-                            @RestForm String state) {
+                            @RestForm String callbackUrl,
+                            @RestForm UUID userId,
+                            @RestForm String state,
+                            @CookieParam("csrf-token") Cookie csrfTokenCookie,
+                            @FormParam("csrf-token") String csrfTokenForm) {
+        CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
 
-        UriBuilder uriBuilder = UriBuilder.fromPath(redirectUri);
+        UriBuilder uriBuilder = UriBuilder.fromPath(callbackUrl);
 
         if (userGaveConsent) {
             AuthCode authCode = new AuthCode();
             authCode.code = codeGenerator.generate(20);
             authCode.client = OAuthClient.findByClientIdOptional(clientId).orElseThrow();
-            authCode.resourceOwner = userService.getByEmail(userEmail);
+            authCode.resourceOwner = userService.getById(userId);
 
             authCode.persist();
 
