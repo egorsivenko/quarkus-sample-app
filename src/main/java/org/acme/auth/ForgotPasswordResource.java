@@ -7,10 +7,13 @@ import io.quarkus.qute.TemplateInstance;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.CookieParam;
+import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
 import org.acme.auth.form.ForgotPasswordForm;
 import org.acme.email.EmailSender;
@@ -19,6 +22,7 @@ import org.acme.turnstile.TurnstileRequest;
 import org.acme.turnstile.TurnstileService;
 import org.acme.user.User;
 import org.acme.user.UserService;
+import org.acme.util.CsrfTokenValidator;
 import org.acme.util.RequestDetails;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -81,8 +85,11 @@ public class ForgotPasswordResource extends Controller {
     @POST
     @Path("/forgot-password")
     public void forgotPassword(@BeanParam @Valid ForgotPasswordForm form,
-                               @RestForm("cf-turnstile-response") String token) {
+                               @RestForm("cf-turnstile-response") String token,
+                               @CookieParam("csrf-token") Cookie csrfTokenCookie,
+                               @FormParam("csrf-token") String csrfTokenForm) {
         LOGGER.info("Forgot password attempt via email `{}`", form.getEmail());
+        CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
 
         String clientIp = requestDetails.getClientIpAddress();
         Bucket bucket = rateLimitService.resolveBucket(clientIp);

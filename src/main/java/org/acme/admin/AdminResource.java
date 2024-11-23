@@ -7,16 +7,20 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.CookieParam;
+import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
 import org.acme.admin.form.EditUserForm;
 import org.acme.user.User;
 import org.acme.user.UserRole;
 import org.acme.user.UserService;
 import org.acme.user.exception.EmailAlreadyTakenException;
+import org.acme.util.CsrfTokenValidator;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestQuery;
 
@@ -64,7 +68,10 @@ public class AdminResource extends Controller {
 
     @POST
     @Path("/edit-user")
-    public void editUser(@BeanParam @Valid EditUserForm form) {
+    public void editUser(@BeanParam @Valid EditUserForm form,
+                         @CookieParam("csrf-token") Cookie csrfTokenCookie,
+                         @FormParam("csrf-token") String csrfTokenForm) {
+        CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
         try {
             if (validationFailed()) {
                 editUserTemplate(form.getId());
@@ -79,7 +86,11 @@ public class AdminResource extends Controller {
 
     @POST
     @Path("/delete-user")
-    public void deleteUser(@RestForm UUID id) {
+    public void deleteUser(@RestForm UUID id,
+                           @CookieParam("csrf-token") Cookie csrfTokenCookie,
+                           @FormParam("csrf-token") String csrfTokenForm) {
+        CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
+
         userService.delete(id);
         usersList();
     }

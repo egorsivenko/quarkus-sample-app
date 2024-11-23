@@ -7,11 +7,14 @@ import io.quarkus.security.Authenticated;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.CookieParam;
+import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
@@ -19,6 +22,7 @@ import jakarta.ws.rs.core.UriBuilder;
 import org.acme.email.EmailSender;
 import org.acme.user.form.ChangePasswordForm;
 import org.acme.util.CookieUtils;
+import org.acme.util.CsrfTokenValidator;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.net.URI;
@@ -53,7 +57,8 @@ public class UserProfileResource extends Controller {
     private final UserService userService;
     private final EmailSender emailSender;
 
-    public UserProfileResource(UserService userService, EmailSender emailSender) {
+    public UserProfileResource(UserService userService,
+                               EmailSender emailSender) {
         this.userService = userService;
         this.emailSender = emailSender;
     }
@@ -87,7 +92,11 @@ public class UserProfileResource extends Controller {
     @POST
     @Path("/change-password")
     public Response changePassword(@Context SecurityContext securityContext,
-                                   @BeanParam @Valid ChangePasswordForm form) {
+                                   @BeanParam @Valid ChangePasswordForm form,
+                                   @CookieParam("csrf-token") Cookie csrfTokenCookie,
+                                   @FormParam("csrf-token") String csrfTokenForm) {
+        CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
+
         if (!Objects.equals(form.getNewPassword(), form.getConfirmPassword())) {
             validation.addError(PASSWORDS_MATCH, PASSWORDS_MATCH_MESSAGE);
         }

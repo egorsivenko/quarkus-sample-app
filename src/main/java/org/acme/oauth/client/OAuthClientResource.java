@@ -7,14 +7,18 @@ import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.CurrentIdentityAssociation;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.CookieParam;
+import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
 import org.acme.oauth.CodeGenerator;
 import org.acme.user.User;
 import org.acme.user.UserService;
+import org.acme.util.CsrfTokenValidator;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestQuery;
 
@@ -79,7 +83,11 @@ public class OAuthClientResource extends Controller {
     public void registerClient(@RestForm String clientName,
                                @RestForm String homepageUrl,
                                @RestForm String callbackUrl,
-                               @RestForm String scopes) {
+                               @RestForm String scopes,
+                               @CookieParam("csrf-token") Cookie csrfTokenCookie,
+                               @FormParam("csrf-token") String csrfTokenForm) {
+        CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
+
         if (OAuthClient.findByNameOptional(clientName).isPresent()) {
             flash(ERROR, CLIENT_NAME_ALREADY_REGISTERED);
             registerClientTemplate();
@@ -117,7 +125,11 @@ public class OAuthClientResource extends Controller {
     public void editClient(@RestForm String clientId,
                            @RestForm String clientName,
                            @RestForm String homepageUrl,
-                           @RestForm String callbackUrl) {
+                           @RestForm String callbackUrl,
+                           @CookieParam("csrf-token") Cookie csrfTokenCookie,
+                           @FormParam("csrf-token") String csrfTokenForm) {
+        CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
+
         OAuthClient client = OAuthClient.findByClientIdOptional(clientId).orElseThrow();
 
         if (!client.name.equals(clientName) && OAuthClient.findByNameOptional(clientName).isPresent()) {
@@ -134,7 +146,11 @@ public class OAuthClientResource extends Controller {
     @POST
     @Path("/delete")
     @Transactional
-    public void deleteClient(@RestForm String clientId) {
+    public void deleteClient(@RestForm String clientId,
+                             @CookieParam("csrf-token") Cookie csrfTokenCookie,
+                             @FormParam("csrf-token") String csrfTokenForm) {
+        CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
+
         OAuthClient.deleteByClientId(clientId);
         clients();
     }

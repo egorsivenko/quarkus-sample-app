@@ -8,18 +8,20 @@
     <main class="container">
         <article>
             <div>
-                <h3><b>{client.name}</b> is requesting permission to access your profile information.</h3>
+                <h3><b>{clientName}</b> is requesting permission to access your profile information.</h3>
                 <h4>Do you want to continue?</h4>
-                <form action="/oauth2/consent/true" method="post" autocomplete="off">
-                    <input type="hidden" name="redirectUri" value="{client.callbackUrl}" />
-                    <input type="hidden" name="clientId" value="{client.clientId}" />
-                    <input type="hidden" name="userEmail" value="{userEmail}" />
+                <form action="/oauth2/consent" method="post" autocomplete="off">
+                    <input type="hidden" name="userGaveConsent" value="true" />
+                    <input type="hidden" name="callbackUrl" value="{callbackUrl}" />
+                    <input type="hidden" name="clientId" value="{clientId}" />
+                    <input type="hidden" name="userId" value="{userId}" />
                     <input type="hidden" name="state" value="{state}" />
                     <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
                     <button type="submit" class="outline">Yes</button>
                 </form>
-                <form action="/oauth2/consent/false" method="post" autocomplete="off">
-                    <input type="hidden" name="redirectUri" value="{client.callbackUrl}" />
+                <form action="/oauth2/consent" method="post" autocomplete="off">
+                    <input type="hidden" name="userGaveConsent" value="false" />
+                    <input type="hidden" name="callbackUrl" value="{callbackUrl}" />
                     <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
                     <button type="submit" class="outline">No</button>
                 </form>

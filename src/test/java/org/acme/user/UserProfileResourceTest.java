@@ -2,6 +2,7 @@ package org.acme.user;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import io.restassured.response.ValidatableResponse;
 import jakarta.inject.Inject;
 import org.acme.TestDataUtil;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -39,6 +40,11 @@ class UserProfileResourceTest {
 
     @Test
     void testSuccessfulPasswordChange() {
+        ValidatableResponse response = TestDataUtil.getResponseFromSuccessfulGetRequest("/profile/change-password");
+
+        String csrfTokenCookie = response.extract().cookie("csrf-token");
+        String csrfTokenForm = TestDataUtil.extractCsrfTokenForm(response.extract().body().asString());
+
         String authCookie = TestDataUtil.extractAuthCookieFromLogin(cookieName, adminEmail, adminPassword);
         String newPassword = "NewPassword789";
 
@@ -48,6 +54,8 @@ class UserProfileResourceTest {
                 .formParam("confirmPassword", newPassword)
                 .contentType(ContentType.URLENC)
                 .cookie(cookieName, authCookie)
+                .cookie("csrf-token", csrfTokenCookie)
+                .formParam("csrf-token", csrfTokenForm)
                 .when().post("/profile/change-password")
                 .then()
                 .statusCode(200)
@@ -59,6 +67,11 @@ class UserProfileResourceTest {
 
     @Test
     void testPasswordChangeWithPasswordMismatch() {
+        ValidatableResponse response = TestDataUtil.getResponseFromSuccessfulGetRequest("/profile/change-password");
+
+        String csrfTokenCookie = response.extract().cookie("csrf-token");
+        String csrfTokenForm = TestDataUtil.extractCsrfTokenForm(response.extract().body().asString());
+
         String authCookie = TestDataUtil.extractAuthCookieFromLogin(cookieName, adminEmail, adminPassword);
 
         given()
@@ -67,6 +80,8 @@ class UserProfileResourceTest {
                 .formParam("confirmPassword", "MismatchPassword")
                 .contentType(ContentType.URLENC)
                 .cookie(cookieName, authCookie)
+                .cookie("csrf-token", csrfTokenCookie)
+                .formParam("csrf-token", csrfTokenForm)
                 .when().post("/profile/change-password")
                 .then()
                 .statusCode(200)
@@ -76,6 +91,11 @@ class UserProfileResourceTest {
 
     @Test
     void testPasswordChangeWithIncorrectCurrentPassword() {
+        ValidatableResponse response = TestDataUtil.getResponseFromSuccessfulGetRequest("/profile/change-password");
+
+        String csrfTokenCookie = response.extract().cookie("csrf-token");
+        String csrfTokenForm = TestDataUtil.extractCsrfTokenForm(response.extract().body().asString());
+
         String authCookie = TestDataUtil.extractAuthCookieFromLogin(cookieName, adminEmail, adminPassword);
         String newPassword = "NewPassword789";
 
@@ -85,6 +105,8 @@ class UserProfileResourceTest {
                 .formParam("confirmPassword", newPassword)
                 .contentType(ContentType.URLENC)
                 .cookie(cookieName, authCookie)
+                .cookie("csrf-token", csrfTokenCookie)
+                .formParam("csrf-token", csrfTokenForm)
                 .when().post("/profile/change-password")
                 .then()
                 .statusCode(200)

@@ -3,6 +3,7 @@ package org.acme.auth;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import io.restassured.response.ValidatableResponse;
 import org.acme.TestDataUtil;
 import org.acme.user.User;
 import org.acme.user.UserService;
@@ -27,6 +28,12 @@ class ResetPasswordResourceTest {
         Mockito.when(userService.getById(Mockito.any()))
                 .thenReturn(testUser);
 
+        ValidatableResponse response = TestDataUtil
+                .getResponseFromSuccessfulGetRequest("/auth/reset-password/{userId}", UUID.randomUUID());
+
+        String csrfTokenCookie = response.extract().cookie("csrf-token");
+        String csrfTokenForm = TestDataUtil.extractCsrfTokenForm(response.extract().body().asString());
+
         String newPassword = "NewPassword789";
 
         given()
@@ -34,6 +41,8 @@ class ResetPasswordResourceTest {
                 .formParam("password", newPassword)
                 .formParam("confirmPassword", newPassword)
                 .contentType(ContentType.URLENC)
+                .cookie("csrf-token", csrfTokenCookie)
+                .formParam("csrf-token", csrfTokenForm)
                 .when().post("/auth/reset-password")
                 .then()
                 .statusCode(200)
@@ -45,11 +54,19 @@ class ResetPasswordResourceTest {
 
     @Test
     void testPasswordResetWithPasswordMismatch() {
+        ValidatableResponse response = TestDataUtil
+                .getResponseFromSuccessfulGetRequest("/auth/reset-password/{userId}", UUID.randomUUID());
+
+        String csrfTokenCookie = response.extract().cookie("csrf-token");
+        String csrfTokenForm = TestDataUtil.extractCsrfTokenForm(response.extract().body().asString());
+
         given()
                 .formParam("userId", UUID.randomUUID())
                 .formParam("password", "NewPassword789")
                 .formParam("confirmPassword", "MismatchPassword")
                 .contentType(ContentType.URLENC)
+                .cookie("csrf-token", csrfTokenCookie)
+                .formParam("csrf-token", csrfTokenForm)
                 .when().post("/auth/reset-password")
                 .then()
                 .statusCode(200)

@@ -1,7 +1,9 @@
 package org.acme;
 
 import io.restassured.http.ContentType;
+import io.restassured.response.ValidatableResponse;
 import org.acme.user.User;
+import org.jsoup.Jsoup;
 
 import static io.restassured.RestAssured.given;
 
@@ -26,5 +28,19 @@ public final class TestDataUtil {
                 .then()
                 .extract()
                 .cookie(cookieName);
+    }
+
+    public static ValidatableResponse getResponseFromSuccessfulGetRequest(String path, Object... pathParams) {
+        return given()
+                .when().get(path, pathParams)
+                .then()
+                .statusCode(200);
+    }
+
+    public static String extractCsrfTokenForm(String htmlPage) {
+        return Jsoup.parse(htmlPage)
+                .body()
+                .getElementsByAttributeValue("name", "csrf-token")
+                .val();
     }
 }

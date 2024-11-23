@@ -6,17 +6,21 @@ import io.quarkus.qute.TemplateInstance;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.CookieParam;
+import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.auth.form.ResetPasswordForm;
 import org.acme.email.EmailSender;
 import org.acme.user.User;
 import org.acme.user.UserService;
+import org.acme.util.CsrfTokenValidator;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestQuery;
 import org.slf4j.Logger;
@@ -65,7 +69,11 @@ public class ResetPasswordResource extends Controller {
 
     @POST
     @Path("/reset-password")
-    public Response resetPassword(@BeanParam @Valid ResetPasswordForm form) {
+    public Response resetPassword(@BeanParam @Valid ResetPasswordForm form,
+                                  @CookieParam("csrf-token") Cookie csrfTokenCookie,
+                                  @FormParam("csrf-token") String csrfTokenForm) {
+        CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
+
         if (!Objects.equals(form.getPassword(), form.getConfirmPassword())) {
             validation.addError(PASSWORDS_MATCH, PASSWORDS_MATCH_MESSAGE);
         }
@@ -87,7 +95,11 @@ public class ResetPasswordResource extends Controller {
 
     @POST
     @Path("/resend-reset-password-email")
-    public void resendResetPasswordEmail(@RestForm UUID userId) {
+    public void resendResetPasswordEmail(@RestForm UUID userId,
+                                         @CookieParam("csrf-token") Cookie csrfTokenCookie,
+                                         @FormParam("csrf-token") String csrfTokenForm) {
+        CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
+
         User user = userService.getById(userId);
         emailSender.sendResetPasswordEmail(user);
         resetPasswordConfirmation(userId);
