@@ -2,12 +2,16 @@ package org.acme.auth;
 
 import io.quarkus.security.UnauthorizedException;
 import io.quarkus.security.identity.CurrentIdentityAssociation;
+import jakarta.ws.rs.CookieParam;
+import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.util.CookieUtils;
+import org.acme.util.CsrfTokenValidator;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +35,10 @@ public class LogoutResource {
 
     @POST
     @Path("/logout")
-    public Response logout() {
+    public Response logout(@CookieParam("csrf-token") Cookie csrfTokenCookie,
+                           @FormParam("csrf-token") String csrfTokenForm) {
+        CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
+
         if (identity.getIdentity().isAnonymous()) {
             throw new UnauthorizedException("Not authenticated");
         }
