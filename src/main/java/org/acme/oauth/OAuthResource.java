@@ -186,10 +186,10 @@ public class OAuthResource extends Controller {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
-    public Response token(@RestForm String grantType,
-                          @RestForm String code,
-                          @RestForm String clientId,
-                          @RestForm String clientSecret) {
+    public Response token(@FormParam("grant_type") String grantType,
+                          @FormParam("code") String code,
+                          @FormParam("client_id") String clientId,
+                          @FormParam("client_secret") String clientSecret) {
 
         return switch (grantType) {
             case "authorization_code" -> {
