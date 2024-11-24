@@ -6,6 +6,8 @@ import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.CurrentIdentityAssociation;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.CookieParam;
 import jakarta.ws.rs.FormParam;
@@ -16,6 +18,8 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
 import org.acme.oauth.CodeGenerator;
+import org.acme.oauth.form.EditClientForm;
+import org.acme.oauth.form.RegisterClientForm;
 import org.acme.user.User;
 import org.acme.user.UserService;
 import org.acme.util.CsrfTokenValidator;
@@ -66,9 +70,7 @@ public class OAuthClientResource extends Controller {
     public TemplateInstance clients() {
         String email = identityAssociation.getIdentity().getPrincipal().getName();
         User user = userService.getByEmail(email);
-
-        var clients = user.getClients();
-        return Templates.clients(clients);
+        return Templates.clients(user.getClients());
     }
 
     @GET
@@ -80,15 +82,15 @@ public class OAuthClientResource extends Controller {
     @POST
     @Path("/new")
     @Transactional
-    public void registerClient(@RestForm String clientName,
-                               @RestForm String homepageUrl,
-                               @RestForm String callbackUrl,
-                               @RestForm String scopes,
+    public void registerClient(@BeanParam @Valid RegisterClientForm form,
                                @CookieParam("csrf-token") Cookie csrfTokenCookie,
                                @FormParam("csrf-token") String csrfTokenForm) {
         CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
 
-        if (OAuthClient.findByNameOptional(clientName).isPresent()) {
+        if (validationFailed()) {
+            registerClientTemplate();
+        }
+        if (OAuthClient.findByNameOptional(form.getClientName()).isPresent()) {
             flash(ERROR, CLIENT_NAME_ALREADY_REGISTERED);
             registerClientTemplate();
         }
@@ -96,13 +98,13 @@ public class OAuthClientResource extends Controller {
         client.clientId = codeGenerator.generate(30);
         client.clientSecret = codeGenerator.generate(40);
 
-        client.name = clientName;
-        client.homepageUrl = homepageUrl;
-        client.callbackUrl = callbackUrl;
+        client.name = form.getClientName();
+        client.homepageUrl = form.getHomepageUrl();
+        client.callbackUrl = form.getCallbackUrl();
 
-        Set<String> scopeSet = scopes.isBlank()
+        Set<String> scopeSet = form.getScopes().isBlank()
                 ? new HashSet<>()
-                : new HashSet<>(Arrays.asList(scopes.split(",")));
+                : new HashSet<>(Arrays.asList(form.getScopes().split(",")));
         scopeSet.add("openid");
         client.scopes = scopeSet;
 
@@ -122,23 +124,24 @@ public class OAuthClientResource extends Controller {
     @POST
     @Path("/edit")
     @Transactional
-    public void editClient(@RestForm String clientId,
-                           @RestForm String clientName,
-                           @RestForm String homepageUrl,
-                           @RestForm String callbackUrl,
+    public void editClient(@BeanParam @Valid EditClientForm form,
                            @CookieParam("csrf-token") Cookie csrfTokenCookie,
                            @FormParam("csrf-token") String csrfTokenForm) {
         CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
 
-        OAuthClient client = OAuthClient.findByClientIdOptional(clientId).orElseThrow();
-
-        if (!client.name.equals(clientName) && OAuthClient.findByNameOptional(clientName).isPresent()) {
-            flash(ERROR, CLIENT_NAME_ALREADY_REGISTERED);
-            editClientTemplate(clientId);
+        if (validationFailed()) {
+            registerClientTemplate();
         }
-        client.name = clientName;
-        client.homepageUrl = homepageUrl;
-        client.callbackUrl = callbackUrl;
+        OAuthClient client = OAuthClient.findByClientIdOptional(form.getClientId()).orElseThrow();
+
+        if (!client.name.equals(form.getClientName())
+                && OAuthClient.findByNameOptional(form.getClientName()).isPresent()) {
+            flash(ERROR, CLIENT_NAME_ALREADY_REGISTERED);
+            editClientTemplate(form.getClientId());
+        }
+        client.name = form.getClientName();
+        client.homepageUrl = form.getHomepageUrl();
+        client.callbackUrl = form.getCallbackUrl();
 
         clients();
     }
