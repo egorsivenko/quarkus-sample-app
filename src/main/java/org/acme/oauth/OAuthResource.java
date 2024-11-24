@@ -21,7 +21,6 @@ import org.acme.jwt.JwtClaim;
 import org.acme.jwt.JwtService;
 import org.acme.oauth.client.OAuthClient;
 import org.acme.oauth.dto.ErrorResponse;
-import org.acme.oauth.dto.TokenRequest;
 import org.acme.oauth.dto.TokenResponse;
 import org.acme.user.User;
 import org.acme.user.UserService;
@@ -173,14 +172,17 @@ public class OAuthResource extends Controller {
 
     @POST
     @Path("/token")
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
-    public Response token(TokenRequest request) {
+    public Response token(@RestForm String grantType,
+                          @RestForm String code,
+                          @RestForm String clientId,
+                          @RestForm String clientSecret) {
 
-        return switch (request.grantType()) {
+        return switch (grantType) {
             case "authorization_code" -> {
-                Optional<AuthCode> authCodeOptional = AuthCode.findByCodeOptional(request.code());
+                Optional<AuthCode> authCodeOptional = AuthCode.findByCodeOptional(code);
 
                 if (authCodeOptional.isEmpty()) {
                     yield buildResponse(Status.NOT_FOUND, "Auth code does not exist or has already been used");
@@ -188,8 +190,8 @@ public class OAuthResource extends Controller {
 
                 AuthCode authCode = authCodeOptional.get();
 
-                if (!authCode.client.clientId.equals(request.clientId())
-                        || !authCode.client.clientSecret.equals(request.clientSecret())) {
+                if (!authCode.client.clientId.equals(clientId)
+                        || !authCode.client.clientSecret.equals(clientSecret)) {
                     yield buildResponse(Status.BAD_REQUEST, "Invalid client ID or secret");
                 }
 
@@ -201,7 +203,7 @@ public class OAuthResource extends Controller {
                         new JwtClaim("full_name", resourceOwner.getFullName()));
             }
             case "client_credentials" -> {
-                Optional<OAuthClient> clientOptional = OAuthClient.findByClientIdOptional(request.clientId());
+                Optional<OAuthClient> clientOptional = OAuthClient.findByClientIdOptional(clientId);
 
                 if (clientOptional.isEmpty()) {
                     yield buildResponse(Status.NOT_FOUND, "Client ID not found");
@@ -209,7 +211,7 @@ public class OAuthResource extends Controller {
 
                 OAuthClient client = clientOptional.get();
 
-                if (!client.clientSecret.equals(request.clientSecret())) {
+                if (!client.clientSecret.equals(clientSecret)) {
                     yield buildResponse(Status.BAD_REQUEST, "Invalid client secret");
                 }
 
