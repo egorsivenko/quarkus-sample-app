@@ -1,4 +1,4 @@
-package org.acme.oauth.form;
+package org.acme.oauth.client.form;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
