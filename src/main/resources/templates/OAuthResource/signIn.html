@@ -11,6 +11,8 @@
                 <h1>Sign In</h1>
                 <h4>Go to {clientName} application</h4>
                 <form action="/oauth2/sign-in" method="post" autocomplete="off">
+                    {#ifError 'email'} <p class="flash-error">{#error 'email'/}</p> {/ifError}
+                    {#ifError 'password'} <p class="flash-error">{#error 'password'/}</p> {/ifError}
                     <p class="flash-error" {#if !error}hidden{/if}>Invalid Credentials.</p>
                     <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
                     <input type="hidden" name="clientId" value="{clientId}" />
