@@ -8,9 +8,9 @@
     <h4>Email: {user.email}</h4>
     {#if cdi:userService.isUserAdmin(user)}
         <a href="/admin/users-list" role="button" class="outline contrast">Users list</a>
+        <a href="/oauth2/clients" role="button" class="outline contrast">OAuth Clients</a>
     {/if}
     <a href="/profile/change-password" role="button" class="outline contrast">Change password</a>
-    <a href="/oauth2/clients" role="button" class="outline contrast">OAuth Clients</a>
     <form action="/auth/logout" class="logout-form" method="POST">
         <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
         <button type="submit" class="outline">Logout</button>
