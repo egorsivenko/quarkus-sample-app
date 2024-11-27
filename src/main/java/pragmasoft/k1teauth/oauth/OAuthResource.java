@@ -18,6 +18,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 import jakarta.ws.rs.core.UriBuilder;
+import org.jboss.resteasy.reactive.RestQuery;
 import pragmasoft.k1teauth.jwt.JwtClaim;
 import pragmasoft.k1teauth.jwt.JwtService;
 import pragmasoft.k1teauth.oauth.client.OAuthClient;
@@ -31,7 +32,6 @@ import pragmasoft.k1teauth.user.User;
 import pragmasoft.k1teauth.user.UserService;
 import pragmasoft.k1teauth.user.exception.UserNotFoundException;
 import pragmasoft.k1teauth.util.CsrfTokenValidator;
-import org.jboss.resteasy.reactive.RestQuery;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -220,7 +220,7 @@ public class OAuthResource extends Controller {
                     yield buildResponse(Status.BAD_REQUEST, "Invalid client secret");
                 }
 
-                yield buildTokenResponse(client.id.toString(),
+                yield buildTokenResponse(client.clientId,
                         new JwtClaim("client_name", client.name),
                         new JwtClaim("homepage_url", client.homepageUrl),
                         new JwtClaim("callback_url", client.callbackUrl));
