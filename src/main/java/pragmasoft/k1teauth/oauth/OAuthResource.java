@@ -192,14 +192,12 @@ public class OAuthResource extends Controller {
                 if (authCodeOptional.isEmpty()) {
                     yield buildResponse(Status.NOT_FOUND, "Auth code does not exist or has already been used");
                 }
-
                 AuthCode authCode = authCodeOptional.get();
 
                 if (!authCode.client.clientId.equals(request.getClientId())
                         || !authCode.client.clientSecret.equals(request.getClientSecret())) {
                     yield buildResponse(Status.BAD_REQUEST, "Invalid client ID or secret");
                 }
-
                 User resourceOwner = authCode.resourceOwner;
                 AuthCode.deleteByCode(authCode.code);
 
@@ -213,16 +211,13 @@ public class OAuthResource extends Controller {
                 if (clientOptional.isEmpty()) {
                     yield buildResponse(Status.NOT_FOUND, "Client ID not found");
                 }
-
                 OAuthClient client = clientOptional.get();
 
                 if (!client.clientSecret.equals(request.getClientSecret())) {
                     yield buildResponse(Status.BAD_REQUEST, "Invalid client secret");
                 }
-
                 yield buildTokenResponse(client.clientId,
                         new JwtClaim("client_name", client.name),
-                        new JwtClaim("homepage_url", client.homepageUrl),
                         new JwtClaim("callback_url", client.callbackUrl));
             }
             default -> buildResponse(Status.BAD_REQUEST, "Unsupported grant type");

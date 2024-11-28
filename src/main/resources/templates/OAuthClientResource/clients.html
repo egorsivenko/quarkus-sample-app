@@ -16,7 +16,6 @@
         <thead>
         <tr>
             <th scope="col">Client name</th>
-            <th scope="col">Homepage URL</th>
             <th scope="col">Callback URL</th>
             <th scope="col">Client ID</th>
             <th scope="col">Client Secret</th>
@@ -28,7 +27,6 @@
         {#for client in clients}
             <tr>
                 <th scope="row">{client.name}</th>
-                <td>{client.homepageUrl}</td>
                 <td>{client.callbackUrl}</td>
                 <td>{client.clientId}</td>
                 <td>{client.clientSecret}</td>

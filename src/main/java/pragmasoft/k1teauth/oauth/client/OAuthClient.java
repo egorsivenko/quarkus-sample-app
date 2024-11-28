@@ -25,9 +25,6 @@ public class OAuthClient extends PanacheEntityBase {
     @Column(name = "name", nullable = false, unique = true)
     public String name;
 
-    @Column(name = "homepage_url", nullable = false)
-    public String homepageUrl;
-
     @Column(name = "callback_url", nullable = false)
     public String callbackUrl;
 

@@ -89,7 +89,6 @@ public class OAuthClientResource extends Controller {
         client.clientSecret = codeGenerator.generate(40);
 
         client.name = form.getClientName();
-        client.homepageUrl = form.getHomepageUrl();
         client.callbackUrl = form.getCallbackUrl();
 
         Set<String> scopeSet = form.getScopes().isBlank()
@@ -127,7 +126,6 @@ public class OAuthClientResource extends Controller {
             editClientTemplate(form.getClientId());
         }
         client.name = form.getClientName();
-        client.homepageUrl = form.getHomepageUrl();
         client.callbackUrl = form.getCallbackUrl();
 
         clients();

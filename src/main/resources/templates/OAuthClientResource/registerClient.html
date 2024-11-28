@@ -11,16 +11,12 @@
                 <h1>Register new OAuth Client</h1>
                 <form action="/oauth2/clients/new" method="post" autocomplete="off">
                     {#ifError 'clientName'} <p class="flash-error">{#error 'clientName'/}</p> {/ifError}
-                    {#ifError 'homepageUrl'} <p class="flash-error">{#error 'homepageUrl'/}</p> {/ifError}
                     {#ifError 'callbackUrl'} <p class="flash-error">{#error 'callbackUrl'/}</p> {/ifError}
                     {#if flash:error} <p class="flash-error">{flash:error}</p> {/if}
                     <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
                     <label for="clientName">Client name</label>
                     <input type="text" id="clientName" name="clientName" minlength="3" maxlength="100"
                            placeholder="Client name" required autofocus />
-                    <label for="homepageUrl">Homepage URL</label>
-                    <input type="url" id="homepageUrl" name="homepageUrl" maxlength="255"
-                           placeholder="Homepage URL" required />
                     <label for="callbackUrl">Callback URL</label>
                     <input type="url" id="callbackUrl" name="callbackUrl" maxlength="255"
                            placeholder="Callback URL" required />

@@ -16,7 +16,6 @@ public final class ValidationConstraints {
     public static final String PASSWORD_NOT_BLANK_MESSAGE = "Password may not be blank.";
     public static final String ROLE_NOT_BLANK_MESSAGE = "User role may not be blank.";
     public static final String CLIENT_NAME_NOT_BLANK_MESSAGE = "Client name may not be blank.";
-    public static final String HOMEPAGE_URL_NOT_BLANK_MESSAGE = "Homepage URL may not be blank.";
     public static final String CALLBACK_URL_NOT_BLANK_MESSAGE = "Callback URL may not be blank.";
 
     public static final String URL_FORMAT_MESSAGE = "Invalid URL format.";
