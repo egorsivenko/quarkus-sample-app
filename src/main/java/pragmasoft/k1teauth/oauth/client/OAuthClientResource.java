@@ -3,8 +3,7 @@ package pragmasoft.k1teauth.oauth.client;
 import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
-import io.quarkus.security.Authenticated;
-import io.quarkus.security.identity.CurrentIdentityAssociation;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.BeanParam;
@@ -17,17 +16,16 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.RestQuery;
 import pragmasoft.k1teauth.oauth.CodeGenerator;
 import pragmasoft.k1teauth.oauth.client.form.EditClientForm;
 import pragmasoft.k1teauth.oauth.client.form.RegisterClientForm;
-import pragmasoft.k1teauth.user.User;
-import pragmasoft.k1teauth.user.UserService;
 import pragmasoft.k1teauth.util.CsrfTokenValidator;
-import org.jboss.resteasy.reactive.RestForm;
-import org.jboss.resteasy.reactive.RestQuery;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static pragmasoft.k1teauth.util.FlashScopeConstants.CLIENT_NAME_ALREADY_REGISTERED;
@@ -36,7 +34,7 @@ import static pragmasoft.k1teauth.util.FlashScopeConstants.ERROR;
 @Path("/oauth2/clients")
 @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 @Produces(MediaType.TEXT_HTML)
-@Authenticated
+@RolesAllowed("admin")
 public class OAuthClientResource extends Controller {
 
     @CheckedTemplate(requireTypeSafeExpressions = false)
@@ -46,31 +44,23 @@ public class OAuthClientResource extends Controller {
             throw new IllegalStateException("Utility class");
         }
 
-        public static native TemplateInstance clients(Set<OAuthClient> clients);
+        public static native TemplateInstance clients(List<OAuthClient> clients);
 
         public static native TemplateInstance registerClient();
 
         public static native TemplateInstance editClient(OAuthClient client);
     }
 
-    private final UserService userService;
-    private final CurrentIdentityAssociation identityAssociation;
     private final CodeGenerator codeGenerator;
 
-    public OAuthClientResource(UserService userService,
-                               CurrentIdentityAssociation identityAssociation,
-                               CodeGenerator codeGenerator) {
-        this.userService = userService;
-        this.identityAssociation = identityAssociation;
+    public OAuthClientResource(CodeGenerator codeGenerator) {
         this.codeGenerator = codeGenerator;
     }
 
     @GET
     @Path("/")
     public TemplateInstance clients() {
-        String email = identityAssociation.getIdentity().getPrincipal().getName();
-        User user = userService.getByEmail(email);
-        return Templates.clients(user.getClients());
+        return Templates.clients(OAuthClient.listAll());
     }
 
     @GET
@@ -107,9 +97,6 @@ public class OAuthClientResource extends Controller {
                 : new HashSet<>(Arrays.asList(form.getScopes().split(",")));
         scopeSet.add("openid");
         client.scopes = scopeSet;
-
-        String email = identityAssociation.getIdentity().getPrincipal().getName();
-        client.user = userService.getByEmail(email);
 
         client.persist();
         clients();

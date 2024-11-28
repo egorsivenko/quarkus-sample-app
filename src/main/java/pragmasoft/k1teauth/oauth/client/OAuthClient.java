@@ -5,13 +5,8 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.Type;
-import pragmasoft.k1teauth.user.User;
 
 import java.util.Optional;
 import java.util.Set;
@@ -35,11 +30,6 @@ public class OAuthClient extends PanacheEntityBase {
 
     @Column(name = "callback_url", nullable = false)
     public String callbackUrl;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    public User user;
 
     @Type(ListArrayType.class)
     @Column(
