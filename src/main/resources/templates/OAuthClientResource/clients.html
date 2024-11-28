@@ -16,7 +16,7 @@
         <thead>
         <tr>
             <th scope="col">Client name</th>
-            <th scope="col">Callback URL</th>
+            <th scope="col">Callback URLs</th>
             <th scope="col">Client ID</th>
             <th scope="col">Client Secret</th>
             <th scope="col">Scopes</th>
@@ -27,7 +27,7 @@
         {#for client in clients}
             <tr>
                 <th scope="row">{client.name}</th>
-                <td>{client.callbackUrl}</td>
+                <td>{client.callbackUrls.join(', ')}</td>
                 <td>{client.clientId}</td>
                 <td>{client.clientSecret}</td>
                 <td>{client.scopes.join(', ')}</td>

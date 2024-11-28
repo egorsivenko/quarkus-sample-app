@@ -80,7 +80,7 @@ public class OAuthResource extends Controller {
         }
         OAuthClient client = clientOptional.get();
 
-        if (!client.callbackUrl.equals(request.getRedirectUri())) {
+        if (!client.callbackUrls.contains(request.getRedirectUri())) {
             return buildResponse(Status.BAD_REQUEST, "Invalid redirect URI");
         }
         if (!"code".equals(request.getResponseType())) {
@@ -184,7 +184,6 @@ public class OAuthResource extends Controller {
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     public Response token(@BeanParam TokenRequest request) {
-
         return switch (request.getGrantType()) {
             case "authorization_code" -> {
                 Optional<AuthCode> authCodeOptional = AuthCode.findByCodeOptional(request.getCode());
@@ -218,7 +217,7 @@ public class OAuthResource extends Controller {
                 }
                 yield buildTokenResponse(client.clientId,
                         new JwtClaim("client_name", client.name),
-                        new JwtClaim("callback_url", client.callbackUrl));
+                        new JwtClaim("callback_urls", client.callbackUrls));
             }
             default -> buildResponse(Status.BAD_REQUEST, "Unsupported grant type");
         };

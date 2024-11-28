@@ -3,14 +3,11 @@ package pragmasoft.k1teauth.oauth.client.form;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import org.hibernate.validator.constraints.URL;
 import org.jboss.resteasy.reactive.RestForm;
 
 import static pragmasoft.k1teauth.util.ValidationConstraints.CALLBACK_URL_NOT_BLANK_MESSAGE;
 import static pragmasoft.k1teauth.util.ValidationConstraints.CLIENT_NAME_NOT_BLANK_MESSAGE;
 import static pragmasoft.k1teauth.util.ValidationConstraints.CLIENT_NAME_SIZE_MESSAGE;
-import static pragmasoft.k1teauth.util.ValidationConstraints.URL_FORMAT_MESSAGE;
-import static pragmasoft.k1teauth.util.ValidationConstraints.URL_MAX_LENGTH_MESSAGE;
 
 public class RegisterClientForm {
 
@@ -21,9 +18,7 @@ public class RegisterClientForm {
 
     @RestForm
     @NotBlank(message = CALLBACK_URL_NOT_BLANK_MESSAGE)
-    @URL(message = URL_FORMAT_MESSAGE)
-    @Size(max = 255, message = URL_MAX_LENGTH_MESSAGE)
-    String callbackUrl;
+    String callbackUrls;
 
     @RestForm
     @NotNull
@@ -33,8 +28,8 @@ public class RegisterClientForm {
         return clientName;
     }
 
-    public String getCallbackUrl() {
-        return callbackUrl;
+    public String getCallbackUrls() {
+        return callbackUrls;
     }
 
     public String getScopes() {

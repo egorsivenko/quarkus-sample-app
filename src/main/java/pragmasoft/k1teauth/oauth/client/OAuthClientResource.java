@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static pragmasoft.k1teauth.util.FlashScopeConstants.CLIENT_NAME_ALREADY_REGISTERED;
 import static pragmasoft.k1teauth.util.FlashScopeConstants.ERROR;
@@ -89,7 +90,7 @@ public class OAuthClientResource extends Controller {
         client.clientSecret = codeGenerator.generate(40);
 
         client.name = form.getClientName();
-        client.callbackUrl = form.getCallbackUrl();
+        client.callbackUrls = parseCallbackUrls(form.getCallbackUrls());
 
         Set<String> scopeSet = form.getScopes().isBlank()
                 ? new HashSet<>()
@@ -116,7 +117,7 @@ public class OAuthClientResource extends Controller {
         CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
 
         if (validationFailed()) {
-            registerClientTemplate();
+            editClientTemplate(form.getClientId());
         }
         OAuthClient client = OAuthClient.findByClientIdOptional(form.getClientId()).orElseThrow();
 
@@ -126,7 +127,7 @@ public class OAuthClientResource extends Controller {
             editClientTemplate(form.getClientId());
         }
         client.name = form.getClientName();
-        client.callbackUrl = form.getCallbackUrl();
+        client.callbackUrls = parseCallbackUrls(form.getCallbackUrls());
 
         clients();
     }
@@ -141,5 +142,12 @@ public class OAuthClientResource extends Controller {
 
         OAuthClient.deleteByClientId(clientId);
         clients();
+    }
+
+    private Set<String> parseCallbackUrls(String callbackUrls) {
+        return Arrays.stream(callbackUrls.split(","))
+                .map(String::strip)
+                .filter(url -> !url.isBlank())
+                .collect(Collectors.toSet());
     }
 }

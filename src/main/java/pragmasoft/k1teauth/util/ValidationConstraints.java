@@ -17,7 +17,4 @@ public final class ValidationConstraints {
     public static final String ROLE_NOT_BLANK_MESSAGE = "User role may not be blank.";
     public static final String CLIENT_NAME_NOT_BLANK_MESSAGE = "Client name may not be blank.";
     public static final String CALLBACK_URL_NOT_BLANK_MESSAGE = "Callback URL may not be blank.";
-
-    public static final String URL_FORMAT_MESSAGE = "Invalid URL format.";
-    public static final String URL_MAX_LENGTH_MESSAGE = "URL length must be less than or equal to {max} characters.";
 }
