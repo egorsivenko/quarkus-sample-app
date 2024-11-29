@@ -17,4 +17,5 @@ public final class FlashScopeConstants {
     public static final String PASSWORDS_MATCH_MESSAGE = "Passwords must match.";
     public static final String INCORRECT_PASSWORD_MESSAGE = "Incorrect current password.";
     public static final String CLIENT_NAME_ALREADY_REGISTERED = "OAuth client name is already registered.";
+    public static final String SCOPE_ALREADY_REGISTERED = "Scope with this name is already registered.";
 }
