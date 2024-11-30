@@ -20,13 +20,13 @@
                     <label for="callbackUrls">Callback URLs (comma-separated list)</label>
                     <input type="text" id="callbackUrls" name="callbackUrls" maxlength="1000"
                            placeholder="Callback URLs" required />
-                    <label for="scopeInput">Scopes</label>
-                    <fieldset role="group">
-                        <input type="text" id="scopeInput" maxlength="500" placeholder="Scope name" />
-                        <input type="submit" id="addScopeButton" value="Add" disabled />
-                    </fieldset>
-                    <span id="scopeContainer" class="scope-container"></span>
-                    <input type="hidden" id="scopesInput" name="scopes" />
+                    <label for="scopes">Select scopes</label>
+                    <input type="text" id="scopeSearch" aria-label="scopeSearch" placeholder="Search scopes..." />
+                    <select name="scopes" id="scopes" multiple size="6" required>
+                        {#for scope in scopes}
+                            <option value="{scope.name}">{scope.name}</option>
+                        {/for}
+                    </select>
                     <button type="submit" class="contrast">Create OAuth Client</button>
                     <a href="/oauth2/clients" role="button" class="outline contrast wide">Cancel</a>
                 </form>

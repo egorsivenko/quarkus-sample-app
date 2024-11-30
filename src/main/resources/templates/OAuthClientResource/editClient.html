@@ -21,10 +21,19 @@
                     <label for="callbackUrls">Callback URLs (comma-separated list)</label>
                     <input type="text" id="callbackUrls" name="callbackUrls" maxlength="1000" value="{client.callbackUrls.join(', ')}"
                            placeholder="Callback URL" required />
+                    <label for="scopes">Select scopes</label>
+                    <input type="text" id="scopeSearch" aria-label="scopeSearch" placeholder="Search scopes..." />
+                    <select name="scopes" id="scopes" multiple size="6" required>
+                        {#for scope in scopes}
+                            <option value="{scope.name}" {#if client.scopes.contains(scope)}selected{/if}>{scope.name}</option>
+                        {/for}
+                    </select>
                     <button type="submit" class="contrast">Save changes</button>
                     <a href="/oauth2/clients" role="button" class="outline contrast wide">Cancel</a>
                 </form>
             </div>
         </article>
     </main>
+
+    <script type="text/javascript" src="/js/scopes.js"></script>
 {/include}

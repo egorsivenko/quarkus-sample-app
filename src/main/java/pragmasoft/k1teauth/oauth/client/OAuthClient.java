@@ -4,10 +4,17 @@ import io.hypersistence.utils.hibernate.type.array.ListArrayType;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Type;
+import pragmasoft.k1teauth.oauth.scope.Scope;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -33,13 +40,23 @@ public class OAuthClient extends PanacheEntityBase {
     )
     public Set<String> callbackUrls;
 
-    @Type(ListArrayType.class)
-    @Column(
-            name = "scopes",
-            nullable = false,
-            columnDefinition = "varchar(500)[]"
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "client_scopes",
+            joinColumns = @JoinColumn(
+                    name = "client_id",
+                    foreignKey = @ForeignKey(
+                            foreignKeyDefinition = "foreign key (client_id) references oauth_clients on delete cascade"
+                    )
+            ),
+            inverseJoinColumns = @JoinColumn(
+                    name = "scope_name",
+                    foreignKey = @ForeignKey(
+                            foreignKeyDefinition = "foreign key (scope_name) references scopes on delete cascade"
+                    )
+            )
     )
-    public Set<String> scopes;
+    public Set<Scope> scopes = new HashSet<>();
 
     public static Optional<OAuthClient> findByClientIdOptional(String clientId) {
         return find("clientId", clientId).firstResultOptional();

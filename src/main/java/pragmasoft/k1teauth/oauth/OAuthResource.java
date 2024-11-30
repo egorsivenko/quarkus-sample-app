@@ -28,12 +28,14 @@ import pragmasoft.k1teauth.oauth.dto.TokenRequest;
 import pragmasoft.k1teauth.oauth.dto.TokenResponse;
 import pragmasoft.k1teauth.oauth.form.ConsentForm;
 import pragmasoft.k1teauth.oauth.form.SignInForm;
+import pragmasoft.k1teauth.oauth.scope.Scope;
 import pragmasoft.k1teauth.user.User;
 import pragmasoft.k1teauth.user.UserService;
 import pragmasoft.k1teauth.user.exception.UserNotFoundException;
 import pragmasoft.k1teauth.util.CsrfTokenValidator;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -86,12 +88,16 @@ public class OAuthResource extends Controller {
         if (!"code".equals(request.getResponseType())) {
             return buildResponse(Status.BAD_REQUEST, "Unsupported response type");
         }
-        Set<String> scopeSet = Arrays.stream(request.getScope().split(" "))
-                .map(String::strip)
+        Set<Scope> scopeSet = Arrays.stream(request.getScope().split(" "))
+                .map(scope -> Scope.findByName(scope.strip()).orElse(null))
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
+        if (scopeSet.isEmpty()) {
+            return buildResponse(Status.BAD_REQUEST, "Not a single existing scope has been provided");
+        }
         if (!client.scopes.containsAll(scopeSet)) {
-            return buildResponse(Status.BAD_REQUEST, "Unsupported scope provided");
+            return buildResponse(Status.BAD_REQUEST, "Unsupported scope has been provided");
         }
         return Response.ok(signInTemplate(request.getClientId(), client.name, request.getRedirectUri(),
                 request.getState(), false)).build();

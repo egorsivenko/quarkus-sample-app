@@ -19,15 +19,11 @@ import jakarta.ws.rs.core.MediaType;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestQuery;
 import pragmasoft.k1teauth.oauth.CodeGenerator;
-import pragmasoft.k1teauth.oauth.client.form.EditClientForm;
-import pragmasoft.k1teauth.oauth.client.form.RegisterClientForm;
+import pragmasoft.k1teauth.oauth.client.form.ClientForm;
+import pragmasoft.k1teauth.oauth.scope.Scope;
 import pragmasoft.k1teauth.util.CsrfTokenValidator;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static pragmasoft.k1teauth.util.FlashScopeConstants.CLIENT_NAME_ALREADY_REGISTERED;
 import static pragmasoft.k1teauth.util.FlashScopeConstants.ERROR;
@@ -47,9 +43,9 @@ public class OAuthClientResource extends Controller {
 
         public static native TemplateInstance clients(List<OAuthClient> clients);
 
-        public static native TemplateInstance registerClient();
+        public static native TemplateInstance registerClient(List<Scope> scopes);
 
-        public static native TemplateInstance editClient(OAuthClient client);
+        public static native TemplateInstance editClient(OAuthClient client, List<Scope> scopes);
     }
 
     private final CodeGenerator codeGenerator;
@@ -67,13 +63,13 @@ public class OAuthClientResource extends Controller {
     @GET
     @Path("/new")
     public TemplateInstance registerClientTemplate() {
-        return Templates.registerClient();
+        return Templates.registerClient(Scope.listAll());
     }
 
     @POST
     @Path("/new")
     @Transactional
-    public void registerClient(@BeanParam @Valid RegisterClientForm form,
+    public void registerClient(@BeanParam @Valid ClientForm form,
                                @CookieParam("csrf-token") Cookie csrfTokenCookie,
                                @FormParam("csrf-token") String csrfTokenForm) {
         CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
@@ -89,14 +85,7 @@ public class OAuthClientResource extends Controller {
         client.clientId = codeGenerator.generate(30);
         client.clientSecret = codeGenerator.generate(40);
 
-        client.name = form.getClientName();
-        client.callbackUrls = parseCallbackUrls(form.getCallbackUrls());
-
-        Set<String> scopeSet = form.getScopes().isBlank()
-                ? new HashSet<>()
-                : new HashSet<>(Arrays.asList(form.getScopes().split(",")));
-        scopeSet.add("openid");
-        client.scopes = scopeSet;
+        form.assignToClient(client);
 
         client.persist();
         clients();
@@ -105,13 +94,13 @@ public class OAuthClientResource extends Controller {
     @GET
     @Path("/edit")
     public TemplateInstance editClientTemplate(@RestQuery String clientId) {
-        return Templates.editClient(OAuthClient.findByClientIdOptional(clientId).orElseThrow());
+        return Templates.editClient(OAuthClient.findByClientIdOptional(clientId).orElseThrow(), Scope.listAll());
     }
 
     @POST
     @Path("/edit")
     @Transactional
-    public void editClient(@BeanParam @Valid EditClientForm form,
+    public void editClient(@BeanParam @Valid ClientForm form,
                            @CookieParam("csrf-token") Cookie csrfTokenCookie,
                            @FormParam("csrf-token") String csrfTokenForm) {
         CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
@@ -126,8 +115,7 @@ public class OAuthClientResource extends Controller {
             flash(ERROR, CLIENT_NAME_ALREADY_REGISTERED);
             editClientTemplate(form.getClientId());
         }
-        client.name = form.getClientName();
-        client.callbackUrls = parseCallbackUrls(form.getCallbackUrls());
+        form.assignToClient(client);
 
         clients();
     }
@@ -142,12 +130,5 @@ public class OAuthClientResource extends Controller {
 
         OAuthClient.deleteByClientId(clientId);
         clients();
-    }
-
-    private Set<String> parseCallbackUrls(String callbackUrls) {
-        return Arrays.stream(callbackUrls.split(","))
-                .map(String::strip)
-                .filter(url -> !url.isBlank())
-                .collect(Collectors.toSet());
     }
 }

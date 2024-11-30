@@ -30,7 +30,11 @@
                 <td>{client.callbackUrls.join(', ')}</td>
                 <td>{client.clientId}</td>
                 <td>{client.clientSecret}</td>
-                <td>{client.scopes.join(', ')}</td>
+                <td>
+                    {#for scope in client.scopes}
+                        <div>{scope.name}</div>
+                    {/for}
+                </td>
                 <td>
                     <form action="/oauth2/clients/delete" method="POST"
                           onsubmit="return confirm('Are you sure you want to delete this OAuth client?');">

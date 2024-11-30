@@ -1,47 +1,18 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const scopeInput = document.getElementById("scopeInput");
-    const addScopeButton = document.getElementById("addScopeButton");
-    const scopeContainer = document.getElementById("scopeContainer");
-    const scopesInput = document.getElementById("scopesInput");
-    const scopes = new Set();
+document.addEventListener('DOMContentLoaded', function () {
+    const scopeSearch = document.getElementById('scopeSearch');
+    const scopesSelect = document.getElementById('scopes');
+    const options = Array.from(scopesSelect.options);
 
-    scopeInput.addEventListener("input", () => {
-        addScopeButton.disabled = scopeInput.value.trim() === "";
-    });
+    scopeSearch.addEventListener('input', function () {
+        const query = this.value.toLowerCase();
 
-    addScopeButton.addEventListener("click", () => {
-        const scopeName = scopeInput.value.toLowerCase().replaceAll(",", "").trim();
-        if (scopeName !== "" && !scopes.has(scopeName)) {
-            scopes.add(scopeName);
-            addScopeTile(scopeName);
-            updateScopesInput();
-            scopeInput.removeAttribute("aria-invalid");
-        } else {
-            scopeInput.setAttribute("aria-invalid", "true");
-        }
-        scopeInput.value = "";
-        addScopeButton.disabled = true;
-    });
-
-    function updateScopesInput() {
-        scopesInput.value = Array.from(scopes).join(",");
-    }
-
-    function addScopeTile(scopeName) {
-        const tile = document.createElement("span");
-        tile.className = "scope-tile";
-        tile.textContent = scopeName;
-
-        const removeButton = document.createElement("button");
-        removeButton.textContent = "x";
-        removeButton.className = "remove-scope";
-        removeButton.addEventListener("click", () => {
-            scopes.delete(scopeName);
-            tile.remove();
-            updateScopesInput();
+        options.forEach(option => {
+            const text = option.text.toLowerCase();
+            if (text.includes(query)) {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
         });
-
-        tile.appendChild(removeButton);
-        scopeContainer.appendChild(tile);
-    }
+    });
 });
