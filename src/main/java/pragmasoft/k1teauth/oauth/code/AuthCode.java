@@ -12,6 +12,7 @@ import org.hibernate.annotations.OnDeleteAction;
 import pragmasoft.k1teauth.oauth.client.OAuthClient;
 import pragmasoft.k1teauth.user.User;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Entity
@@ -32,11 +33,18 @@ public class AuthCode extends PanacheEntityBase {
     @OnDelete(action = OnDeleteAction.CASCADE)
     public User resourceOwner;
 
+    @Column(name = "expires_at", nullable = false)
+    public LocalDateTime expiresAt;
+
     public static Optional<AuthCode> findByCodeOptional(String code) {
         return find("code", code).firstResultOptional();
     }
 
     public static void deleteByCode(String code) {
         delete("code", code);
+    }
+
+    public boolean isExpired() {
+        return LocalDateTime.now().isAfter(expiresAt);
     }
 }

@@ -36,6 +36,7 @@ import pragmasoft.k1teauth.user.UserService;
 import pragmasoft.k1teauth.user.exception.UserNotFoundException;
 import pragmasoft.k1teauth.util.CsrfTokenValidator;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
@@ -172,6 +173,7 @@ public class OAuthResource extends Controller {
             authCode.code = codeGenerator.generate(20);
             authCode.client = OAuthClient.findByClientIdOptional(form.getClientId()).orElseThrow();
             authCode.resourceOwner = userService.getById(form.getUserId());
+            authCode.expiresAt = LocalDateTime.now().plusMinutes(5);
 
             authCode.persist();
 
@@ -200,6 +202,11 @@ public class OAuthResource extends Controller {
                     yield buildResponse(Status.NOT_FOUND, "Auth code does not exist or has already been used");
                 }
                 AuthCode authCode = authCodeOptional.get();
+
+                if (authCode.isExpired()) {
+                    AuthCode.deleteByCode(authCode.code);
+                    yield buildResponse(Status.BAD_REQUEST, "Auth code has expired");
+                }
 
                 if (!authCode.client.clientId.equals(request.getClientId())
                         || !authCode.client.clientSecret.equals(request.getClientSecret())) {
