@@ -1,4 +1,4 @@
-package pragmasoft.k1teauth.oauth;
+package pragmasoft.k1teauth.oauth.code;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;

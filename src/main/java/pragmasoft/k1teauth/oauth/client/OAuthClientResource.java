@@ -18,7 +18,7 @@ import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestQuery;
-import pragmasoft.k1teauth.oauth.CodeGenerator;
+import pragmasoft.k1teauth.oauth.code.CodeGenerator;
 import pragmasoft.k1teauth.oauth.client.form.ClientForm;
 import pragmasoft.k1teauth.oauth.scope.Scope;
 import pragmasoft.k1teauth.util.CsrfTokenValidator;

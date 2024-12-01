@@ -22,6 +22,8 @@ import org.jboss.resteasy.reactive.RestQuery;
 import pragmasoft.k1teauth.jwt.JwtClaim;
 import pragmasoft.k1teauth.jwt.JwtService;
 import pragmasoft.k1teauth.oauth.client.OAuthClient;
+import pragmasoft.k1teauth.oauth.code.AuthCode;
+import pragmasoft.k1teauth.oauth.code.CodeGenerator;
 import pragmasoft.k1teauth.oauth.dto.AuthRequest;
 import pragmasoft.k1teauth.oauth.dto.ErrorResponse;
 import pragmasoft.k1teauth.oauth.dto.TokenRequest;
