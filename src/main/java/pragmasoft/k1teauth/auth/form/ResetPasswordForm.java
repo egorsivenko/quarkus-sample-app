@@ -6,22 +6,19 @@ import org.jboss.resteasy.reactive.RestForm;
 
 import java.util.UUID;
 
-import static pragmasoft.k1teauth.util.ValidationConstraints.PASSWORD_NOT_BLANK_MESSAGE;
-import static pragmasoft.k1teauth.util.ValidationConstraints.PASSWORD_SIZE_MESSAGE;
-
 public class ResetPasswordForm {
 
     @RestForm
     UUID userId;
 
     @RestForm
-    @NotBlank(message = PASSWORD_NOT_BLANK_MESSAGE)
-    @Size(min = 6, max = 50, message = PASSWORD_SIZE_MESSAGE)
+    @NotBlank
+    @Size(min = 6, max = 50)
     String password;
 
     @RestForm
-    @NotBlank(message = PASSWORD_NOT_BLANK_MESSAGE)
-    @Size(min = 6, max = 50, message = PASSWORD_SIZE_MESSAGE)
+    @NotBlank
+    @Size(min = 6, max = 50)
     String confirmPassword;
 
     public UUID getUserId() {

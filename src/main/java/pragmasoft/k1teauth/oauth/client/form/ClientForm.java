@@ -13,22 +13,18 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static pragmasoft.k1teauth.util.ValidationConstraints.CALLBACK_URL_NOT_BLANK_MESSAGE;
-import static pragmasoft.k1teauth.util.ValidationConstraints.CLIENT_NAME_NOT_BLANK_MESSAGE;
-import static pragmasoft.k1teauth.util.ValidationConstraints.CLIENT_NAME_SIZE_MESSAGE;
-
 public class ClientForm {
 
     @RestForm
     String clientId;
 
     @RestForm
-    @NotBlank(message = CLIENT_NAME_NOT_BLANK_MESSAGE)
-    @Size(min = 3, max = 100, message = CLIENT_NAME_SIZE_MESSAGE)
+    @NotBlank
+    @Size(min = 3, max = 100)
     String clientName;
 
     @RestForm
-    @NotBlank(message = CALLBACK_URL_NOT_BLANK_MESSAGE)
+    @NotBlank
     String callbackUrls;
 
     @RestForm
