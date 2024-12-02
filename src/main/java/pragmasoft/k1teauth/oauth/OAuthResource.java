@@ -175,14 +175,15 @@ public class OAuthResource extends Controller {
             consent.scopes = mapScopeStringToSet(form.getScopes());
 
             AuthCode authCode = new AuthCode();
-            authCode.code = codeGenerator.generate(20);
+            String code = codeGenerator.generate(20);
+            authCode.code = code;
             authCode.expiresAt = LocalDateTime.now().plusMinutes(5);
             authCode.consent = consent;
 
             authCode.persist();
 
             uriBuilder
-                    .queryParam("code", authCode.code)
+                    .queryParam("code", code)
                     .queryParam("state", form.getState());
         } else {
             uriBuilder
@@ -217,7 +218,7 @@ public class OAuthResource extends Controller {
                     yield buildResponse(Status.BAD_REQUEST, "Invalid client ID or secret");
                 }
                 User resourceOwner = authCode.consent.resourceOwner;
-                AuthCode.deleteByCode(authCode.code);
+                AuthCode.deleteByCode(request.getCode());
 
                 yield buildTokenResponse(resourceOwner.getId().toString(),
                         new JwtClaim("email", resourceOwner.getEmail()),

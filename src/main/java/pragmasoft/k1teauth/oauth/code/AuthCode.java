@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import pragmasoft.k1teauth.oauth.consent.Consent;
+import pragmasoft.k1teauth.util.HashUtil;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -32,14 +33,18 @@ public class AuthCode extends PanacheEntityBase {
     public LocalDateTime expiresAt;
 
     public static Optional<AuthCode> findByCodeOptional(String code) {
-        return find("code", code).firstResultOptional();
+        return find("code", HashUtil.hashWithSHA256(code)).firstResultOptional();
     }
 
     public static void deleteByCode(String code) {
-        delete("code", code);
+        delete("code", HashUtil.hashWithSHA256(code));
     }
 
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiresAt);
+    }
+
+    public void setCode(String code) {
+        this.code = HashUtil.hashWithSHA256(code);
     }
 }
