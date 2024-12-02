@@ -24,6 +24,7 @@ import pragmasoft.k1teauth.jwt.JwtService;
 import pragmasoft.k1teauth.oauth.client.OAuthClient;
 import pragmasoft.k1teauth.oauth.code.AuthCode;
 import pragmasoft.k1teauth.oauth.code.CodeGenerator;
+import pragmasoft.k1teauth.oauth.consent.Consent;
 import pragmasoft.k1teauth.oauth.dto.AuthRequest;
 import pragmasoft.k1teauth.oauth.dto.ErrorResponse;
 import pragmasoft.k1teauth.oauth.dto.TokenRequest;
@@ -56,10 +57,10 @@ public class OAuthResource extends Controller {
         }
 
         public static native TemplateInstance signIn(String clientId, String clientName, String callbackUrl,
-                                                     String state, boolean error);
+                                                     String state, boolean error, String scopes);
 
         public static native TemplateInstance consent(String clientId, String clientName, String callbackUrl,
-                                                      String state, UUID userId);
+                                                      String state, UUID userId, Set<Scope> scopes);
     }
 
     private final CodeGenerator codeGenerator;
@@ -91,10 +92,7 @@ public class OAuthResource extends Controller {
         if (!"code".equals(request.getResponseType())) {
             return buildResponse(Status.BAD_REQUEST, "Unsupported response type");
         }
-        Set<Scope> scopeSet = Arrays.stream(request.getScope().split(" "))
-                .map(scope -> Scope.findByName(scope.strip()).orElse(null))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+        Set<Scope> scopeSet = mapScopeStringToSet(request.getScope());
 
         if (scopeSet.isEmpty()) {
             return buildResponse(Status.BAD_REQUEST, "Not a single existing scope has been provided");
@@ -103,7 +101,7 @@ public class OAuthResource extends Controller {
             return buildResponse(Status.BAD_REQUEST, "Unsupported scope has been provided");
         }
         return Response.ok(signInTemplate(request.getClientId(), client.name, request.getRedirectUri(),
-                request.getState(), false)).build();
+                request.getState(), false, mapScopeSetToString(scopeSet))).build();
     }
 
     @GET
@@ -113,8 +111,9 @@ public class OAuthResource extends Controller {
                                            @RestQuery String clientName,
                                            @RestQuery String callbackUrl,
                                            @RestQuery String state,
-                                           @RestQuery boolean error) {
-        return Templates.signIn(clientId, clientName, callbackUrl, state, error);
+                                           @RestQuery boolean error,
+                                           @RestQuery String scopes) {
+        return Templates.signIn(clientId, clientName, callbackUrl, state, error, scopes);
     }
 
     @POST
@@ -127,7 +126,7 @@ public class OAuthResource extends Controller {
         CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
 
         Supplier<TemplateInstance> failureResponse = () -> signInTemplate(
-                form.getClientId(), form.getClientName(), form.getCallbackUrl(), form.getState(), true);
+                form.getClientId(), form.getClientName(), form.getCallbackUrl(), form.getState(), true, form.getScopes());
 
         if (validationFailed()) {
             return failureResponse.get();
@@ -139,7 +138,7 @@ public class OAuthResource extends Controller {
                 return failureResponse.get();
             }
             return consentTemplate(form.getClientId(), form.getClientName(), form.getCallbackUrl(),
-                    form.getState(), user.getId());
+                    form.getState(), user.getId(), form.getScopes());
 
         } catch (UserNotFoundException e) {
             return failureResponse.get();
@@ -153,8 +152,9 @@ public class OAuthResource extends Controller {
                                             @RestQuery String clientName,
                                             @RestQuery String callbackUrl,
                                             @RestQuery String state,
-                                            @RestQuery UUID userId) {
-        return Templates.consent(clientId, clientName, callbackUrl, state, userId);
+                                            @RestQuery UUID userId,
+                                            @RestQuery String scopes) {
+        return Templates.consent(clientId, clientName, callbackUrl, state, userId, mapScopeStringToSet(scopes));
     }
 
     @POST
@@ -169,11 +169,15 @@ public class OAuthResource extends Controller {
         UriBuilder uriBuilder = UriBuilder.fromPath(form.getCallbackUrl());
 
         if (form.userGaveConsent()) {
+            Consent consent = new Consent();
+            consent.resourceOwner = userService.getById(form.getUserId());
+            consent.client = OAuthClient.findByClientIdOptional(form.getClientId()).orElseThrow();
+            consent.scopes = mapScopeStringToSet(form.getScopes());
+
             AuthCode authCode = new AuthCode();
             authCode.code = codeGenerator.generate(20);
-            authCode.client = OAuthClient.findByClientIdOptional(form.getClientId()).orElseThrow();
-            authCode.resourceOwner = userService.getById(form.getUserId());
             authCode.expiresAt = LocalDateTime.now().plusMinutes(5);
+            authCode.consent = consent;
 
             authCode.persist();
 
@@ -208,11 +212,11 @@ public class OAuthResource extends Controller {
                     yield buildResponse(Status.BAD_REQUEST, "Auth code has expired");
                 }
 
-                if (!authCode.client.clientId.equals(request.getClientId())
-                        || !authCode.client.clientSecret.equals(request.getClientSecret())) {
+                if (!authCode.consent.client.clientId.equals(request.getClientId())
+                        || !authCode.consent.client.clientSecret.equals(request.getClientSecret())) {
                     yield buildResponse(Status.BAD_REQUEST, "Invalid client ID or secret");
                 }
-                User resourceOwner = authCode.resourceOwner;
+                User resourceOwner = authCode.consent.resourceOwner;
                 AuthCode.deleteByCode(authCode.code);
 
                 yield buildTokenResponse(resourceOwner.getId().toString(),
@@ -236,6 +240,19 @@ public class OAuthResource extends Controller {
             }
             default -> buildResponse(Status.BAD_REQUEST, "Unsupported grant type");
         };
+    }
+
+    private Set<Scope> mapScopeStringToSet(String scopes) {
+        return Arrays.stream(scopes.split(" "))
+                .map(scope -> Scope.findByName(scope.strip()).orElse(null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+    }
+
+    private String mapScopeSetToString(Set<Scope> scopes) {
+        return scopes.stream()
+                .map(scope -> scope.name)
+                .collect(Collectors.joining(" "));
     }
 
     private Response buildTokenResponse(String subject, JwtClaim... claims) {

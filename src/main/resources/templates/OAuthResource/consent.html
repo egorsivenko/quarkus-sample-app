@@ -8,7 +8,12 @@
     <main class="container">
         <article>
             <div>
-                <h3><b>{clientName}</b> is requesting permission to access your profile information.</h3>
+                <h3><b>{clientName}</b> is requesting the following permissions:</h3>
+                <ul>
+                {#for scope in scopes}
+                    <li>{scope.description}</li>
+                {/for}
+                </ul>
                 <h4>Do you want to continue?</h4>
                 <form action="/oauth2/consent" method="post" autocomplete="off">
                     <input type="hidden" name="userGaveConsent" value="true" />
@@ -16,6 +21,7 @@
                     <input type="hidden" name="clientId" value="{clientId}" />
                     <input type="hidden" name="userId" value="{userId}" />
                     <input type="hidden" name="state" value="{state}" />
+                    <input type="hidden" name="scopes" value="{scopes.mapToString()}" />
                     <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
                     <button type="submit" class="outline">Yes</button>
                 </form>

@@ -33,6 +33,10 @@ public class SignInForm {
     @NotNull
     String state;
 
+    @RestForm
+    @NotNull
+    String scopes;
+
     public String getEmail() {
         return email;
     }
@@ -55,5 +59,9 @@ public class SignInForm {
 
     public String getState() {
         return state;
+    }
+
+    public String getScopes() {
+        return scopes;
     }
 }

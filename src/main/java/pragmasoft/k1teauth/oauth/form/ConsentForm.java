@@ -26,6 +26,10 @@ public class ConsentForm {
     @NotNull
     UUID userId;
 
+    @RestForm
+    @NotNull
+    String scopes;
+
     public boolean userGaveConsent() {
         return userGaveConsent;
     }
@@ -44,5 +48,9 @@ public class ConsentForm {
 
     public UUID getUserId() {
         return userId;
+    }
+
+    public String getScopes() {
+        return scopes;
     }
 }

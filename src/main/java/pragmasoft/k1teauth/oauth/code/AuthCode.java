@@ -1,16 +1,16 @@
 package pragmasoft.k1teauth.oauth.code;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import pragmasoft.k1teauth.oauth.client.OAuthClient;
-import pragmasoft.k1teauth.user.User;
+import pragmasoft.k1teauth.oauth.consent.Consent;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -23,15 +23,10 @@ public class AuthCode extends PanacheEntityBase {
     @Column(nullable = false, unique = true)
     public String code;
 
-    @ManyToOne
-    @JoinColumn(name = "oauth_client_id", nullable = false)
+    @OneToOne(cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "consent_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    public OAuthClient client;
-
-    @ManyToOne
-    @JoinColumn(name = "resource_owner_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    public User resourceOwner;
+    public Consent consent;
 
     @Column(name = "expires_at", nullable = false)
     public LocalDateTime expiresAt;
