@@ -1,6 +1,7 @@
 package pragmasoft.k1teauth.oauth.consent;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
@@ -12,13 +13,16 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import pragmasoft.k1teauth.oauth.client.OAuthClient;
 import pragmasoft.k1teauth.oauth.scope.Scope;
 import pragmasoft.k1teauth.user.User;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -57,4 +61,12 @@ public class Consent extends PanacheEntityBase {
             )
     )
     public Set<Scope> scopes = new HashSet<>();
+
+    @CreationTimestamp
+    @Column(name = "granted_at", nullable = false)
+    public LocalDateTime grantedAt;
+
+    public static List<Consent> listByResourceOwner(User resourceOwner) {
+        return list("resourceOwner", resourceOwner);
+    }
 }

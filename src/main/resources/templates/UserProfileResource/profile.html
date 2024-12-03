@@ -7,6 +7,7 @@
     <h4>Hello, {user.fullName} &#x1F44B;</h4>
     <h4>Email: {user.email}</h4>
     <a href="/profile/change-password" role="button" class="outline contrast">Change password</a>
+    <a href="/consents" role="button" class="outline contrast">Granted consents</a>
     {#if cdi:userService.isUserAdmin(user)}
         <hr />
         <a href="/admin/users-list" role="button" class="outline contrast">Users list</a>
