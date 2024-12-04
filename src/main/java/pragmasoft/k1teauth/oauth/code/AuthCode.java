@@ -24,7 +24,7 @@ public class AuthCode extends PanacheEntityBase {
     @Column(nullable = false, unique = true)
     public String code;
 
-    @OneToOne(cascade = CascadeType.PERSIST)
+    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "consent_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     public Consent consent;
@@ -34,6 +34,10 @@ public class AuthCode extends PanacheEntityBase {
 
     public static Optional<AuthCode> findByCodeOptional(String code) {
         return find("code", HashUtil.hashWithSHA256(code)).firstResultOptional();
+    }
+
+    public static Optional<AuthCode> findByConsentOptional(Consent consent) {
+        return find("consent", consent).firstResultOptional();
     }
 
     public static void deleteByCode(String code) {

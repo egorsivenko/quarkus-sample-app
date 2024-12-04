@@ -120,28 +120,60 @@ public class OAuthResource extends Controller {
     @Path("/sign-in")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance signIn(@BeanParam @Valid SignInForm form,
-                                   @CookieParam("csrf-token") Cookie csrfTokenCookie,
-                                   @FormParam("csrf-token") String csrfTokenForm) {
+    public Response signIn(@BeanParam @Valid SignInForm form,
+                           @CookieParam("csrf-token") Cookie csrfTokenCookie,
+                           @FormParam("csrf-token") String csrfTokenForm) {
         CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
 
         Supplier<TemplateInstance> failureResponse = () -> signInTemplate(
                 form.getClientId(), form.getClientName(), form.getCallbackUrl(), form.getState(), true, form.getScopes());
 
         if (validationFailed()) {
-            return failureResponse.get();
+            return Response.ok(failureResponse.get()).build();
         }
         try {
             User user = userService.getByEmail(form.getEmail());
 
             if (!user.verifyPassword(form.getPassword())) {
-                return failureResponse.get();
+                return Response.ok(failureResponse.get()).build();
             }
-            return consentTemplate(form.getClientId(), form.getClientName(), form.getCallbackUrl(),
-                    form.getState(), user.getId(), form.getScopes());
+            OAuthClient client = OAuthClient.findByClientIdOptional(form.getClientId()).orElseThrow();
+            Optional<Consent> consentOptional = Consent.findByResourceOwnerAndClient(user, client);
+
+            if (consentOptional.isPresent()) {
+                UriBuilder uriBuilder = UriBuilder.fromPath(form.getCallbackUrl());
+
+                if (AuthCode.findByConsentOptional(consentOptional.get()).isPresent()) {
+                    uriBuilder
+                            .queryParam("error", "bad_request")
+                            .queryParam("error_message", "An existing auth code belonging to this user hasn't yet been used");
+
+                    return Response.seeOther(uriBuilder.build()).build();
+                }
+                Set<Scope> scopes = mapScopeStringToSet(form.getScopes());
+                scopes.removeAll(consentOptional.get().scopes);
+                form.setScopes(mapScopeSetToString(scopes));
+
+                if (form.getScopes().isBlank()) {
+                    AuthCode authCode = new AuthCode();
+                    String code = codeGenerator.generate(20);
+                    authCode.code = code;
+                    authCode.expiresAt = LocalDateTime.now().plusMinutes(5);
+                    authCode.consent = consentOptional.get();
+                    authCode.persist();
+
+                    uriBuilder
+                            .queryParam("code", code)
+                            .queryParam("state", form.getState());
+
+                    return Response.seeOther(uriBuilder.build()).build();
+                }
+            }
+            return Response.ok(consentTemplate(form.getClientId(), form.getClientName(), form.getCallbackUrl(),
+                    form.getState(), user.getId(), form.getScopes())).build();
 
         } catch (UserNotFoundException e) {
-            return failureResponse.get();
+            return Response.ok(failureResponse.get()).build();
         }
     }
 
@@ -169,17 +201,25 @@ public class OAuthResource extends Controller {
         UriBuilder uriBuilder = UriBuilder.fromPath(form.getCallbackUrl());
 
         if (form.userGaveConsent()) {
-            Consent consent = new Consent();
-            consent.resourceOwner = userService.getById(form.getUserId());
-            consent.client = OAuthClient.findByClientIdOptional(form.getClientId()).orElseThrow();
-            consent.scopes = mapScopeStringToSet(form.getScopes());
-
             AuthCode authCode = new AuthCode();
             String code = codeGenerator.generate(20);
             authCode.code = code;
             authCode.expiresAt = LocalDateTime.now().plusMinutes(5);
-            authCode.consent = consent;
 
+            User user = userService.getById(form.getUserId());
+            OAuthClient client = OAuthClient.findByClientIdOptional(form.getClientId()).orElseThrow();
+            Optional<Consent> consentOptional = Consent.findByResourceOwnerAndClient(user, client);
+
+            consentOptional.ifPresentOrElse(consent -> {
+                consent.scopes.addAll(mapScopeStringToSet(form.getScopes()));
+                authCode.consent = consent;
+            }, () -> {
+                Consent consent = new Consent();
+                consent.resourceOwner = userService.getById(form.getUserId());
+                consent.client = OAuthClient.findByClientIdOptional(form.getClientId()).orElseThrow();
+                consent.scopes = mapScopeStringToSet(form.getScopes());
+                authCode.consent = consent;
+            });
             authCode.persist();
 
             uriBuilder

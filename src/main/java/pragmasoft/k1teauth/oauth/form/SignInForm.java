@@ -64,4 +64,8 @@ public class SignInForm {
     public String getScopes() {
         return scopes;
     }
+
+    public void setScopes(String scopes) {
+        this.scopes = scopes;
+    }
 }

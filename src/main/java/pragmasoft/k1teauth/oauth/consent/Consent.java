@@ -23,6 +23,7 @@ import pragmasoft.k1teauth.user.User;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -65,6 +66,10 @@ public class Consent extends PanacheEntityBase {
     @CreationTimestamp
     @Column(name = "granted_at", nullable = false)
     public LocalDateTime grantedAt;
+
+    public static Optional<Consent> findByResourceOwnerAndClient(User resourceOwner, OAuthClient client) {
+        return find("resourceOwner = ?1 and client = ?2", resourceOwner, client).firstResultOptional();
+    }
 
     public static List<Consent> listByResourceOwner(User resourceOwner) {
         return list("resourceOwner", resourceOwner);
