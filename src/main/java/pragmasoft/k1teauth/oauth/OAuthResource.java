@@ -3,6 +3,7 @@ package pragmasoft.k1teauth.oauth;
 import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
+import io.quarkus.security.identity.CurrentIdentityAssociation;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.BeanParam;
@@ -66,18 +67,22 @@ public class OAuthResource extends Controller {
     private final CodeGenerator codeGenerator;
     private final UserService userService;
     private final JwtService jwtService;
+    private final CurrentIdentityAssociation identity;
 
     public OAuthResource(CodeGenerator codeGenerator,
                          UserService userService,
-                         JwtService jwtService) {
+                         JwtService jwtService,
+                         CurrentIdentityAssociation identity) {
         this.codeGenerator = codeGenerator;
         this.userService = userService;
         this.jwtService = jwtService;
+        this.identity = identity;
     }
 
     @GET
     @Path("/auth")
     @Produces(MediaType.TEXT_HTML)
+    @Transactional
     public Response authorize(@BeanParam AuthRequest request) {
         Optional<OAuthClient> clientOptional = OAuthClient.findByClientIdOptional(request.getClientId());
 
@@ -100,6 +105,21 @@ public class OAuthResource extends Controller {
         if (!client.scopes.containsAll(scopeSet)) {
             return buildResponse(Status.BAD_REQUEST, "Unsupported scope has been provided");
         }
+        if (!identity.getIdentity().isAnonymous()) {
+            String email = identity.getIdentity().getPrincipal().getName();
+            User user = userService.getByEmail(email);
+
+            Optional<Consent> consentOptional = Consent.findByResourceOwnerAndClient(user, client);
+
+            if (consentOptional.isPresent()) {
+                Response response = handleExistingConsent(request.getRedirectUri(), consentOptional.get(), scopeSet, request.getState());
+                if (response != null) {
+                    return response;
+                }
+            }
+            return Response.ok(consentTemplate(request.getClientId(), client.name, request.getRedirectUri(),
+                    request.getState(), user.getId(), mapScopeSetToString(scopeSet))).build();
+        }
         return Response.ok(signInTemplate(request.getClientId(), client.name, request.getRedirectUri(),
                 request.getState(), false, mapScopeSetToString(scopeSet))).build();
     }
@@ -120,6 +140,7 @@ public class OAuthResource extends Controller {
     @Path("/sign-in")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.TEXT_HTML)
+    @Transactional
     public Response signIn(@BeanParam @Valid SignInForm form,
                            @CookieParam("csrf-token") Cookie csrfTokenCookie,
                            @FormParam("csrf-token") String csrfTokenForm) {
@@ -137,40 +158,19 @@ public class OAuthResource extends Controller {
             if (!user.verifyPassword(form.getPassword())) {
                 return Response.ok(failureResponse.get()).build();
             }
+            Set<Scope> scopeSet = mapScopeStringToSet(form.getScopes());
             OAuthClient client = OAuthClient.findByClientIdOptional(form.getClientId()).orElseThrow();
+
             Optional<Consent> consentOptional = Consent.findByResourceOwnerAndClient(user, client);
 
             if (consentOptional.isPresent()) {
-                UriBuilder uriBuilder = UriBuilder.fromPath(form.getCallbackUrl());
-
-                if (AuthCode.findByConsentOptional(consentOptional.get()).isPresent()) {
-                    uriBuilder
-                            .queryParam("error", "bad_request")
-                            .queryParam("error_message", "An existing auth code belonging to this user hasn't yet been used");
-
-                    return Response.seeOther(uriBuilder.build()).build();
-                }
-                Set<Scope> scopes = mapScopeStringToSet(form.getScopes());
-                scopes.removeAll(consentOptional.get().scopes);
-                form.setScopes(mapScopeSetToString(scopes));
-
-                if (form.getScopes().isBlank()) {
-                    AuthCode authCode = new AuthCode();
-                    String code = codeGenerator.generate(20);
-                    authCode.code = code;
-                    authCode.expiresAt = LocalDateTime.now().plusMinutes(5);
-                    authCode.consent = consentOptional.get();
-                    authCode.persist();
-
-                    uriBuilder
-                            .queryParam("code", code)
-                            .queryParam("state", form.getState());
-
-                    return Response.seeOther(uriBuilder.build()).build();
+                Response response = handleExistingConsent(form.getCallbackUrl(), consentOptional.get(), scopeSet, form.getState());
+                if (response != null) {
+                    return response;
                 }
             }
             return Response.ok(consentTemplate(form.getClientId(), form.getClientName(), form.getCallbackUrl(),
-                    form.getState(), user.getId(), form.getScopes())).build();
+                    form.getState(), user.getId(), mapScopeSetToString(scopeSet))).build();
 
         } catch (UserNotFoundException e) {
             return Response.ok(failureResponse.get()).build();
@@ -201,30 +201,21 @@ public class OAuthResource extends Controller {
         UriBuilder uriBuilder = UriBuilder.fromPath(form.getCallbackUrl());
 
         if (form.userGaveConsent()) {
-            AuthCode authCode = new AuthCode();
-            String code = codeGenerator.generate(20);
-            authCode.code = code;
-            authCode.expiresAt = LocalDateTime.now().plusMinutes(5);
-
             User user = userService.getById(form.getUserId());
             OAuthClient client = OAuthClient.findByClientIdOptional(form.getClientId()).orElseThrow();
             Optional<Consent> consentOptional = Consent.findByResourceOwnerAndClient(user, client);
 
-            consentOptional.ifPresentOrElse(consent -> {
+            Consent consent;
+            if (consentOptional.isPresent()) {
+                consent = consentOptional.get();
                 consent.scopes.addAll(mapScopeStringToSet(form.getScopes()));
-                authCode.consent = consent;
-            }, () -> {
-                Consent consent = new Consent();
+            } else {
+                consent = new Consent();
                 consent.resourceOwner = userService.getById(form.getUserId());
                 consent.client = OAuthClient.findByClientIdOptional(form.getClientId()).orElseThrow();
                 consent.scopes = mapScopeStringToSet(form.getScopes());
-                authCode.consent = consent;
-            });
-            authCode.persist();
-
-            uriBuilder
-                    .queryParam("code", code)
-                    .queryParam("state", form.getState());
+            }
+            return buildAuthCodeAndRedirect(uriBuilder, consent, form.getState());
         } else {
             uriBuilder
                     .queryParam("error", "access_denied")
@@ -281,6 +272,39 @@ public class OAuthResource extends Controller {
             }
             default -> buildResponse(Status.BAD_REQUEST, "Unsupported grant type");
         };
+    }
+
+    private Response handleExistingConsent(String callbackUrl, Consent consent, Set<Scope> scopeSet, String state) {
+        UriBuilder uriBuilder = UriBuilder.fromPath(callbackUrl);
+
+        if (AuthCode.findByConsentOptional(consent).isPresent()) {
+            uriBuilder
+                    .queryParam("error", "bad_request")
+                    .queryParam("error_message", "An existing auth code belonging to this user hasn't yet been used");
+
+            return Response.seeOther(uriBuilder.build()).build();
+        }
+        scopeSet.removeAll(consent.scopes);
+
+        if (scopeSet.isEmpty()) {
+            return buildAuthCodeAndRedirect(uriBuilder, consent, state);
+        }
+        return null;
+    }
+
+    private Response buildAuthCodeAndRedirect(UriBuilder uriBuilder, Consent consent, String state) {
+        AuthCode authCode = new AuthCode();
+        String code = codeGenerator.generate(20);
+        authCode.code = code;
+        authCode.expiresAt = LocalDateTime.now().plusMinutes(5);
+        authCode.consent = consent;
+        authCode.persist();
+
+        uriBuilder
+                .queryParam("code", code)
+                .queryParam("state", state);
+
+        return Response.seeOther(uriBuilder.build()).build();
     }
 
     private Set<Scope> mapScopeStringToSet(String scopes) {
