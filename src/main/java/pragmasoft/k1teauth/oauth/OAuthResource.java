@@ -3,6 +3,7 @@ package pragmasoft.k1teauth.oauth;
 import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
+import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.CurrentIdentityAssociation;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -19,7 +20,6 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 import jakarta.ws.rs.core.UriBuilder;
-import org.jboss.resteasy.reactive.RestQuery;
 import pragmasoft.k1teauth.jwt.JwtClaim;
 import pragmasoft.k1teauth.jwt.JwtService;
 import pragmasoft.k1teauth.oauth.client.OAuthClient;
@@ -31,11 +31,9 @@ import pragmasoft.k1teauth.oauth.dto.ErrorResponse;
 import pragmasoft.k1teauth.oauth.dto.TokenRequest;
 import pragmasoft.k1teauth.oauth.dto.TokenResponse;
 import pragmasoft.k1teauth.oauth.form.ConsentForm;
-import pragmasoft.k1teauth.oauth.form.SignInForm;
 import pragmasoft.k1teauth.oauth.scope.Scope;
 import pragmasoft.k1teauth.user.User;
 import pragmasoft.k1teauth.user.UserService;
-import pragmasoft.k1teauth.user.exception.UserNotFoundException;
 import pragmasoft.k1teauth.util.CsrfTokenValidator;
 
 import java.time.LocalDateTime;
@@ -44,7 +42,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Path("/oauth2")
@@ -56,9 +53,6 @@ public class OAuthResource extends Controller {
         private Templates() {
             throw new IllegalStateException("Utility class");
         }
-
-        public static native TemplateInstance signIn(String clientId, String clientName, String callbackUrl,
-                                                     String state, boolean error, String scopes);
 
         public static native TemplateInstance consent(String clientId, String clientName, String callbackUrl,
                                                       String state, UUID userId, Set<Scope> scopes);
@@ -83,6 +77,7 @@ public class OAuthResource extends Controller {
     @Path("/auth")
     @Produces(MediaType.TEXT_HTML)
     @Transactional
+    @Authenticated
     public Response authorize(@BeanParam AuthRequest request) {
         Optional<OAuthClient> clientOptional = OAuthClient.findByClientIdOptional(request.getClientId());
 
@@ -105,94 +100,26 @@ public class OAuthResource extends Controller {
         if (!client.scopes.containsAll(scopeSet)) {
             return buildResponse(Status.BAD_REQUEST, "Unsupported scope has been provided");
         }
-        if (!identity.getIdentity().isAnonymous()) {
-            String email = identity.getIdentity().getPrincipal().getName();
-            User user = userService.getByEmail(email);
+        String email = identity.getIdentity().getPrincipal().getName();
+        User user = userService.getByEmail(email);
 
-            Optional<Consent> consentOptional = Consent.findByResourceOwnerAndClient(user, client);
+        Optional<Consent> consentOptional = Consent.findByResourceOwnerAndClient(user, client);
 
-            if (consentOptional.isPresent()) {
-                Response response = handleExistingConsent(request.getRedirectUri(), consentOptional.get(), scopeSet, request.getState());
-                if (response != null) {
-                    return response;
-                }
+        if (consentOptional.isPresent()) {
+            Response response = handleExistingConsent(request.getRedirectUri(), consentOptional.get(), scopeSet, request.getState());
+            if (response != null) {
+                return response;
             }
-            return Response.ok(consentTemplate(request.getClientId(), client.name, request.getRedirectUri(),
-                    request.getState(), user.getId(), mapScopeSetToString(scopeSet))).build();
         }
-        return Response.ok(signInTemplate(request.getClientId(), client.name, request.getRedirectUri(),
-                request.getState(), false, mapScopeSetToString(scopeSet))).build();
-    }
-
-    @GET
-    @Path("/sign-in")
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance signInTemplate(@RestQuery String clientId,
-                                           @RestQuery String clientName,
-                                           @RestQuery String callbackUrl,
-                                           @RestQuery String state,
-                                           @RestQuery boolean error,
-                                           @RestQuery String scopes) {
-        return Templates.signIn(clientId, clientName, callbackUrl, state, error, scopes);
-    }
-
-    @POST
-    @Path("/sign-in")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Produces(MediaType.TEXT_HTML)
-    @Transactional
-    public Response signIn(@BeanParam @Valid SignInForm form,
-                           @CookieParam("csrf-token") Cookie csrfTokenCookie,
-                           @FormParam("csrf-token") String csrfTokenForm) {
-        CsrfTokenValidator.validate(csrfTokenCookie, csrfTokenForm);
-
-        Supplier<TemplateInstance> failureResponse = () -> signInTemplate(
-                form.getClientId(), form.getClientName(), form.getCallbackUrl(), form.getState(), true, form.getScopes());
-
-        if (validationFailed()) {
-            return Response.ok(failureResponse.get()).build();
-        }
-        try {
-            User user = userService.getByEmail(form.getEmail());
-
-            if (!user.verifyPassword(form.getPassword())) {
-                return Response.ok(failureResponse.get()).build();
-            }
-            Set<Scope> scopeSet = mapScopeStringToSet(form.getScopes());
-            OAuthClient client = OAuthClient.findByClientIdOptional(form.getClientId()).orElseThrow();
-
-            Optional<Consent> consentOptional = Consent.findByResourceOwnerAndClient(user, client);
-
-            if (consentOptional.isPresent()) {
-                Response response = handleExistingConsent(form.getCallbackUrl(), consentOptional.get(), scopeSet, form.getState());
-                if (response != null) {
-                    return response;
-                }
-            }
-            return Response.ok(consentTemplate(form.getClientId(), form.getClientName(), form.getCallbackUrl(),
-                    form.getState(), user.getId(), mapScopeSetToString(scopeSet))).build();
-
-        } catch (UserNotFoundException e) {
-            return Response.ok(failureResponse.get()).build();
-        }
-    }
-
-    @GET
-    @Path("/consent")
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance consentTemplate(@RestQuery String clientId,
-                                            @RestQuery String clientName,
-                                            @RestQuery String callbackUrl,
-                                            @RestQuery String state,
-                                            @RestQuery UUID userId,
-                                            @RestQuery String scopes) {
-        return Templates.consent(clientId, clientName, callbackUrl, state, userId, mapScopeStringToSet(scopes));
+        return Response.ok(Templates.consent(client.clientId, client.name, request.getRedirectUri(),
+                request.getState(), user.getId(), scopeSet)).build();
     }
 
     @POST
     @Path("/consent")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Transactional
+    @Authenticated
     public Response consent(@BeanParam @Valid ConsentForm form,
                             @CookieParam("csrf-token") Cookie csrfTokenCookie,
                             @FormParam("csrf-token") String csrfTokenForm) {
@@ -312,12 +239,6 @@ public class OAuthResource extends Controller {
                 .map(scope -> Scope.findByName(scope.strip()).orElse(null))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-    }
-
-    private String mapScopeSetToString(Set<Scope> scopes) {
-        return scopes.stream()
-                .map(scope -> scope.name)
-                .collect(Collectors.joining(" "));
     }
 
     private Response buildTokenResponse(String subject, JwtClaim... claims) {
