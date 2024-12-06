@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.UriInfo;
 import pragmasoft.k1teauth.jwt.JwtService;
 import pragmasoft.k1teauth.user.User;
 
+import java.util.List;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -58,9 +59,9 @@ public class SimpleEmailSender implements EmailSender {
                 .send().await().indefinitely();
     }
 
-    private String formatLink(UUID userId, String linkPart) {
-        String token = jwtService.generate(userId.toString());
-        String path = uriInfo.getBaseUri().toString() + "verify/" + linkPart;
+    private String formatLink(UUID userId, String operation) {
+        String path = uriInfo.getBaseUri().toString() + "verify/" + operation;
+        String token = jwtService.generate(userId.toString(), List.of(path));
 
         return UriBuilder.fromPath(path)
                 .queryParam("token", token)

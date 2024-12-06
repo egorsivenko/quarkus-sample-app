@@ -38,6 +38,7 @@ import pragmasoft.k1teauth.util.CsrfTokenValidator;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -179,8 +180,8 @@ public class OAuthResource extends Controller {
                 AuthCode.deleteByCode(request.getCode());
 
                 yield buildTokenResponse(resourceOwner.getId().toString(),
-                        new JwtClaim("email", resourceOwner.getEmail()),
-                        new JwtClaim("full_name", resourceOwner.getFullName()));
+                        authCode.consent.scopes.stream().map(scope -> scope.audience).toList(),
+                        new JwtClaim("scopes", authCode.consent.scopes.stream().map(scope -> scope.name).toList()));
             }
             case "client_credentials" -> {
                 Optional<OAuthClient> clientOptional = OAuthClient.findByClientIdOptional(request.getClientId());
@@ -194,8 +195,7 @@ public class OAuthResource extends Controller {
                     yield buildResponse(Status.BAD_REQUEST, "Invalid client secret");
                 }
                 yield buildTokenResponse(client.clientId,
-                        new JwtClaim("client_name", client.name),
-                        new JwtClaim("callback_urls", client.callbackUrls));
+                        client.scopes.stream().map(scope -> scope.audience).toList());
             }
             default -> buildResponse(Status.BAD_REQUEST, "Unsupported grant type");
         };
@@ -241,8 +241,8 @@ public class OAuthResource extends Controller {
                 .collect(Collectors.toSet());
     }
 
-    private Response buildTokenResponse(String subject, JwtClaim... claims) {
-        String token = jwtService.generate(subject, claims);
+    private Response buildTokenResponse(String subject, List<String> audience, JwtClaim... claims) {
+        String token = jwtService.generate(subject, audience, claims);
         TokenResponse tokenResponse = new TokenResponse(token, 3600, "Bearer");
 
         return Response.ok(tokenResponse).build();

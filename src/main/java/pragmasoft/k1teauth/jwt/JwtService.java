@@ -12,14 +12,20 @@ import com.nimbusds.jwt.SignedJWT;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.UriInfo;
 
 import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 @ApplicationScoped
 public class JwtService {
+
+    @Context
+    UriInfo uriInfo;
 
     private RSAKey rsaJWK;
     private RSAKey rsaPublicJWK;
@@ -33,15 +39,16 @@ public class JwtService {
         rsaPublicJWK = rsaJWK.toPublicJWK();
     }
 
-    public String generate(String subject, JwtClaim... claims) {
+    public String generate(String subject, List<String> audience, JwtClaim... claims) {
         try {
             JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder()
                     .subject(subject)
+                    .issuer(uriInfo.getBaseUri().toString())
+                    .audience(audience)
                     .issueTime(new Date())
                     .expirationTime(new Date(System.currentTimeMillis() + 60 * 60 * 1000));
 
-            Stream.of(claims)
-                    .forEach(claim -> claimsBuilder.claim(claim.name(), claim.value()));
+            Stream.of(claims).forEach(claim -> claimsBuilder.claim(claim.name(), claim.value()));
 
             SignedJWT signedJWT = new SignedJWT(
                     new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(rsaJWK.getKeyID()).build(),
