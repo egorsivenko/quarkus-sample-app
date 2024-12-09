@@ -195,7 +195,8 @@ public class OAuthResource extends Controller {
                     yield buildResponse(Status.BAD_REQUEST, "Invalid client secret");
                 }
                 yield buildTokenResponse(client.clientId,
-                        client.scopes.stream().map(scope -> scope.audience).toList());
+                        client.scopes.stream().map(scope -> scope.audience).toList(),
+                        new JwtClaim("scopes", client.scopes.stream().map(scope -> scope.name).toList()));
             }
             default -> buildResponse(Status.BAD_REQUEST, "Unsupported grant type");
         };
