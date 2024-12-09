@@ -3,7 +3,7 @@ package pragmasoft.k1teauth.oauth.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record TokenResponse(
-        @JsonProperty("id_token") String idToken,
+        @JsonProperty("access_token") String token,
         @JsonProperty("expires_in") int expiresInSecs,
         @JsonProperty("token_type") String tokenType
 ) {
