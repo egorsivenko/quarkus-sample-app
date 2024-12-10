@@ -10,11 +10,18 @@ public class TokenRequest {
     @FormParam("code")
     String code;
 
+    @FormParam("code_verifier")
+    String codeVerifier;
+
     public String getGrantType() {
         return grantType;
     }
 
     public String getCode() {
         return code;
+    }
+
+    public String getCodeVerifier() {
+        return codeVerifier;
     }
 }

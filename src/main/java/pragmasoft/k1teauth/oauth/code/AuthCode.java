@@ -29,6 +29,12 @@ public class AuthCode extends PanacheEntityBase {
     @OnDelete(action = OnDeleteAction.CASCADE)
     public Consent consent;
 
+    @Column(name = "code_challenge", nullable = false)
+    public String codeChallenge;
+
+    @Column(name = "code_challenge_method", nullable = false)
+    public String codeChallengeMethod;
+
     @Column(name = "expires_at", nullable = false)
     public LocalDateTime expiresAt;
 

@@ -30,6 +30,14 @@ public class ConsentForm {
     @NotNull
     String scopes;
 
+    @RestForm
+    @NotNull
+    String codeChallenge;
+
+    @RestForm
+    @NotNull
+    String codeChallengeMethod;
+
     public boolean userGaveConsent() {
         return userGaveConsent;
     }
@@ -52,5 +60,13 @@ public class ConsentForm {
 
     public String getScopes() {
         return scopes;
+    }
+
+    public String getCodeChallenge() {
+        return codeChallenge;
+    }
+
+    public String getCodeChallengeMethod() {
+        return codeChallengeMethod;
     }
 }

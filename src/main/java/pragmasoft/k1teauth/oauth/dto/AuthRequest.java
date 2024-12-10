@@ -13,6 +13,12 @@ public class AuthRequest {
     @QueryParam("response_type")
     String responseType;
 
+    @QueryParam("code_challenge")
+    String codeChallenge;
+
+    @QueryParam("code_challenge_method")
+    String codeChallengeMethod;
+
     @QueryParam("scope")
     String scope;
 
@@ -29,6 +35,14 @@ public class AuthRequest {
 
     public String getResponseType() {
         return responseType;
+    }
+
+    public String getCodeChallenge() {
+        return codeChallenge;
+    }
+
+    public String getCodeChallengeMethod() {
+        return codeChallengeMethod;
     }
 
     public String getScope() {

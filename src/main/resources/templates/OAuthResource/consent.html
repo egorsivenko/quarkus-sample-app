@@ -22,6 +22,8 @@
                     <input type="hidden" name="userId" value="{userId}" />
                     <input type="hidden" name="state" value="{state}" />
                     <input type="hidden" name="scopes" value="{scopes.mapToString()}" />
+                    <input type="hidden" name="codeChallenge" value="{codeChallenge}" />
+                    <input type="hidden" name="codeChallengeMethod" value="{codeChallengeMethod}" />
                     <input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
                     <button type="submit" class="outline">Yes</button>
                 </form>

@@ -37,6 +37,7 @@ import pragmasoft.k1teauth.oauth.scope.Scope;
 import pragmasoft.k1teauth.user.User;
 import pragmasoft.k1teauth.user.UserService;
 import pragmasoft.k1teauth.util.CsrfTokenValidator;
+import pragmasoft.k1teauth.util.HashUtil;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -60,7 +61,8 @@ public class OAuthResource extends Controller {
         }
 
         public static native TemplateInstance consent(String clientId, String clientName, String callbackUrl,
-                                                      String state, UUID userId, Set<Scope> scopes);
+                                                      String state, UUID userId, Set<Scope> scopes,
+                                                      String codeChallenge, String codeChallengeMethod);
     }
 
     private final CodeGenerator codeGenerator;
@@ -95,6 +97,15 @@ public class OAuthResource extends Controller {
         if (!"code".equals(request.getResponseType())) {
             return buildResponse(Status.BAD_REQUEST, "Unsupported response type");
         }
+        String codeChallenge = request.getCodeChallenge();
+        String codeChallengeMethod = Optional.ofNullable(request.getCodeChallengeMethod()).orElse("plain");
+
+        if (codeChallenge == null || codeChallenge.isEmpty()) {
+            return buildResponse(Status.BAD_REQUEST, "Code challenge is required");
+        }
+        if (!List.of("plain", "S256").contains(codeChallengeMethod)) {
+            return buildResponse(Status.BAD_REQUEST, "Unsupported code challenge method");
+        }
         Set<Scope> scopeSet = mapScopeStringToSet(request.getScope());
 
         if (scopeSet.isEmpty()) {
@@ -109,13 +120,14 @@ public class OAuthResource extends Controller {
         Optional<Consent> consentOptional = Consent.findByResourceOwnerAndClient(user, client);
 
         if (consentOptional.isPresent()) {
-            Response response = handleExistingConsent(request.getRedirectUri(), consentOptional.get(), scopeSet, request.getState());
+            Response response = handleExistingConsent(request.getRedirectUri(),
+                    consentOptional.get(), scopeSet, request.getState(), codeChallenge, codeChallengeMethod);
             if (response != null) {
                 return response;
             }
         }
         return Response.ok(Templates.consent(client.clientId, client.name, request.getRedirectUri(),
-                request.getState(), user.getId(), scopeSet)).build();
+                request.getState(), user.getId(), scopeSet, codeChallenge, codeChallengeMethod)).build();
     }
 
     @POST
@@ -143,7 +155,7 @@ public class OAuthResource extends Controller {
                 consent.client = OAuthClient.findByClientIdOptional(form.getClientId()).orElseThrow();
                 consent.scopes = mapScopeStringToSet(form.getScopes());
             }
-            return buildAuthCodeAndRedirect(uriBuilder, consent, form.getState());
+            return buildAuthCodeAndRedirect(uriBuilder, consent, form.getState(), form.getCodeChallenge(), form.getCodeChallengeMethod());
         } else {
             uriBuilder
                     .queryParam("error", "access_denied")
@@ -177,6 +189,14 @@ public class OAuthResource extends Controller {
                 if (!authCode.consent.client.clientId.equals(client.clientId)) {
                     yield buildResponse(Status.BAD_REQUEST, "Authorization code was issued to another client");
                 }
+                String codeVerifier = request.getCodeVerifier();
+
+                if (codeVerifier == null || codeVerifier.isEmpty()) {
+                    yield buildResponse(Status.BAD_REQUEST, "Code verifier is required");
+                }
+                if (!verifyCodeChallenge(authCode.codeChallenge, codeVerifier, authCode.codeChallengeMethod)) {
+                    yield buildResponse(Status.BAD_REQUEST, "Invalid code verifier");
+                }
                 User resourceOwner = authCode.consent.resourceOwner;
                 AuthCode.deleteByCode(request.getCode());
 
@@ -196,7 +216,8 @@ public class OAuthResource extends Controller {
         };
     }
 
-    private Response handleExistingConsent(String callbackUrl, Consent consent, Set<Scope> scopeSet, String state) {
+    private Response handleExistingConsent(String callbackUrl, Consent consent, Set<Scope> scopeSet, String state,
+                                           String codeChallenge, String codeChallengeMethod) {
         UriBuilder uriBuilder = UriBuilder.fromPath(callbackUrl);
 
         if (AuthCode.findByConsentOptional(consent).isPresent()) {
@@ -209,15 +230,18 @@ public class OAuthResource extends Controller {
         scopeSet.removeAll(consent.scopes);
 
         if (scopeSet.isEmpty()) {
-            return buildAuthCodeAndRedirect(uriBuilder, consent, state);
+            return buildAuthCodeAndRedirect(uriBuilder, consent, state, codeChallenge, codeChallengeMethod);
         }
         return null;
     }
 
-    private Response buildAuthCodeAndRedirect(UriBuilder uriBuilder, Consent consent, String state) {
+    private Response buildAuthCodeAndRedirect(UriBuilder uriBuilder, Consent consent, String state,
+                                              String codeChallenge, String codeChallengeMethod) {
         AuthCode authCode = new AuthCode();
         String code = codeGenerator.generate(20);
         authCode.code = code;
+        authCode.codeChallenge = codeChallenge;
+        authCode.codeChallengeMethod = codeChallengeMethod;
         authCode.expiresAt = LocalDateTime.now().plusMinutes(5);
         authCode.consent = consent;
         authCode.persist();
@@ -227,6 +251,14 @@ public class OAuthResource extends Controller {
                 .queryParam("state", state);
 
         return Response.seeOther(uriBuilder.build()).build();
+    }
+
+    private boolean verifyCodeChallenge(String codeChallenge, String codeVerifier, String method) {
+        return switch (method) {
+            case "plain" -> codeChallenge.equals(codeVerifier);
+            case "S256" -> codeChallenge.equals(HashUtil.hashWithSHA256(codeVerifier));
+            default -> false;
+        };
     }
 
     private Set<Scope> mapScopeStringToSet(String scopes) {
