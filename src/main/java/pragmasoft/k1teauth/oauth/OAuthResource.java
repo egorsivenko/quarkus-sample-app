@@ -15,10 +15,12 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriBuilder;
 import pragmasoft.k1teauth.jwt.JwtClaim;
 import pragmasoft.k1teauth.jwt.JwtService;
@@ -46,6 +48,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Path("/oauth2")
+@Authenticated
+@Transactional
 public class OAuthResource extends Controller {
 
     @CheckedTemplate(requireTypeSafeExpressions = false)
@@ -77,8 +81,6 @@ public class OAuthResource extends Controller {
     @GET
     @Path("/auth")
     @Produces(MediaType.TEXT_HTML)
-    @Transactional
-    @Authenticated
     public Response authorize(@BeanParam AuthRequest request) {
         Optional<OAuthClient> clientOptional = OAuthClient.findByClientIdOptional(request.getClientId());
 
@@ -119,8 +121,6 @@ public class OAuthResource extends Controller {
     @POST
     @Path("/consent")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Transactional
-    @Authenticated
     public Response consent(@BeanParam @Valid ConsentForm form,
                             @CookieParam("csrf-token") Cookie csrfTokenCookie,
                             @FormParam("csrf-token") String csrfTokenForm) {
@@ -156,8 +156,8 @@ public class OAuthResource extends Controller {
     @Path("/token")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
-    @Transactional
-    public Response token(@BeanParam TokenRequest request) {
+    public Response token(@BeanParam TokenRequest request,
+                          @Context SecurityContext context) {
         return switch (request.getGrantType()) {
             case "authorization_code" -> {
                 Optional<AuthCode> authCodeOptional = AuthCode.findByCodeOptional(request.getCode());
@@ -171,10 +171,11 @@ public class OAuthResource extends Controller {
                     AuthCode.deleteByCode(authCode.code);
                     yield buildResponse(Status.BAD_REQUEST, "Auth code has expired");
                 }
+                String clientId = context.getUserPrincipal().getName();
+                OAuthClient client = OAuthClient.findByClientIdOptional(clientId).orElseThrow();
 
-                if (!authCode.consent.client.clientId.equals(request.getClientId())
-                        || !authCode.consent.client.clientSecret.equals(request.getClientSecret())) {
-                    yield buildResponse(Status.BAD_REQUEST, "Invalid client ID or secret");
+                if (!authCode.consent.client.clientId.equals(client.clientId)) {
+                    yield buildResponse(Status.BAD_REQUEST, "Authorization code was issued to another client");
                 }
                 User resourceOwner = authCode.consent.resourceOwner;
                 AuthCode.deleteByCode(request.getCode());
@@ -184,16 +185,9 @@ public class OAuthResource extends Controller {
                         new JwtClaim("scopes", authCode.consent.scopes.stream().map(scope -> scope.name).toList()));
             }
             case "client_credentials" -> {
-                Optional<OAuthClient> clientOptional = OAuthClient.findByClientIdOptional(request.getClientId());
+                String clientId = context.getUserPrincipal().getName();
+                OAuthClient client = OAuthClient.findByClientIdOptional(clientId).orElseThrow();
 
-                if (clientOptional.isEmpty()) {
-                    yield buildResponse(Status.NOT_FOUND, "Client ID not found");
-                }
-                OAuthClient client = clientOptional.get();
-
-                if (!client.clientSecret.equals(request.getClientSecret())) {
-                    yield buildResponse(Status.BAD_REQUEST, "Invalid client secret");
-                }
                 yield buildTokenResponse(client.clientId,
                         client.scopes.stream().map(scope -> scope.audience).toList(),
                         new JwtClaim("scopes", client.scopes.stream().map(scope -> scope.name).toList()));
