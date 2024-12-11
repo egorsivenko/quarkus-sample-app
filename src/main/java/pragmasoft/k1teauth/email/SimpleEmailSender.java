@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.UriInfo;
 import pragmasoft.k1teauth.jwt.JwtService;
 import pragmasoft.k1teauth.user.User;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,6 +30,8 @@ public class SimpleEmailSender implements EmailSender {
 
     private static final String REGISTRATION_SUBJECT = "Confirm your email";
     private static final String RESET_PASSWORD_SUBJECT = "Confirm password reset";
+
+    private static final Duration TOKEN_EXP_TIME = Duration.ofMinutes(30);
 
     @Context
     UriInfo uriInfo;
@@ -61,7 +64,7 @@ public class SimpleEmailSender implements EmailSender {
 
     private String formatLink(UUID userId, String operation) {
         String path = uriInfo.getBaseUri().toString() + "verify/" + operation;
-        String token = jwtService.generate(userId.toString(), List.of(path));
+        String token = jwtService.generate(userId.toString(), List.of(path), TOKEN_EXP_TIME);
 
         return UriBuilder.fromPath(path)
                 .queryParam("token", token)

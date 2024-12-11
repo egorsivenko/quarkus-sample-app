@@ -16,6 +16,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.UriInfo;
 
 import java.text.ParseException;
+import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -39,14 +40,14 @@ public class JwtService {
         rsaPublicJWK = rsaJWK.toPublicJWK();
     }
 
-    public String generate(String subject, List<String> audience, JwtClaim... claims) {
+    public String generate(String subject, List<String> audience, Duration expirationTime, JwtClaim... claims) {
         try {
             JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder()
                     .subject(subject)
                     .issuer(uriInfo.getBaseUri().toString())
                     .audience(audience)
                     .issueTime(new Date())
-                    .expirationTime(new Date(System.currentTimeMillis() + 60 * 60 * 1000));
+                    .expirationTime(new Date(System.currentTimeMillis() + expirationTime.toMillis()));
 
             Stream.of(claims).forEach(claim -> claimsBuilder.claim(claim.name(), claim.value()));
 

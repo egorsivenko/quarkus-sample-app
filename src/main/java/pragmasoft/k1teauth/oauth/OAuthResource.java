@@ -39,6 +39,7 @@ import pragmasoft.k1teauth.user.UserService;
 import pragmasoft.k1teauth.util.CsrfTokenValidator;
 import pragmasoft.k1teauth.util.HashUtil;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -64,6 +65,9 @@ public class OAuthResource extends Controller {
                                                       String state, UUID userId, Set<Scope> scopes,
                                                       String codeChallenge, String codeChallengeMethod);
     }
+
+    private static final Duration AUTH_CODE_EXP_TIME = Duration.ofMinutes(10);
+    private static final Duration ACCESS_TOKEN_EXP_TIME = Duration.ofHours(1);
 
     private final CodeGenerator codeGenerator;
     private final UserService userService;
@@ -242,7 +246,7 @@ public class OAuthResource extends Controller {
         authCode.code = code;
         authCode.codeChallenge = codeChallenge;
         authCode.codeChallengeMethod = codeChallengeMethod;
-        authCode.expiresAt = LocalDateTime.now().plusMinutes(5);
+        authCode.expiresAt = LocalDateTime.now().plus(AUTH_CODE_EXP_TIME);
         authCode.consent = consent;
         authCode.persist();
 
@@ -269,8 +273,8 @@ public class OAuthResource extends Controller {
     }
 
     private Response buildTokenResponse(String subject, List<String> audience, JwtClaim... claims) {
-        String token = jwtService.generate(subject, audience, claims);
-        TokenResponse tokenResponse = new TokenResponse(token, 3600, "Bearer");
+        String token = jwtService.generate(subject, audience, ACCESS_TOKEN_EXP_TIME, claims);
+        TokenResponse tokenResponse = new TokenResponse(token, ACCESS_TOKEN_EXP_TIME.toSeconds(), "Bearer");
 
         return Response.ok(tokenResponse).build();
     }
