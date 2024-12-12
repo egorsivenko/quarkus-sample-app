@@ -68,6 +68,7 @@ public class OAuthResource extends Controller {
 
     private static final Duration AUTH_CODE_EXP_TIME = Duration.ofMinutes(10);
     private static final Duration ACCESS_TOKEN_EXP_TIME = Duration.ofHours(1);
+    private static final Duration REFRESH_TOKEN_EXP_TIME = Duration.ofDays(14);
 
     private final CodeGenerator codeGenerator;
     private final UserService userService;
@@ -174,6 +175,14 @@ public class OAuthResource extends Controller {
     @Produces(MediaType.APPLICATION_JSON)
     public Response token(@BeanParam TokenRequest request,
                           @Context SecurityContext context) {
+        String clientId = context.getUserPrincipal().getName();
+        Optional<OAuthClient> clientOptional = OAuthClient.findByClientIdOptional(clientId);
+
+        if (clientOptional.isEmpty()) {
+            return buildResponse(Status.UNAUTHORIZED, Status.UNAUTHORIZED.getReasonPhrase());
+        }
+        OAuthClient client = clientOptional.get();
+
         return switch (request.getGrantType()) {
             case "authorization_code" -> {
                 Optional<AuthCode> authCodeOptional = AuthCode.findByCodeOptional(request.getCode());
@@ -182,16 +191,14 @@ public class OAuthResource extends Controller {
                     yield buildResponse(Status.NOT_FOUND, "Auth code does not exist or has already been used");
                 }
                 AuthCode authCode = authCodeOptional.get();
+                Consent consent = authCode.consent;
 
                 if (authCode.isExpired()) {
                     AuthCode.deleteByCode(authCode.code);
                     yield buildResponse(Status.BAD_REQUEST, "Auth code has expired");
                 }
-                String clientId = context.getUserPrincipal().getName();
-                OAuthClient client = OAuthClient.findByClientIdOptional(clientId).orElseThrow();
-
-                if (!authCode.consent.client.clientId.equals(client.clientId)) {
-                    yield buildResponse(Status.BAD_REQUEST, "Authorization code was issued to another client");
+                if (!consent.client.clientId.equals(client.clientId)) {
+                    yield buildResponse(Status.BAD_REQUEST, "Authorization code was issued to a different client");
                 }
                 String codeVerifier = request.getCodeVerifier();
 
@@ -201,20 +208,42 @@ public class OAuthResource extends Controller {
                 if (!verifyCodeChallenge(authCode.codeChallenge, codeVerifier, authCode.codeChallengeMethod)) {
                     yield buildResponse(Status.BAD_REQUEST, "Invalid code verifier");
                 }
-                User resourceOwner = authCode.consent.resourceOwner;
+                User resourceOwner = consent.resourceOwner;
                 AuthCode.deleteByCode(request.getCode());
 
-                yield buildTokenResponse(resourceOwner.getId().toString(),
-                        authCode.consent.scopes.stream().map(scope -> scope.audience).toList(),
-                        new JwtClaim("scopes", authCode.consent.scopes.stream().map(scope -> scope.name).toList()));
+                String accessToken = generateAccessToken(resourceOwner.getId().toString(), consent.scopes);
+                String refreshToken = generateRefreshToken(consent.id.toString());
+
+                yield buildTokenResponse(accessToken, refreshToken);
+            }
+            case "refresh_token" -> {
+                String refreshToken = request.getRefreshToken();
+
+                if (!jwtService.extractAudience(refreshToken).contains(uriInfo.getAbsolutePath().toString())) {
+                    yield buildResponse(Status.BAD_REQUEST, "Audience mismatch in the refresh token");
+                }
+                Optional<Consent> consentOptional;
+                try {
+                    consentOptional = Consent.findByIdOptional(UUID.fromString(jwtService.extractSubject(refreshToken)));
+                } catch (IllegalArgumentException e) {
+                    yield buildResponse(Status.BAD_REQUEST, "Invalid refresh token subject");
+                }
+                if (consentOptional.isEmpty()) {
+                    yield buildResponse(Status.BAD_REQUEST, "Refresh token no longer valid: consent revoked");
+                }
+                Consent consent = consentOptional.get();
+
+                if (!consent.client.clientId.equals(client.clientId)) {
+                    yield buildResponse(Status.BAD_REQUEST, "Refresh Token was issued to a different client");
+                }
+                String accessToken = generateAccessToken(consent.resourceOwner.getId().toString(), consent.scopes);
+                String newRefreshToken = generateRefreshToken(consent.id.toString());
+
+                yield buildTokenResponse(accessToken, newRefreshToken);
             }
             case "client_credentials" -> {
-                String clientId = context.getUserPrincipal().getName();
-                OAuthClient client = OAuthClient.findByClientIdOptional(clientId).orElseThrow();
-
-                yield buildTokenResponse(client.clientId,
-                        client.scopes.stream().map(scope -> scope.audience).toList(),
-                        new JwtClaim("scopes", client.scopes.stream().map(scope -> scope.name).toList()));
+                String accessToken = generateAccessToken(client.clientId, client.scopes);
+                yield buildTokenResponse(accessToken, null);
             }
             default -> buildResponse(Status.BAD_REQUEST, "Unsupported grant type");
         };
@@ -272,11 +301,21 @@ public class OAuthResource extends Controller {
                 .collect(Collectors.toSet());
     }
 
-    private Response buildTokenResponse(String subject, List<String> audience, JwtClaim... claims) {
-        String token = jwtService.generate(subject, audience, ACCESS_TOKEN_EXP_TIME, claims);
-        TokenResponse tokenResponse = new TokenResponse(token, ACCESS_TOKEN_EXP_TIME.toSeconds(), "Bearer");
+    private String generateAccessToken(String subject, Set<Scope> scopes) {
+        return jwtService.generate(subject,
+                scopes.stream().map(scope -> scope.audience).toList(),
+                ACCESS_TOKEN_EXP_TIME,
+                new JwtClaim("scopes", scopes.stream().map(scope -> scope.name).toList()));
+    }
 
-        return Response.ok(tokenResponse).build();
+    private String generateRefreshToken(String subject) {
+        return jwtService.generate(subject, List.of(uriInfo.getAbsolutePath().toString()), REFRESH_TOKEN_EXP_TIME);
+    }
+
+    private Response buildTokenResponse(String accessToken, String refreshToken) {
+        return Response.ok(
+                new TokenResponse(accessToken, refreshToken, ACCESS_TOKEN_EXP_TIME.toSeconds(), "Bearer")
+        ).build();
     }
 
     private Response buildResponse(Status status, Object entity) {

@@ -60,11 +60,19 @@ public class JwtService {
             return signedJWT.serialize();
 
         } catch (JOSEException e) {
-            throw new BadRequestException(e.getMessage(), e);
+            throw new BadRequestException(e.getMessage());
         }
     }
 
     public String extractSubject(String token) {
+        return extractClaimsSet(token).getSubject();
+    }
+
+    public List<String> extractAudience(String token) {
+        return extractClaimsSet(token).getAudience();
+    }
+
+    private JWTClaimsSet extractClaimsSet(String token) {
         try {
             SignedJWT signedJWT = SignedJWT.parse(token);
 
@@ -74,10 +82,10 @@ public class JwtService {
             if (new Date().after(signedJWT.getJWTClaimsSet().getExpirationTime())) {
                 throw new BadRequestException("Token is expired");
             }
-            return signedJWT.getJWTClaimsSet().getSubject();
+            return signedJWT.getJWTClaimsSet();
 
         } catch (ParseException | JOSEException e) {
-            throw new BadRequestException(e.getMessage(), e);
+            throw new BadRequestException(e.getMessage());
         }
     }
 }

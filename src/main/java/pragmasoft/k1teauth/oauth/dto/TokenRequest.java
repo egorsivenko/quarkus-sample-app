@@ -13,6 +13,9 @@ public class TokenRequest {
     @FormParam("code_verifier")
     String codeVerifier;
 
+    @FormParam("refresh_token")
+    String refreshToken;
+
     public String getGrantType() {
         return grantType;
     }
@@ -23,5 +26,9 @@ public class TokenRequest {
 
     public String getCodeVerifier() {
         return codeVerifier;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
     }
 }
