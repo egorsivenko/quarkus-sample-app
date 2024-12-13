@@ -184,69 +184,75 @@ public class OAuthResource extends Controller {
         OAuthClient client = clientOptional.get();
 
         return switch (request.getGrantType()) {
-            case "authorization_code" -> {
-                Optional<AuthCode> authCodeOptional = AuthCode.findByCodeOptional(request.getCode());
-
-                if (authCodeOptional.isEmpty()) {
-                    yield buildResponse(Status.NOT_FOUND, "Auth code does not exist or has already been used");
-                }
-                AuthCode authCode = authCodeOptional.get();
-                Consent consent = authCode.consent;
-
-                if (authCode.isExpired()) {
-                    AuthCode.deleteByCode(authCode.code);
-                    yield buildResponse(Status.BAD_REQUEST, "Auth code has expired");
-                }
-                if (!consent.client.clientId.equals(client.clientId)) {
-                    yield buildResponse(Status.BAD_REQUEST, "Authorization code was issued to a different client");
-                }
-                String codeVerifier = request.getCodeVerifier();
-
-                if (codeVerifier == null || codeVerifier.isEmpty()) {
-                    yield buildResponse(Status.BAD_REQUEST, "Code verifier is required");
-                }
-                if (!verifyCodeChallenge(authCode.codeChallenge, codeVerifier, authCode.codeChallengeMethod)) {
-                    yield buildResponse(Status.BAD_REQUEST, "Invalid code verifier");
-                }
-                User resourceOwner = consent.resourceOwner;
-                AuthCode.deleteByCode(request.getCode());
-
-                String accessToken = generateAccessToken(resourceOwner.getId().toString(), consent.scopes);
-                String refreshToken = generateRefreshToken(consent.id.toString());
-
-                yield buildTokenResponse(accessToken, refreshToken);
-            }
-            case "refresh_token" -> {
-                String refreshToken = request.getRefreshToken();
-
-                if (!jwtService.extractAudience(refreshToken).contains(uriInfo.getAbsolutePath().toString())) {
-                    yield buildResponse(Status.BAD_REQUEST, "Audience mismatch in the refresh token");
-                }
-                Optional<Consent> consentOptional;
-                try {
-                    consentOptional = Consent.findByIdOptional(UUID.fromString(jwtService.extractSubject(refreshToken)));
-                } catch (IllegalArgumentException e) {
-                    yield buildResponse(Status.BAD_REQUEST, "Invalid refresh token subject");
-                }
-                if (consentOptional.isEmpty()) {
-                    yield buildResponse(Status.BAD_REQUEST, "Refresh token no longer valid: consent revoked");
-                }
-                Consent consent = consentOptional.get();
-
-                if (!consent.client.clientId.equals(client.clientId)) {
-                    yield buildResponse(Status.BAD_REQUEST, "Refresh Token was issued to a different client");
-                }
-                String accessToken = generateAccessToken(consent.resourceOwner.getId().toString(), consent.scopes);
-                String newRefreshToken = generateRefreshToken(consent.id.toString());
-
-                yield buildTokenResponse(accessToken, newRefreshToken);
-            }
-            case "client_credentials" -> {
-                String accessToken = generateAccessToken(client.clientId, client.scopes);
-                yield buildTokenResponse(accessToken, null);
-            }
+            case "authorization_code" -> handleAuthorizationCodeGrant(request, client);
+            case "refresh_token" -> handleRefreshTokenGrant(request, client);
+            case "client_credentials" -> handleClientCredentialsGrant(client);
             default -> buildResponse(Status.BAD_REQUEST, "Unsupported grant type");
         };
+    }
+
+    private Response handleAuthorizationCodeGrant(TokenRequest request, OAuthClient client) {
+        Optional<AuthCode> authCodeOptional = AuthCode.findByCodeOptional(request.getCode());
+
+        if (authCodeOptional.isEmpty()) {
+            return buildResponse(Status.NOT_FOUND, "Auth code does not exist or has already been used");
+        }
+        AuthCode authCode = authCodeOptional.get();
+        Consent consent = authCode.consent;
+
+        if (authCode.isExpired()) {
+            AuthCode.deleteByCode(authCode.code);
+            return buildResponse(Status.BAD_REQUEST, "Auth code has expired");
+        }
+        if (!consent.client.clientId.equals(client.clientId)) {
+            return buildResponse(Status.BAD_REQUEST, "Authorization code was issued to a different client");
+        }
+        String codeVerifier = request.getCodeVerifier();
+
+        if (codeVerifier == null || codeVerifier.isEmpty()) {
+            return buildResponse(Status.BAD_REQUEST, "Code verifier is required");
+        }
+        if (!verifyCodeChallenge(authCode.codeChallenge, codeVerifier, authCode.codeChallengeMethod)) {
+            return buildResponse(Status.BAD_REQUEST, "Invalid code verifier");
+        }
+        User resourceOwner = consent.resourceOwner;
+        AuthCode.deleteByCode(request.getCode());
+
+        String accessToken = generateAccessToken(resourceOwner.getId().toString(), consent.scopes);
+        String refreshToken = generateRefreshToken(consent.id.toString());
+
+        return buildTokenResponse(accessToken, refreshToken);
+    }
+
+    private Response handleRefreshTokenGrant(TokenRequest request, OAuthClient client) {
+        String refreshToken = request.getRefreshToken();
+
+        if (!jwtService.extractAudience(refreshToken).contains(uriInfo.getAbsolutePath().toString())) {
+            return buildResponse(Status.BAD_REQUEST, "Audience mismatch in the refresh token");
+        }
+        Optional<Consent> consentOptional;
+        try {
+            consentOptional = Consent.findByIdOptional(UUID.fromString(jwtService.extractSubject(refreshToken)));
+        } catch (IllegalArgumentException e) {
+            return buildResponse(Status.BAD_REQUEST, "Invalid refresh token subject");
+        }
+        if (consentOptional.isEmpty()) {
+            return buildResponse(Status.BAD_REQUEST, "Refresh token no longer valid: consent revoked");
+        }
+        Consent consent = consentOptional.get();
+
+        if (!consent.client.clientId.equals(client.clientId)) {
+            return buildResponse(Status.BAD_REQUEST, "Refresh Token was issued to a different client");
+        }
+        String accessToken = generateAccessToken(consent.resourceOwner.getId().toString(), consent.scopes);
+        String newRefreshToken = generateRefreshToken(consent.id.toString());
+
+        return buildTokenResponse(accessToken, newRefreshToken);
+    }
+
+    private Response handleClientCredentialsGrant(OAuthClient client) {
+        String accessToken = generateAccessToken(client.clientId, client.scopes);
+        return buildTokenResponse(accessToken, null);
     }
 
     private Response handleExistingConsent(String callbackUrl, Consent consent, Set<Scope> scopeSet, String state,
