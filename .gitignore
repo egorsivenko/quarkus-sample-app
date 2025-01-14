@@ -39,11 +39,8 @@ nb-configuration.xml
 # Local environment
 .env
 
-# Plugin directory
-/.quarkus/cli/plugins/
-# TLS Certificates
-.certs/
-# RSA key pair
-.key-pair/
 # Logging
 logs/
+
+# Micronaut
+.micronaut/
