@@ -1,4 +1,4 @@
-#Maven
+# Maven
 target/
 pom.xml.tag
 pom.xml.releaseBackup
@@ -38,9 +38,16 @@ nb-configuration.xml
 
 # Local environment
 .env
+local-config.yml
 
 # Logging
 logs/
+
+# Key pair
+.key-pair/
+
+# JTE
+build/
 
 # Micronaut
 .micronaut/
