@@ -18,12 +18,12 @@ import io.micronaut.views.View;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import pragmasoft.k1teauth.auth.form.RegistrationForm;
+import pragmasoft.k1teauth.common.violation.MessageSource;
 import pragmasoft.k1teauth.email.EmailService;
 import pragmasoft.k1teauth.turnstile.TurnstileClient;
 import pragmasoft.k1teauth.turnstile.TurnstileRequest;
 import pragmasoft.k1teauth.user.User;
 import pragmasoft.k1teauth.user.UserService;
-import pragmasoft.k1teauth.common.violation.MessageSource;
 
 import java.net.URI;
 import java.util.List;
@@ -44,16 +44,13 @@ public class RegistrationController {
     private final TurnstileClient turnstileClient;
     private final UserService userService;
     private final EmailService emailService;
-    private final MessageSource messageSource;
 
     public RegistrationController(TurnstileClient turnstileClient,
                                   UserService userService,
-                                  EmailService emailService,
-                                  MessageSource messageSource) {
+                                  EmailService emailService) {
         this.turnstileClient = turnstileClient;
         this.userService = userService;
         this.emailService = emailService;
-        this.messageSource = messageSource;
     }
 
     @View("auth/registration")
@@ -102,6 +99,6 @@ public class RegistrationController {
     @View("auth/registration")
     @Error(exception = ConstraintViolationException.class)
     public Map<String, Object> handleError(ConstraintViolationException ex) {
-        return Map.of("siteKey", siteKey, "errors", messageSource.violationsMessages(ex.getConstraintViolations()));
+        return Map.of("siteKey", siteKey, "errors", MessageSource.violationsMessages(ex.getConstraintViolations()));
     }
 }

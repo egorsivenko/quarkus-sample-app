@@ -35,14 +35,11 @@ public class ResetPasswordController {
 
     private final UserService userService;
     private final EmailService emailService;
-    private final MessageSource messageSource;
 
     public ResetPasswordController(UserService userService,
-                                   EmailService emailService,
-                                   MessageSource messageSource) {
+                                   EmailService emailService) {
         this.userService = userService;
         this.emailService = emailService;
-        this.messageSource = messageSource;
     }
 
     @View("auth/resetPassword")
@@ -81,7 +78,7 @@ public class ResetPasswordController {
                 ? HttpResponse.badRequest(new ModelAndView<>(
                         "auth/resetPassword",
                         Map.of("userId", userIdOptional.get(),
-                                "errors", messageSource.violationsMessages(ex.getConstraintViolations()))
+                                "errors", MessageSource.violationsMessages(ex.getConstraintViolations()))
                 ))
                 : HttpResponse.seeOther(URI.create("/auth/forgot-password"));
     }

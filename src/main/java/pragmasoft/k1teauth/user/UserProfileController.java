@@ -30,14 +30,11 @@ public class UserProfileController {
 
     private final UserService userService;
     private final EmailService emailService;
-    private final MessageSource messageSource;
 
     public UserProfileController(UserService userService,
-                                 EmailService emailService,
-                                 MessageSource messageSource) {
+                                 EmailService emailService) {
         this.userService = userService;
         this.emailService = emailService;
-        this.messageSource = messageSource;
     }
 
     @Get(produces = MediaType.TEXT_HTML)
@@ -73,6 +70,6 @@ public class UserProfileController {
     @View("user/changePassword")
     @Error(exception = ConstraintViolationException.class)
     public Map<String, Object> handleError(ConstraintViolationException ex) {
-        return Map.of("errors", messageSource.violationsMessages(ex.getConstraintViolations()));
+        return Map.of("errors", MessageSource.violationsMessages(ex.getConstraintViolations()));
     }
 }

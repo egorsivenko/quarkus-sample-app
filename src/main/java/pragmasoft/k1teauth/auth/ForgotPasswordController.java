@@ -40,16 +40,13 @@ public class ForgotPasswordController {
     private final TurnstileClient turnstileClient;
     private final UserService userService;
     private final EmailService emailService;
-    private final MessageSource messageSource;
 
     public ForgotPasswordController(TurnstileClient turnstileClient,
                                     UserService userService,
-                                    EmailService emailService,
-                                    MessageSource messageSource) {
+                                    EmailService emailService) {
         this.turnstileClient = turnstileClient;
         this.userService = userService;
         this.emailService = emailService;
-        this.messageSource = messageSource;
     }
 
     @View("auth/forgotPassword")
@@ -78,6 +75,6 @@ public class ForgotPasswordController {
     @View("auth/forgotPassword")
     @Error(exception = ConstraintViolationException.class)
     public Map<String, Object> handleError(ConstraintViolationException ex) {
-        return Map.of("siteKey", siteKey, "errors", messageSource.violationsMessages(ex.getConstraintViolations()));
+        return Map.of("siteKey", siteKey, "errors", MessageSource.violationsMessages(ex.getConstraintViolations()));
     }
 }

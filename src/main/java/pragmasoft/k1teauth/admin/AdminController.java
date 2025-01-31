@@ -31,12 +31,9 @@ import java.util.UUID;
 public class AdminController {
 
     private final UserService userService;
-    private final MessageSource messageSource;
 
-    public AdminController(UserService userService,
-                           MessageSource messageSource) {
+    public AdminController(UserService userService) {
         this.userService = userService;
-        this.messageSource = messageSource;
     }
 
     @View("admin/usersList")
@@ -79,7 +76,7 @@ public class AdminController {
                         "admin/editUser",
                         Map.of("user", userService.getById(userIdOptional.get()),
                                 "roles", Role.values(),
-                                "errors", messageSource.violationsMessages(ex.getConstraintViolations()))
+                                "errors", MessageSource.violationsMessages(ex.getConstraintViolations()))
                 ))
                 : HttpResponse.seeOther(URI.create("/admin/users-list"));
     }

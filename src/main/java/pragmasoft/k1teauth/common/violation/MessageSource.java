@@ -1,6 +1,5 @@
 package pragmasoft.k1teauth.common.violation;
 
-import jakarta.inject.Singleton;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Path;
 import jakarta.validation.Path.Node;
@@ -8,10 +7,11 @@ import jakarta.validation.Path.Node;
 import java.util.List;
 import java.util.Set;
 
-@Singleton
-public class MessageSource {
+public final class MessageSource {
 
-    public List<String> violationsMessages(Set<ConstraintViolation<?>> violations) {
+    private MessageSource() {}
+
+    public static List<String> violationsMessages(Set<ConstraintViolation<?>> violations) {
         return violations.stream()
                 .map(MessageSource::violationMessage)
                 .toList();
