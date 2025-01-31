@@ -24,6 +24,7 @@
         <springframework.security.version>6.3.1</springframework.security.version>
         <bouncycastle.version>1.78.1</bouncycastle.version>
         <bucket4j.version>8.10.1</bucket4j.version>
+        <hypersistence.version>3.9.0</hypersistence.version>
     </properties>
 
     <repositories>
@@ -134,6 +135,11 @@
             <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j-core</artifactId>
             <version>${bucket4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.hypersistence</groupId>
+            <artifactId>hypersistence-utils-hibernate-63</artifactId>
+            <version>${hypersistence.version}</version>
         </dependency>
 
         <dependency>
