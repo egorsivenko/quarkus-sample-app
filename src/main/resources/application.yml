@@ -53,6 +53,16 @@ micronaut:
     from:
       email: ${SENDER_EMAIL}
       name: ${SENDER_NAME}
+  metrics:
+    enabled: true
+    export:
+      prometheus:
+        enabled: true
+        descriptions: true
+        step: PT1M
+endpoints:
+  prometheus:
+    sensitive: false
 aws:
   accessKeyId: ${AWS_ACCESS_KEY_ID}
   secretKey: ${AWS_SECRET_ACCESS_KEY}

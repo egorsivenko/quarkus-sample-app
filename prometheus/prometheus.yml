@@ -2,7 +2,7 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: 'quarkus-micrometer'
-    metrics_path: /q/metrics
+  - job_name: 'micronaut-micrometer'
+    metrics_path: /prometheus
     static_configs:
       - targets: [ 'app:8080' ]
