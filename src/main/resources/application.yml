@@ -61,7 +61,7 @@ turnstile:
   siteKey: ${TURNSTILE_SITE_KEY}
   secretKey: ${TURNSTILE_SECRET_KEY}
 pem:
-  path: .key-pair/ec512-key-pair.pem
+  path: ${PEM_FILE_LOCATION:`.key-pair/ec512-key-pair.pem`}
 datasources:
   default:
     url: ${DB_URL:`jdbc:postgresql://localhost:5432/postgres`}
