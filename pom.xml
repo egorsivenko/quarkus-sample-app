@@ -25,6 +25,7 @@
         <bouncycastle.version>1.78.1</bouncycastle.version>
         <bucket4j.version>8.10.1</bucket4j.version>
         <hypersistence.version>3.9.0</hypersistence.version>
+        <dependency-check-maven.version>12.0.2</dependency-check-maven.version>
     </properties>
 
     <repositories>
@@ -282,6 +283,22 @@
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>${dependency-check-maven.version}</version>
+                <configuration>
+                    <failBuildOnCVSS>8</failBuildOnCVSS>
+                    <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
                         </goals>
                     </execution>
                 </executions>
