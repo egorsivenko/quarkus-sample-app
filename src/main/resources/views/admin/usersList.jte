@@ -1,7 +1,6 @@
 @import pragmasoft.k1teauth.user.User
 @import java.time.format.DateTimeFormatter
 @import java.util.List
-@import java.util.Locale
 
 @param String csrfToken
 @param List<User> users
