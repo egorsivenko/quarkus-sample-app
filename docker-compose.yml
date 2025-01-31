@@ -19,6 +19,9 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
     volumes:
       - ./grafana/grafana.ini:/etc/grafana/grafana.ini
       - grafana-data:/var/lib/grafana
