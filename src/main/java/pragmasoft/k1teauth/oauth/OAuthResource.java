@@ -8,7 +8,6 @@ import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Consumes;
 import io.micronaut.http.annotation.Controller;
-import io.micronaut.http.annotation.Error;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.Produces;
@@ -180,11 +179,6 @@ public class OAuthResource {
             case "client_credentials" -> handleClientCredentialsGrant(client);
             default -> buildResponse(HttpStatus.BAD_REQUEST, "Unsupported grant type");
         };
-    }
-
-    @Error(exception = BadJWTException.class)
-    public HttpResponse<?> handleError(BadJWTException ex) {
-        return HttpResponse.badRequest(new ErrorResponse(ex.getMessage()));
     }
 
     private HttpResponse<?> handleAuthorizationCodeGrant(String code, String codeVerifier, OAuthClient client) {
