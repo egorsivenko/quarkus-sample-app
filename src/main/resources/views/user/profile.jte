@@ -1,6 +1,5 @@
 @import pragmasoft.k1teauth.user.User
 
-@param String csrfToken
 @param User user
 
 @template.layout(title = "Profile",
@@ -19,7 +18,6 @@ body = @`
         <a href="/oauth2/scopes" role="button" class="outline contrast">OAuth Scopes</a>
     @endif
     <form action="/logout" class="logout-form" method="post">
-        <input type="hidden" name="csrfToken" value="${csrfToken}">
         <button type="submit" class="outline">Logout</button>
     </form>
 `)
