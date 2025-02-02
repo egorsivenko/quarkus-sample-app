@@ -123,16 +123,17 @@ public class OAuthController {
                 return response;
             }
         }
-        return HttpResponse.ok(new ModelAndView<>(
-                "oauth/consent",
-                Map.of("clientId", client.getClientId(),
-                        "clientName", client.getName(),
-                        "callbackUrl", request.getRedirectUri(),
-                        "state", request.getState(),
-                        "userId", user.getId(),
-                        "scopes", requestedScopes,
-                        "codeChallenge", codeChallenge,
-                        "codeChallengeMethod", codeChallengeMethod)
+        return HttpResponse.ok(new ModelAndView<>("oauth/consent",
+                Map.of("form", new ConsentForm(
+                        client.getName(),
+                        request.getRedirectUri(),
+                        request.getState(),
+                        user.getId(),
+                        mapScopeSetToScopeNames(requestedScopes),
+                        mapScopeSetToScopeDescriptions(requestedScopes),
+                        codeChallenge,
+                        codeChallengeMethod
+                ))
         ));
     }
 
@@ -142,9 +143,9 @@ public class OAuthController {
         UriBuilder uriBuilder = UriBuilder.of(form.getCallbackUrl());
 
         if (form.userGaveConsent()) {
-            Set<Scope> allowedScopes = mapScopeStringToSet(form.getScopes());
+            Set<Scope> allowedScopes = mapScopeStringToSet(form.getScopeNames());
             User user = userService.getById(form.getUserId());
-            OAuthClient client = clientRepository.findById(form.getClientId()).orElseThrow(NotFoundException::new);
+            OAuthClient client = clientRepository.findByName(form.getClientName()).orElseThrow(NotFoundException::new);
             Optional<Consent> consentOptional = consentRepository.findByResourceOwnerAndClient(user, client);
 
             Consent consent;
@@ -291,6 +292,14 @@ public class OAuthController {
                 .map(scope -> scopeRepository.findById(scope.strip()).orElse(null))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
+    }
+
+    private String mapScopeSetToScopeNames(Set<Scope> scopes) {
+        return scopes.stream().map(Scope::getName).collect(Collectors.joining(" "));
+    }
+
+    private String mapScopeSetToScopeDescriptions(Set<Scope> scopes) {
+        return scopes.stream().map(Scope::getDescription).collect(Collectors.joining("\n"));
     }
 
     private String generateAccessToken(String subject, Set<Scope> scopes) {

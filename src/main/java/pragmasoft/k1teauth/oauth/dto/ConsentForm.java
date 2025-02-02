@@ -13,7 +13,7 @@ public class ConsentForm {
     private boolean userGaveConsent;
 
     @Nullable
-    private String clientId;
+    private String clientName;
 
     @NotNull
     private String callbackUrl;
@@ -25,7 +25,10 @@ public class ConsentForm {
     private UUID userId;
 
     @Nullable
-    private String scopes;
+    private String scopeNames;
+
+    @Nullable
+    private String scopeDescriptions;
 
     @Nullable
     private String codeChallenge;
@@ -36,14 +39,15 @@ public class ConsentForm {
     public ConsentForm() {}
 
     @Creator
-    public ConsentForm(boolean userGaveConsent, String clientId, String callbackUrl, String state,
-                       UUID userId, String scopes, String codeChallenge, String codeChallengeMethod) {
-        this.userGaveConsent = userGaveConsent;
-        this.clientId = clientId;
+    public ConsentForm(String clientName, String callbackUrl, String state, UUID userId,
+                       String scopeNames, String scopeDescriptions,
+                       String codeChallenge, String codeChallengeMethod) {
+        this.clientName = clientName;
         this.callbackUrl = callbackUrl;
         this.state = state;
         this.userId = userId;
-        this.scopes = scopes;
+        this.scopeNames = scopeNames;
+        this.scopeDescriptions = scopeDescriptions;
         this.codeChallenge = codeChallenge;
         this.codeChallengeMethod = codeChallengeMethod;
     }
@@ -56,12 +60,12 @@ public class ConsentForm {
         this.userGaveConsent = userGaveConsent;
     }
 
-    public String getClientId() {
-        return clientId;
+    public String getClientName() {
+        return clientName;
     }
 
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
     }
 
     public String getCallbackUrl() {
@@ -88,12 +92,20 @@ public class ConsentForm {
         this.userId = userId;
     }
 
-    public String getScopes() {
-        return scopes;
+    public String getScopeNames() {
+        return scopeNames;
     }
 
-    public void setScopes(String scopes) {
-        this.scopes = scopes;
+    public void setScopeNames(String scopeNames) {
+        this.scopeNames = scopeNames;
+    }
+
+    public String getScopeDescriptions() {
+        return scopeDescriptions;
+    }
+
+    public void setScopeDescriptions(String scopeDescriptions) {
+        this.scopeDescriptions = scopeDescriptions;
     }
 
     public String getCodeChallenge() {
