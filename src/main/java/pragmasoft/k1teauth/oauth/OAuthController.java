@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
 @Controller("/oauth2")
 @Secured(SecurityRule.IS_AUTHENTICATED)
 @Transactional
-public class OAuthResource {
+public class OAuthController {
 
     private static final Duration AUTH_CODE_EXP_TIME = Duration.ofMinutes(10);
     private static final Duration ACCESS_TOKEN_EXP_TIME = Duration.ofHours(1);
@@ -68,13 +68,13 @@ public class OAuthResource {
     private final ConsentRepository consentRepository;
     private final AuthCodeRepository authCodeRepository;
 
-    public OAuthResource(UserService userService,
-                         JwtService jwtService,
-                         EmbeddedServer embeddedServer,
-                         OAuthClientRepository clientRepository,
-                         ScopeRepository scopeRepository,
-                         ConsentRepository consentRepository,
-                         AuthCodeRepository authCodeRepository) {
+    public OAuthController(UserService userService,
+                           JwtService jwtService,
+                           EmbeddedServer embeddedServer,
+                           OAuthClientRepository clientRepository,
+                           ScopeRepository scopeRepository,
+                           ConsentRepository consentRepository,
+                           AuthCodeRepository authCodeRepository) {
         this.userService = userService;
         this.jwtService = jwtService;
         this.embeddedServer = embeddedServer;
