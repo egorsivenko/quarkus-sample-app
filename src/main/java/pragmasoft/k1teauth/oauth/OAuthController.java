@@ -39,6 +39,7 @@ import pragmasoft.k1teauth.security.jwt.JwtService;
 import pragmasoft.k1teauth.user.User;
 import pragmasoft.k1teauth.user.UserService;
 
+import java.net.URI;
 import java.security.Principal;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -163,7 +164,7 @@ public class OAuthController {
                     .queryParam("error_description", "The resource owner declined to provide the necessary consent")
                     .queryParam("state", form.getState());
         }
-        return HttpResponse.seeOther(uriBuilder.build());
+        return buildRedirectResponse(uriBuilder.build());
     }
 
     @Post(uri = "/token")
@@ -255,7 +256,7 @@ public class OAuthController {
                     .queryParam("error_description", "An existing auth code belonging to this user hasn't yet been used")
                     .queryParam("state", state);
 
-            return HttpResponse.seeOther(uriBuilder.build());
+            return buildRedirectResponse(uriBuilder.build());
         }
         requestedScopes.removeAll(consent.getScopes());
 
@@ -280,7 +281,7 @@ public class OAuthController {
                 .queryParam("code", code)
                 .queryParam("state", state);
 
-        return HttpResponse.seeOther(uriBuilder.build());
+        return buildRedirectResponse(uriBuilder.build());
     }
 
     private boolean verifyCodeChallenge(String codeChallenge, String codeVerifier, String method) {
@@ -319,6 +320,11 @@ public class OAuthController {
 
     private HttpResponse<?> buildTokenResponse(String accessToken, String refreshToken) {
         return HttpResponse.ok(new TokenResponse(accessToken, refreshToken, ACCESS_TOKEN_EXP_TIME.toSeconds(), "Bearer"));
+    }
+
+    private HttpResponse<?> buildRedirectResponse(URI location) {
+        return HttpResponse.status(HttpStatus.FOUND)
+                .headers(headers -> headers.location(location));
     }
 
     private HttpResponse<?> buildResponse(HttpStatus status, Object body) {
