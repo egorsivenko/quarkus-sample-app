@@ -1,4 +1,4 @@
-package pragmasoft.k1teauth.common.generator;
+package pragmasoft.k1teauth.security.generator;
 
 import java.security.SecureRandom;
 import java.util.Base64;

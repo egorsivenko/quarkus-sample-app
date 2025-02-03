@@ -15,11 +15,11 @@ import io.micronaut.views.View;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
-import pragmasoft.k1teauth.common.generator.CodeGenerator;
 import pragmasoft.k1teauth.oauth.client.form.EditClientForm;
 import pragmasoft.k1teauth.oauth.client.form.RegisterClientForm;
 import pragmasoft.k1teauth.oauth.scope.Scope;
 import pragmasoft.k1teauth.oauth.scope.ScopeRepository;
+import pragmasoft.k1teauth.security.generator.CodeGenerator;
 
 import java.net.URI;
 import java.util.Arrays;
