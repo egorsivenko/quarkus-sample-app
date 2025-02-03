@@ -2,6 +2,7 @@ package pragmasoft.k1teauth.oauth.dto;
 
 import io.micronaut.core.annotation.Creator;
 import io.micronaut.core.annotation.Introspected;
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.http.annotation.QueryValue;
 import io.micronaut.serde.annotation.Serdeable;
 
@@ -19,9 +20,11 @@ public class AuthRequest {
     private String responseType;
 
     @QueryValue("code_challenge")
+    @Nullable
     private String codeChallenge;
 
     @QueryValue("code_challenge_method")
+    @Nullable
     private String codeChallengeMethod;
 
     @QueryValue("scope")

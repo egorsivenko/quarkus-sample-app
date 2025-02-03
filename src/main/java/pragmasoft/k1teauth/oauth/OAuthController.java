@@ -85,7 +85,7 @@ public class OAuthController {
     }
 
     @Get(uri = "/auth")
-    public HttpResponse<?> authorize(@RequestBean AuthRequest request, Principal principal) {
+    public HttpResponse<?> authorization(@RequestBean AuthRequest request, Principal principal) {
         Optional<OAuthClient> clientOptional = clientRepository.findById(request.getClientId());
         if (clientOptional.isEmpty()) {
             return buildResponse(HttpStatus.NOT_FOUND, "Client ID not found");
@@ -100,7 +100,7 @@ public class OAuthController {
         String codeChallenge = request.getCodeChallenge();
         String codeChallengeMethod = Optional.ofNullable(request.getCodeChallengeMethod()).orElse("plain");
 
-        if (codeChallenge.isEmpty()) {
+        if (codeChallenge == null || codeChallenge.isBlank()) {
             return buildResponse(HttpStatus.BAD_REQUEST, "Code challenge is required");
         }
         if (!List.of("plain", "S256").contains(codeChallengeMethod)) {
