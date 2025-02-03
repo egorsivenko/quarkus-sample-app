@@ -117,8 +117,8 @@ public class OAuthController {
         Optional<Consent> consentOptional = consentRepository.findByResourceOwnerAndClient(user, client);
 
         if (consentOptional.isPresent()) {
-            HttpResponse<?> response = handleExistingConsent(request.getRedirectUri(), consentOptional.get(),
-                    requestedScopes, request.getState(), codeChallenge, codeChallengeMethod);
+            HttpResponse<?> response = handleExistingConsent(consentOptional.get(), requestedScopes,
+                    request.getRedirectUri(), request.getState(), codeChallenge, codeChallengeMethod);
             if (response != null) {
                 return response;
             }
@@ -155,11 +155,13 @@ public class OAuthController {
             } else {
                 consent = new Consent(user, client, allowedScopes);
             }
-            return buildAuthCodeAndRedirect(uriBuilder, consent, form.getState(), form.getCodeChallenge(), form.getCodeChallengeMethod());
+            return buildAuthCodeAndRedirect(uriBuilder, consent, form.getState(),
+                    form.getCodeChallenge(), form.getCodeChallengeMethod());
         } else {
             uriBuilder
                     .queryParam("error", "access_denied")
-                    .queryParam("error_message", "The resource owner declined to provide the necessary consent");
+                    .queryParam("error_description", "The resource owner declined to provide the necessary consent")
+                    .queryParam("state", form.getState());
         }
         return HttpResponse.seeOther(uriBuilder.build());
     }
@@ -242,14 +244,16 @@ public class OAuthController {
         return buildTokenResponse(accessToken, null);
     }
 
-    private HttpResponse<?> handleExistingConsent(String callbackUrl, Consent consent, Set<Scope> requestedScopes, String state,
+    private HttpResponse<?> handleExistingConsent(Consent consent, Set<Scope> requestedScopes,
+                                                  String callbackUrl, String state,
                                                   String codeChallenge, String codeChallengeMethod) {
         UriBuilder uriBuilder = UriBuilder.of(callbackUrl);
 
         if (authCodeRepository.findByConsent(consent).isPresent()) {
             uriBuilder
-                    .queryParam("error", "bad_request")
-                    .queryParam("error_message", "An existing auth code belonging to this user hasn't yet been used");
+                    .queryParam("error", "access_denied")
+                    .queryParam("error_description", "An existing auth code belonging to this user hasn't yet been used")
+                    .queryParam("state", state);
 
             return HttpResponse.seeOther(uriBuilder.build());
         }
