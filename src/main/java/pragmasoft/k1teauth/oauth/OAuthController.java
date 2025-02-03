@@ -264,7 +264,7 @@ public class OAuthController {
     private HttpResponse<?> buildAuthCodeAndRedirect(UriBuilder uriBuilder, Consent consent, String state,
                                                      String codeChallenge, String codeChallengeMethod) {
         AuthCode authCode = new AuthCode();
-        String code = CodeGenerator.generate(20);
+        String code = CodeGenerator.generate(40);
         authCode.setCode(HashUtil.hashWithSHA256(code));
         authCode.setCodeChallenge(codeChallenge);
         authCode.setCodeChallengeMethod(codeChallengeMethod);

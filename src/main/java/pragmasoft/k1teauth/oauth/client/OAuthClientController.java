@@ -63,7 +63,7 @@ public class OAuthClientController {
                             "errors", List.of("OAuth client name is already registered"))));
         }
         OAuthClient client = new OAuthClient();
-        client.setClientId(CodeGenerator.generate(30));
+        client.setClientId(CodeGenerator.generate(40));
         client.setClientSecret(CodeGenerator.generate(40));
         assignFormDataToClient(client, form);
 
