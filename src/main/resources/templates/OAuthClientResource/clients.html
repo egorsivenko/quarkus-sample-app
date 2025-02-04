@@ -16,8 +16,7 @@
         <thead>
         <tr>
             <th scope="col">Client name</th>
-            <th scope="col">Homepage URL</th>
-            <th scope="col">Callback URL</th>
+            <th scope="col">Callback URLs</th>
             <th scope="col">Client ID</th>
             <th scope="col">Client Secret</th>
             <th scope="col">Scopes</th>
@@ -28,11 +27,14 @@
         {#for client in clients}
             <tr>
                 <th scope="row">{client.name}</th>
-                <td>{client.homepageUrl}</td>
-                <td>{client.callbackUrl}</td>
+                <td>{client.callbackUrls.join(', ')}</td>
                 <td>{client.clientId}</td>
                 <td>{client.clientSecret}</td>
-                <td>{client.scopes.join(', ')}</td>
+                <td>
+                    {#for scope in client.scopes}
+                        <div>{scope.name}</div>
+                    {/for}
+                </td>
                 <td>
                     <form action="/oauth2/clients/delete" method="POST"
                           onsubmit="return confirm('Are you sure you want to delete this OAuth client?');">
