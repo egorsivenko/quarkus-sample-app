@@ -14,7 +14,7 @@ http {
             set ${DOLLAR}STYLE    "style-src 'self' https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css";
             set ${DOLLAR}IMG      "img-src 'self' https://picocss.com/favicon.ico";
             set ${DOLLAR}CONNECT  "connect-src 'self' https://challenges.cloudflare.com/turnstile/v0/siteverify";
-            set ${DOLLAR}FRAME    "frame-src 'self' https://challenges.cloudflare.com";
+            set ${DOLLAR}FRAME    "frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'none'";
 
             add_header Content-Security-Policy "${DOLLAR}DEFAULT; ${DOLLAR}SCRIPT; ${DOLLAR}STYLE; ${DOLLAR}IMG; ${DOLLAR}CONNECT; ${DOLLAR}FRAME";
 
