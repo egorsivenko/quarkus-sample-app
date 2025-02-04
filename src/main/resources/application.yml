@@ -1,0 +1,95 @@
+micronaut:
+  application:
+    name: k1te-auth
+  router:
+    static-resources:
+      css:
+        mapping: /css/*.css
+        paths: classpath:static/css
+      js:
+        mapping: /js/*.js
+        paths: classpath:static/js
+  security:
+    reject-not-found: true
+    authentication: cookie
+    redirect:
+      login-success: /profile
+      login-failure: /auth/login?failed=true
+      logout: /auth/login
+      prior-to-login: true
+      unauthorized:
+        url: /auth/login
+    intercept-url-map:
+      - pattern: /css/**
+        httpMethod: GET
+        access:
+          - isAnonymous()
+      - pattern: /js/**
+        httpMethod: GET
+        access:
+          - isAnonymous()
+    token:
+      cookie:
+        cookie-http-only: true
+        cookie-secure: true
+        cookie-same-site: strict
+        cookie-max-age: 1h
+      jwt:
+        signatures:
+          secret:
+            generator:
+              secret: ${JWT_GENERATOR_SIGNATURE_SECRET}
+              jws-algorithm: HS256
+    csrf:
+      signature-key: ${CSRF_SIGNATURE_KEY}
+      cookie-name: csrfToken
+      cookie-http-only: true
+      cookie-secure: true
+      cookie-same-site: strict
+      cookie-max-age: 1h
+      filter:
+        regex-pattern: "^(?!(/login|/logout|/auth/.*|/oauth2/token)$).*$"
+  email:
+    from:
+      email: ${SENDER_EMAIL}
+      name: ${SENDER_NAME}
+  metrics:
+    enabled: true
+    export:
+      prometheus:
+        enabled: true
+        descriptions: true
+        step: PT1M
+endpoints:
+  prometheus:
+    sensitive: false
+aws:
+  accessKeyId: ${AWS_ACCESS_KEY_ID}
+  secretKey: ${AWS_SECRET_ACCESS_KEY}
+  region: ${AWS_REGION:us-east-1}
+turnstile:
+  siteKey: ${TURNSTILE_SITE_KEY}
+  secretKey: ${TURNSTILE_SECRET_KEY}
+pem:
+  path: ${PEM_FILE_LOCATION:`.key-pair/ec512-key-pair.pem`}
+datasources:
+  default:
+    url: ${DB_URL:`jdbc:postgresql://localhost:5432/postgres`}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
+jpa:
+  default:
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        hbm2ddl:
+          auto: update
+    entity-scan:
+      packages: 'pragmasoft.k1teauth'
+cache:
+  capacity: 1000
+bucket:
+  capacity: 10
+  refillRate: 1s

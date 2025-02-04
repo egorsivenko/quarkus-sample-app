@@ -13,19 +13,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up JDK 17
+    - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
-        java-version: '17'
+        java-version: '21'
         distribution: 'temurin'
         cache: maven
 
     - name: Build with Maven
-      env:
-        QUARKUS_MAILER_HOST: ${{ vars.QUARKUS_MAILER_HOST }}
-        TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
-        TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
-        ADMIN_NAME: ${{ secrets.ADMIN_NAME }}
-        ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-        ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
       run: mvn -B package --file pom.xml

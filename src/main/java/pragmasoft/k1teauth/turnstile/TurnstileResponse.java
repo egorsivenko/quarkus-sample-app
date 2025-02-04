@@ -1,10 +1,12 @@
 package pragmasoft.k1teauth.turnstile;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.micronaut.serde.annotation.Serdeable;
 
 import java.util.Arrays;
 import java.util.Objects;
 
+@Serdeable
 public record TurnstileResponse(
         boolean success,
         String hostname,

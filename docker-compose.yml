@@ -19,6 +19,9 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
     volumes:
       - ./grafana/grafana.ini:/etc/grafana/grafana.ini
       - grafana-data:/var/lib/grafana
@@ -41,10 +44,8 @@ services:
   app:
     container_name: app
     build:
-      context: ./
-      dockerfile: src/main/docker/Dockerfile.${QUARKUS_MODE:-jvm}
-    env_file:
-      - .env
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "${APP_HOST_PORT:-8080}:${APP_CONTAINER_PORT:-8080}"
     depends_on:

@@ -1,31 +1,39 @@
 package pragmasoft.k1teauth.auth.form;
 
+import io.micronaut.core.annotation.Creator;
+import io.micronaut.serde.annotation.Serdeable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import org.jboss.resteasy.reactive.RestForm;
 import pragmasoft.k1teauth.user.User;
 
+@Serdeable
 public class RegistrationForm {
 
-    @RestForm
     @NotBlank
     @Size(min = 4, max = 50)
-    String fullName;
+    private String fullName;
 
-    @RestForm
     @NotBlank
     @Size(min = 6, max = 50)
-    String email;
+    private String email;
 
-    @RestForm
     @NotBlank
     @Size(min = 6, max = 50)
-    String password;
+    private String password;
 
-    @RestForm
     @NotBlank
     @Size(min = 6, max = 50)
-    String confirmPassword;
+    private String confirmPassword;
+
+    public RegistrationForm() {}
+
+    @Creator
+    public RegistrationForm(String fullName, String email, String password, String confirmPassword) {
+        this.fullName = fullName;
+        this.email = email;
+        this.password = password;
+        this.confirmPassword = confirmPassword;
+    }
 
     public User mapToUser() {
         return new User(fullName, email, password);
@@ -35,15 +43,31 @@ public class RegistrationForm {
         return fullName;
     }
 
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
     public String getEmail() {
         return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getPassword() {
         return password;
     }
 
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     public String getConfirmPassword() {
         return confirmPassword;
+    }
+
+    public void setConfirmPassword(String confirmPassword) {
+        this.confirmPassword = confirmPassword;
     }
 }

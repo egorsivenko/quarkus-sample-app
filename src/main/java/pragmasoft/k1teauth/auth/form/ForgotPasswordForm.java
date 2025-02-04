@@ -1,17 +1,29 @@
 package pragmasoft.k1teauth.auth.form;
 
+import io.micronaut.core.annotation.Creator;
+import io.micronaut.serde.annotation.Serdeable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import org.jboss.resteasy.reactive.RestForm;
 
+@Serdeable
 public class ForgotPasswordForm {
 
-    @RestForm
     @NotBlank
     @Size(min = 6, max = 50)
-    String email;
+    private String email;
+
+    public ForgotPasswordForm() {}
+
+    @Creator
+    public ForgotPasswordForm(String email) {
+        this.email = email;
+    }
 
     public String getEmail() {
         return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

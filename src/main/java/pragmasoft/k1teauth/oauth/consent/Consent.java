@@ -1,6 +1,6 @@
 package pragmasoft.k1teauth.oauth.consent;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.micronaut.serde.annotation.Serdeable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -13,6 +13,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -22,28 +23,30 @@ import pragmasoft.k1teauth.user.User;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+@Serdeable
 @Entity
-@Table(name = "consents")
-public class Consent extends PanacheEntityBase {
+@Table(
+        name = "consents",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"resource_owner_id", "oauth_client_id"})
+)
+public class Consent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    public UUID id;
+    private UUID id;
 
     @ManyToOne
     @JoinColumn(name = "resource_owner_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    public User resourceOwner;
+    private User resourceOwner;
 
     @ManyToOne
     @JoinColumn(name = "oauth_client_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    public OAuthClient client;
+    private OAuthClient client;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -61,17 +64,57 @@ public class Consent extends PanacheEntityBase {
                     )
             )
     )
-    public Set<Scope> scopes = new HashSet<>();
+    private Set<Scope> scopes = new HashSet<>();
 
     @CreationTimestamp
     @Column(name = "granted_at", nullable = false)
-    public LocalDateTime grantedAt;
+    private LocalDateTime grantedAt;
 
-    public static Optional<Consent> findByResourceOwnerAndClient(User resourceOwner, OAuthClient client) {
-        return find("resourceOwner = ?1 and client = ?2", resourceOwner, client).firstResultOptional();
+    public Consent() {}
+
+    public Consent(User resourceOwner, OAuthClient client, Set<Scope> scopes) {
+        this.resourceOwner = resourceOwner;
+        this.client = client;
+        this.scopes = scopes;
     }
 
-    public static List<Consent> listByResourceOwner(User resourceOwner) {
-        return list("resourceOwner", resourceOwner);
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public User getResourceOwner() {
+        return resourceOwner;
+    }
+
+    public void setResourceOwner(User resourceOwner) {
+        this.resourceOwner = resourceOwner;
+    }
+
+    public OAuthClient getClient() {
+        return client;
+    }
+
+    public void setClient(OAuthClient client) {
+        this.client = client;
+    }
+
+    public Set<Scope> getScopes() {
+        return scopes;
+    }
+
+    public void setScopes(Set<Scope> scopes) {
+        this.scopes = scopes;
+    }
+
+    public LocalDateTime getGrantedAt() {
+        return grantedAt;
+    }
+
+    public void setGrantedAt(LocalDateTime grantedAt) {
+        this.grantedAt = grantedAt;
     }
 }

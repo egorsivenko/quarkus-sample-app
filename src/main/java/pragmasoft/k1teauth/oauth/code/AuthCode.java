@@ -1,6 +1,6 @@
 package pragmasoft.k1teauth.oauth.code;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.micronaut.serde.annotation.Serdeable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,50 +11,82 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import pragmasoft.k1teauth.oauth.consent.Consent;
-import pragmasoft.k1teauth.util.HashUtil;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
+@Serdeable
 @Entity
 @Table(name = "auth_codes")
-public class AuthCode extends PanacheEntityBase {
+public class AuthCode {
 
     @Id
-    @Column(nullable = false, unique = true)
-    public String code;
+    private String code;
 
     @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "consent_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    public Consent consent;
+    private Consent consent;
 
     @Column(name = "code_challenge", nullable = false)
-    public String codeChallenge;
+    private String codeChallenge;
 
     @Column(name = "code_challenge_method", nullable = false)
-    public String codeChallengeMethod;
+    private String codeChallengeMethod;
 
     @Column(name = "expires_at", nullable = false)
-    public LocalDateTime expiresAt;
+    private LocalDateTime expiresAt;
 
-    public static Optional<AuthCode> findByCodeOptional(String code) {
-        return find("code", HashUtil.hashWithSHA256(code)).firstResultOptional();
-    }
+    public AuthCode() {}
 
-    public static Optional<AuthCode> findByConsentOptional(Consent consent) {
-        return find("consent", consent).firstResultOptional();
-    }
-
-    public static void deleteByCode(String code) {
-        delete("code", HashUtil.hashWithSHA256(code));
+    public AuthCode(String code, Consent consent, String codeChallenge, String codeChallengeMethod, LocalDateTime expiresAt) {
+        this.code = code;
+        this.consent = consent;
+        this.codeChallenge = codeChallenge;
+        this.codeChallengeMethod = codeChallengeMethod;
+        this.expiresAt = expiresAt;
     }
 
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiresAt);
     }
 
+    public String getCode() {
+        return code;
+    }
+
     public void setCode(String code) {
-        this.code = HashUtil.hashWithSHA256(code);
+        this.code = code;
+    }
+
+    public Consent getConsent() {
+        return consent;
+    }
+
+    public void setConsent(Consent consent) {
+        this.consent = consent;
+    }
+
+    public String getCodeChallenge() {
+        return codeChallenge;
+    }
+
+    public void setCodeChallenge(String codeChallenge) {
+        this.codeChallenge = codeChallenge;
+    }
+
+    public String getCodeChallengeMethod() {
+        return codeChallengeMethod;
+    }
+
+    public void setCodeChallengeMethod(String codeChallengeMethod) {
+        this.codeChallengeMethod = codeChallengeMethod;
+    }
+
+    public LocalDateTime getExpiresAt() {
+        return expiresAt;
+    }
+
+    public void setExpiresAt(LocalDateTime expiresAt) {
+        this.expiresAt = expiresAt;
     }
 }
