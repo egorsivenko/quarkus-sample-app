@@ -1,6 +1,7 @@
 package pragmasoft.k1teauth.auth.form;
 
 import io.micronaut.core.annotation.Creator;
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.serde.annotation.Serdeable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -25,14 +26,18 @@ public class RegistrationForm {
     @Size(min = 6, max = 50)
     private String confirmPassword;
 
+    @Nullable
+    private String cfTurnstileResponse;
+
     public RegistrationForm() {}
 
     @Creator
-    public RegistrationForm(String fullName, String email, String password, String confirmPassword) {
+    public RegistrationForm(String fullName, String email, String password, String confirmPassword, String cfTurnstileResponse) {
         this.fullName = fullName;
         this.email = email;
         this.password = password;
         this.confirmPassword = confirmPassword;
+        this.cfTurnstileResponse = cfTurnstileResponse;
     }
 
     public User mapToUser() {
@@ -69,5 +74,13 @@ public class RegistrationForm {
 
     public void setConfirmPassword(String confirmPassword) {
         this.confirmPassword = confirmPassword;
+    }
+
+    public String getCfTurnstileResponse() {
+        return cfTurnstileResponse;
+    }
+
+    public void setCfTurnstileResponse(String cfTurnstileResponse) {
+        this.cfTurnstileResponse = cfTurnstileResponse;
     }
 }
