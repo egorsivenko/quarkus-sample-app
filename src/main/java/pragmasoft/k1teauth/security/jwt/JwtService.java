@@ -10,9 +10,9 @@ import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.BadJWTException;
-import io.micronaut.runtime.server.EmbeddedServer;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Singleton;
+import pragmasoft.k1teauth.common.ServerInfo;
 
 import java.text.ParseException;
 import java.time.Duration;
@@ -27,10 +27,10 @@ public class JwtService {
     private RSAKey rsaJWK;
     private RSAKey rsaPublicJWK;
 
-    private final EmbeddedServer embeddedServer;
+    private final ServerInfo serverInfo;
 
-    public JwtService(EmbeddedServer embeddedServer) {
-        this.embeddedServer = embeddedServer;
+    public JwtService(ServerInfo serverInfo) {
+        this.serverInfo = serverInfo;
     }
 
     @PostConstruct
@@ -46,7 +46,7 @@ public class JwtService {
         try {
             JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder()
                     .subject(subject)
-                    .issuer(embeddedServer.getContextURI().toString())
+                    .issuer(serverInfo.getBaseUrl())
                     .audience(audience)
                     .issueTime(new Date())
                     .expirationTime(new Date(System.currentTimeMillis() + expirationTime.toMillis()));

@@ -6,9 +6,9 @@ import io.micronaut.email.EmailSender;
 import io.micronaut.email.MultipartBody;
 import io.micronaut.email.template.TemplateBody;
 import io.micronaut.http.uri.UriBuilder;
-import io.micronaut.runtime.server.EmbeddedServer;
 import io.micronaut.views.ModelAndView;
 import jakarta.inject.Singleton;
+import pragmasoft.k1teauth.common.ServerInfo;
 import pragmasoft.k1teauth.security.jwt.JwtService;
 import pragmasoft.k1teauth.user.User;
 
@@ -27,14 +27,14 @@ public class EmailService {
 
     private final EmailSender<?, ?> emailSender;
     private final JwtService jwtService;
-    private final EmbeddedServer embeddedServer;
+    private final ServerInfo serverInfo;
 
     public EmailService(EmailSender<?, ?> emailSender,
                         JwtService jwtService,
-                        EmbeddedServer embeddedServer) {
+                        ServerInfo serverInfo) {
         this.emailSender = emailSender;
         this.jwtService = jwtService;
-        this.embeddedServer = embeddedServer;
+        this.serverInfo = serverInfo;
     }
 
     public void sendRegistrationEmail(User recipient) {
@@ -66,7 +66,7 @@ public class EmailService {
     }
 
     private String formatLink(UUID userId, String endpoint) {
-        String path = embeddedServer.getContextURI().toString() + "/verify" + endpoint;
+        String path = serverInfo.getBaseUrl() + "/verify" + endpoint;
         String token = jwtService.generate(userId.toString(), List.of(path), TOKEN_EXP_TIME);
 
         return UriBuilder.of(path)
