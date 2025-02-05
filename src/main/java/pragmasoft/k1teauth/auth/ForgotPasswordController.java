@@ -58,9 +58,8 @@ public class ForgotPasswordController {
     @View("auth/forgotPassword")
     @Post(uri = "/forgot-password", consumes = MediaType.APPLICATION_FORM_URLENCODED)
     @ExecuteOn(TaskExecutors.BLOCKING)
-    public HttpResponse<?> forgotPassword(@Valid @Body ForgotPasswordForm form,
-                                          @Body("cf-turnstile-response") String token) {
-        TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, token);
+    public HttpResponse<?> forgotPassword(@Valid @Body ForgotPasswordForm form) {
+        TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, form.getCfTurnstileResponse());
         if (!turnstileClient.verifyToken(turnstileRequest).success()) {
             return HttpResponse.badRequest(Map.of("siteKey", siteKey, "errors", List.of("Turnstile verification failed")));
         }

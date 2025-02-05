@@ -62,9 +62,8 @@ public class RegistrationController {
     @View("auth/registration")
     @Post(uri = "/registration", consumes = MediaType.APPLICATION_FORM_URLENCODED)
     @ExecuteOn(TaskExecutors.BLOCKING)
-    public HttpResponse<?> registration(@Valid @Body RegistrationForm form,
-                                        @Body("cf-turnstile-response") String token) {
-        TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, token);
+    public HttpResponse<?> registration(@Valid @Body RegistrationForm form) {
+        TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, form.getCfTurnstileResponse());
         if (!turnstileClient.verifyToken(turnstileRequest).success()) {
             return HttpResponse.badRequest(Map.of("siteKey", siteKey, "errors", List.of("Turnstile verification failed")));
         }
