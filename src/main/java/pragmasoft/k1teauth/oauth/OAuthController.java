@@ -15,12 +15,12 @@ import io.micronaut.http.annotation.Produces;
 import io.micronaut.http.annotation.RequestBean;
 import io.micronaut.http.server.exceptions.NotFoundException;
 import io.micronaut.http.uri.UriBuilder;
-import io.micronaut.runtime.server.EmbeddedServer;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.views.ModelAndView;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import pragmasoft.k1teauth.common.ServerInfo;
 import pragmasoft.k1teauth.common.dto.ErrorResponse;
 import pragmasoft.k1teauth.oauth.client.OAuthClient;
 import pragmasoft.k1teauth.oauth.client.OAuthClientRepository;
@@ -64,7 +64,7 @@ public class OAuthController {
 
     private final UserService userService;
     private final JwtService jwtService;
-    private final EmbeddedServer embeddedServer;
+    private final ServerInfo serverInfo;
     private final OAuthClientRepository clientRepository;
     private final ScopeRepository scopeRepository;
     private final ConsentRepository consentRepository;
@@ -72,14 +72,14 @@ public class OAuthController {
 
     public OAuthController(UserService userService,
                            JwtService jwtService,
-                           EmbeddedServer embeddedServer,
+                           ServerInfo serverInfo,
                            OAuthClientRepository clientRepository,
                            ScopeRepository scopeRepository,
                            ConsentRepository consentRepository,
                            AuthCodeRepository authCodeRepository) {
         this.userService = userService;
         this.jwtService = jwtService;
-        this.embeddedServer = embeddedServer;
+        this.serverInfo = serverInfo;
         this.clientRepository = clientRepository;
         this.scopeRepository = scopeRepository;
         this.consentRepository = consentRepository;
@@ -218,7 +218,7 @@ public class OAuthController {
     }
 
     private HttpResponse<?> handleRefreshTokenGrant(String refreshToken, OAuthClient client) throws BadJWTException {
-        if (!jwtService.extractClaimsSet(refreshToken).getAudience().contains(embeddedServer.getContextURI().toString())) {
+        if (!jwtService.extractClaimsSet(refreshToken).getAudience().contains(serverInfo.getBaseUrl())) {
             return buildResponse(HttpStatus.BAD_REQUEST, "Audience mismatch in the refresh token");
         }
         Optional<Consent> consentOptional;
@@ -316,7 +316,7 @@ public class OAuthController {
     }
 
     private String generateRefreshToken(String subject) {
-        return jwtService.generate(subject, List.of(embeddedServer.getContextURI().toString()), REFRESH_TOKEN_EXP_TIME);
+        return jwtService.generate(subject, List.of(serverInfo.getBaseUrl()), REFRESH_TOKEN_EXP_TIME);
     }
 
     private HttpResponse<?> buildTokenResponse(String accessToken, String refreshToken) {

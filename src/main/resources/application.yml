@@ -70,6 +70,8 @@ aws:
 turnstile:
   siteKey: ${TURNSTILE_SITE_KEY}
   secretKey: ${TURNSTILE_SECRET_KEY}
+host:
+  name: ${HOST_NAME}
 pem:
   path: ${PEM_FILE_LOCATION:`.key-pair/ec512-key-pair.pem`}
 datasources:
