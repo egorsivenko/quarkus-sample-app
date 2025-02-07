@@ -59,6 +59,28 @@ import java.util.stream.Collectors;
 @Transactional
 public class OAuthController {
 
+    public enum AuthorizationGrantType {
+        AUTHORIZATION_CODE("authorization_code"),
+        REFRESH_TOKEN("refresh_token"),
+        CLIENT_CREDENTIALS("client_credentials");
+
+        private final String label;
+
+        AuthorizationGrantType(String label) {
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public static Set<String> getAvailableAuthorizationGrantTypes() {
+            return Arrays.stream(values())
+                    .map(AuthorizationGrantType::getLabel)
+                    .collect(Collectors.toSet());
+        }
+    }
+
     private static final Duration AUTH_CODE_EXP_TIME = Duration.ofMinutes(10);
     private static final Duration ACCESS_TOKEN_EXP_TIME = Duration.ofHours(1);
     private static final Duration REFRESH_TOKEN_EXP_TIME = Duration.ofDays(14);
@@ -179,12 +201,15 @@ public class OAuthController {
                                  Principal principal) throws BadJWTException {
         OAuthClient client = clientRepository.findById(principal.getName()).orElseThrow(NotFoundException::new);
 
-        return switch (grantType) {
-            case "authorization_code" -> handleAuthorizationCodeGrant(code, codeVerifier, client);
-            case "refresh_token" -> handleRefreshTokenGrant(refreshToken, client);
-            case "client_credentials" -> handleClientCredentialsGrant(client);
-            default -> buildResponse(HttpStatus.BAD_REQUEST, "Unsupported grant type");
-        };
+        try {
+            return switch (AuthorizationGrantType.valueOf(grantType.toUpperCase())) {
+                case AUTHORIZATION_CODE -> handleAuthorizationCodeGrant(code, codeVerifier, client);
+                case REFRESH_TOKEN -> handleRefreshTokenGrant(refreshToken, client);
+                case CLIENT_CREDENTIALS -> handleClientCredentialsGrant(client);
+            };
+        } catch (IllegalArgumentException e) {
+            return buildResponse(HttpStatus.BAD_REQUEST, "Unsupported grant type");
+        }
     }
 
     private HttpResponse<?> handleAuthorizationCodeGrant(String code, String codeVerifier, OAuthClient client) {
