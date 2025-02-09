@@ -33,6 +33,7 @@ import pragmasoft.k1teauth.oauth.dto.ConsentForm;
 import pragmasoft.k1teauth.oauth.dto.TokenResponse;
 import pragmasoft.k1teauth.oauth.scope.Scope;
 import pragmasoft.k1teauth.oauth.scope.ScopeRepository;
+import pragmasoft.k1teauth.oauth.util.CodeChallengeUtil;
 import pragmasoft.k1teauth.security.generator.CodeGenerator;
 import pragmasoft.k1teauth.security.hash.HashUtil;
 import pragmasoft.k1teauth.security.jwt.JwtClaim;
@@ -57,6 +58,28 @@ import java.util.stream.Collectors;
 @Secured(SecurityRule.IS_AUTHENTICATED)
 @Transactional
 public class OAuthController {
+
+    public enum AuthorizationGrantType {
+        AUTHORIZATION_CODE("authorization_code"),
+        REFRESH_TOKEN("refresh_token"),
+        CLIENT_CREDENTIALS("client_credentials");
+
+        private final String label;
+
+        AuthorizationGrantType(String label) {
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public static Set<String> getAvailableAuthorizationGrantTypes() {
+            return Arrays.stream(values())
+                    .map(AuthorizationGrantType::getLabel)
+                    .collect(Collectors.toSet());
+        }
+    }
 
     private static final Duration AUTH_CODE_EXP_TIME = Duration.ofMinutes(10);
     private static final Duration ACCESS_TOKEN_EXP_TIME = Duration.ofHours(1);
@@ -105,7 +128,7 @@ public class OAuthController {
         if (codeChallenge == null || codeChallenge.isBlank()) {
             return buildResponse(HttpStatus.BAD_REQUEST, "Code challenge is required");
         }
-        if (!List.of("plain", "S256").contains(codeChallengeMethod)) {
+        if (!CodeChallengeUtil.getAvailableCodeChallengeMethods().contains(codeChallengeMethod)) {
             return buildResponse(HttpStatus.BAD_REQUEST, "Unsupported code challenge method");
         }
         Set<Scope> requestedScopes = mapScopeStringToSet(request.getScope());
@@ -178,12 +201,15 @@ public class OAuthController {
                                  Principal principal) throws BadJWTException {
         OAuthClient client = clientRepository.findById(principal.getName()).orElseThrow(NotFoundException::new);
 
-        return switch (grantType) {
-            case "authorization_code" -> handleAuthorizationCodeGrant(code, codeVerifier, client);
-            case "refresh_token" -> handleRefreshTokenGrant(refreshToken, client);
-            case "client_credentials" -> handleClientCredentialsGrant(client);
-            default -> buildResponse(HttpStatus.BAD_REQUEST, "Unsupported grant type");
-        };
+        try {
+            return switch (AuthorizationGrantType.valueOf(grantType.toUpperCase())) {
+                case AUTHORIZATION_CODE -> handleAuthorizationCodeGrant(code, codeVerifier, client);
+                case REFRESH_TOKEN -> handleRefreshTokenGrant(refreshToken, client);
+                case CLIENT_CREDENTIALS -> handleClientCredentialsGrant(client);
+            };
+        } catch (IllegalArgumentException e) {
+            return buildResponse(HttpStatus.BAD_REQUEST, "Unsupported grant type");
+        }
     }
 
     private HttpResponse<?> handleAuthorizationCodeGrant(String code, String codeVerifier, OAuthClient client) {
@@ -205,7 +231,7 @@ public class OAuthController {
         if (codeVerifier == null || codeVerifier.isEmpty()) {
             return buildResponse(HttpStatus.BAD_REQUEST, "Code verifier is required");
         }
-        if (!verifyCodeChallenge(authCode.getCodeChallenge(), codeVerifier, authCode.getCodeChallengeMethod())) {
+        if (!CodeChallengeUtil.verifyCodeChallenge(authCode.getCodeChallenge(), codeVerifier, authCode.getCodeChallengeMethod())) {
             return buildResponse(HttpStatus.BAD_REQUEST, "Invalid code verifier");
         }
         User resourceOwner = consent.getResourceOwner();
@@ -283,14 +309,6 @@ public class OAuthController {
                 .queryParam("state", state);
 
         return buildRedirectResponse(uriBuilder.build());
-    }
-
-    private boolean verifyCodeChallenge(String codeChallenge, String codeVerifier, String method) {
-        return switch (method) {
-            case "plain" -> codeChallenge.equals(codeVerifier);
-            case "S256" -> codeChallenge.equals(HashUtil.hashWithSHA256(codeVerifier));
-            default -> false;
-        };
     }
 
     private Set<Scope> mapScopeStringToSet(String scopes) {
