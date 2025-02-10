@@ -345,10 +345,13 @@ public class OAuthController {
 
     private HttpResponse<?> buildRedirectResponse(URI location) {
         return HttpResponse.status(HttpStatus.FOUND)
-                .headers(headers -> headers.location(location));
+                .headers(headers ->
+                        headers.location(location).add(HttpHeaders.CACHE_CONTROL, "no-store")
+                );
     }
 
     private HttpResponse<?> buildErrorResponse(String error) {
-        return HttpResponse.badRequest(new ErrorResponse(error));
+        return HttpResponse.badRequest(new ErrorResponse(error))
+                .header(HttpHeaders.CACHE_CONTROL, "no-store");
     }
 }
