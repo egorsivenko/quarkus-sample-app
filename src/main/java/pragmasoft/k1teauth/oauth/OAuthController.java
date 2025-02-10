@@ -306,7 +306,8 @@ public class OAuthController {
 
         uriBuilder
                 .queryParam("code", code)
-                .queryParam("state", state);
+                .queryParam("state", state)
+                .queryParam("iss", serverInfo.getBaseUrl());
 
         return buildRedirectResponse(uriBuilder.build());
     }
