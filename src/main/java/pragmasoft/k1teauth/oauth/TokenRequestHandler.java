@@ -75,7 +75,6 @@ public class TokenRequestHandler {
 
     private HttpResponse<?> handleAuthorizationCodeGrant(String code, String codeVerifier, OAuthClient client) {
         Optional<AuthCode> authCodeOptional = authCodeRepository.findById(HashUtil.hashWithSHA256(code));
-
         if (authCodeOptional.isEmpty()) {
             return ResponseBuilder.buildErrorResponse("Auth code is invalid or has already been used");
         }
@@ -120,6 +119,7 @@ public class TokenRequestHandler {
         Consent consent = consentOptional.get();
 
         if (!consent.getClient().getClientId().equals(client.getClientId())) {
+            consentRepository.delete(consent);
             return ResponseBuilder.buildErrorResponse("Refresh Token was issued to a different client");
         }
         String accessToken = generateAccessToken(consent.getResourceOwner().getId().toString(), consent.getScopes());
@@ -141,6 +141,8 @@ public class TokenRequestHandler {
     }
 
     private String generateRefreshToken(String subject) {
-        return jwtService.generate(subject, List.of(serverInfo.getBaseUrl()), OAuthConstants.REFRESH_TOKEN_EXP_TIME);
+        return jwtService.generate(subject,
+                List.of(serverInfo.getBaseUrl()),
+                OAuthConstants.REFRESH_TOKEN_EXP_TIME);
     }
 }
