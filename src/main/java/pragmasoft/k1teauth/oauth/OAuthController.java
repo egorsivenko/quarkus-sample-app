@@ -2,9 +2,7 @@ package pragmasoft.k1teauth.oauth;
 
 import com.nimbusds.jwt.proc.BadJWTException;
 import io.micronaut.core.annotation.Nullable;
-import io.micronaut.http.HttpHeaders;
 import io.micronaut.http.HttpResponse;
-import io.micronaut.http.HttpStatus;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Consumes;
@@ -21,7 +19,6 @@ import io.micronaut.views.ModelAndView;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import pragmasoft.k1teauth.common.ServerInfo;
-import pragmasoft.k1teauth.common.dto.ErrorResponse;
 import pragmasoft.k1teauth.oauth.client.OAuthClient;
 import pragmasoft.k1teauth.oauth.client.OAuthClientRepository;
 import pragmasoft.k1teauth.oauth.code.AuthCode;
@@ -30,28 +27,23 @@ import pragmasoft.k1teauth.oauth.consent.Consent;
 import pragmasoft.k1teauth.oauth.consent.ConsentRepository;
 import pragmasoft.k1teauth.oauth.dto.AuthRequest;
 import pragmasoft.k1teauth.oauth.dto.ConsentForm;
-import pragmasoft.k1teauth.oauth.dto.TokenResponse;
 import pragmasoft.k1teauth.oauth.scope.Scope;
 import pragmasoft.k1teauth.oauth.scope.ScopeRepository;
 import pragmasoft.k1teauth.oauth.util.CodeChallengeUtil;
+import pragmasoft.k1teauth.oauth.util.OAuthConstants;
+import pragmasoft.k1teauth.oauth.util.ResponseBuilder;
 import pragmasoft.k1teauth.security.generator.CodeGenerator;
 import pragmasoft.k1teauth.security.hash.HashUtil;
-import pragmasoft.k1teauth.security.jwt.JwtClaim;
-import pragmasoft.k1teauth.security.jwt.JwtService;
 import pragmasoft.k1teauth.user.User;
 import pragmasoft.k1teauth.user.UserService;
 
-import java.net.URI;
 import java.security.Principal;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Controller("/oauth2")
@@ -59,50 +51,24 @@ import java.util.stream.Collectors;
 @Transactional
 public class OAuthController {
 
-    public enum AuthorizationGrantType {
-        AUTHORIZATION_CODE("authorization_code"),
-        REFRESH_TOKEN("refresh_token"),
-        CLIENT_CREDENTIALS("client_credentials");
-
-        private final String label;
-
-        AuthorizationGrantType(String label) {
-            this.label = label;
-        }
-
-        public String getLabel() {
-            return label;
-        }
-
-        public static Set<String> getAvailableAuthorizationGrantTypes() {
-            return Arrays.stream(values())
-                    .map(AuthorizationGrantType::getLabel)
-                    .collect(Collectors.toSet());
-        }
-    }
-
-    private static final Duration AUTH_CODE_EXP_TIME = Duration.ofMinutes(10);
-    private static final Duration ACCESS_TOKEN_EXP_TIME = Duration.ofHours(1);
-    private static final Duration REFRESH_TOKEN_EXP_TIME = Duration.ofDays(14);
-
     private final UserService userService;
-    private final JwtService jwtService;
     private final ServerInfo serverInfo;
+    private final TokenRequestHandler tokenRequestHandler;
     private final OAuthClientRepository clientRepository;
     private final ScopeRepository scopeRepository;
     private final ConsentRepository consentRepository;
     private final AuthCodeRepository authCodeRepository;
 
     public OAuthController(UserService userService,
-                           JwtService jwtService,
                            ServerInfo serverInfo,
+                           TokenRequestHandler tokenRequestHandler,
                            OAuthClientRepository clientRepository,
                            ScopeRepository scopeRepository,
                            ConsentRepository consentRepository,
                            AuthCodeRepository authCodeRepository) {
         this.userService = userService;
-        this.jwtService = jwtService;
         this.serverInfo = serverInfo;
+        this.tokenRequestHandler = tokenRequestHandler;
         this.clientRepository = clientRepository;
         this.scopeRepository = scopeRepository;
         this.consentRepository = consentRepository;
@@ -113,30 +79,30 @@ public class OAuthController {
     public HttpResponse<?> authorization(@RequestBean AuthRequest request, Principal principal) {
         Optional<OAuthClient> clientOptional = clientRepository.findById(request.getClientId());
         if (clientOptional.isEmpty()) {
-            return buildErrorResponse("Client ID not found");
+            return ResponseBuilder.buildErrorResponse("Unknown Client ID");
         }
         OAuthClient client = clientOptional.get();
         if (!client.getCallbackUrls().contains(request.getRedirectUri())) {
-            return buildErrorResponse("Invalid redirect URI");
+            return ResponseBuilder.buildErrorResponse("Invalid redirect URI");
         }
         if (!"code".equals(request.getResponseType())) {
-            return buildErrorResponse("Unsupported response type");
+            return ResponseBuilder.buildErrorResponse("Unsupported response type");
         }
         String codeChallenge = request.getCodeChallenge();
         String codeChallengeMethod = Optional.ofNullable(request.getCodeChallengeMethod()).orElse("plain");
 
         if (codeChallenge == null || codeChallenge.isBlank()) {
-            return buildErrorResponse("Code challenge is required");
+            return ResponseBuilder.buildErrorResponse("Code challenge is required");
         }
         if (!CodeChallengeUtil.getAvailableCodeChallengeMethods().contains(codeChallengeMethod)) {
-            return buildErrorResponse("Unsupported code challenge method");
+            return ResponseBuilder.buildErrorResponse("Unsupported code challenge method");
         }
         Set<Scope> requestedScopes = mapScopeStringToSet(request.getScope());
         if (requestedScopes.isEmpty()) {
-            return buildErrorResponse("Not a single existing scope has been provided");
+            return ResponseBuilder.buildErrorResponse("Not a single existing scope has been provided");
         }
         if (!client.getScopes().containsAll(requestedScopes)) {
-            return buildErrorResponse("Unsupported scope has been provided");
+            return ResponseBuilder.buildErrorResponse("Unsupported scope has been provided");
         }
         User user = userService.getByEmail(principal.getName());
         Optional<Consent> consentOptional = consentRepository.findByResourceOwnerAndClient(user, client);
@@ -188,7 +154,7 @@ public class OAuthController {
                     .queryParam("error_description", "The resource owner declined to provide the necessary consent")
                     .queryParam("state", form.getState());
         }
-        return buildRedirectResponse(uriBuilder.build());
+        return ResponseBuilder.buildRedirectResponse(uriBuilder.build());
     }
 
     @Post(uri = "/token")
@@ -199,77 +165,11 @@ public class OAuthController {
                                  @Nullable @Body("code_verifier") String codeVerifier,
                                  @Nullable @Body("refresh_token") String refreshToken,
                                  Principal principal) throws BadJWTException {
-        OAuthClient client = clientRepository.findById(principal.getName()).orElseThrow(NotFoundException::new);
-
-        try {
-            return switch (AuthorizationGrantType.valueOf(grantType.toUpperCase())) {
-                case AUTHORIZATION_CODE -> handleAuthorizationCodeGrant(code, codeVerifier, client);
-                case REFRESH_TOKEN -> handleRefreshTokenGrant(refreshToken, client);
-                case CLIENT_CREDENTIALS -> handleClientCredentialsGrant(client);
-            };
-        } catch (IllegalArgumentException e) {
-            return buildErrorResponse("Unsupported grant type");
+        Optional<OAuthClient> clientOptional = clientRepository.findById(principal.getName());
+        if (clientOptional.isEmpty()) {
+            return ResponseBuilder.buildErrorResponse("Unknown Client ID");
         }
-    }
-
-    private HttpResponse<?> handleAuthorizationCodeGrant(String code, String codeVerifier, OAuthClient client) {
-        Optional<AuthCode> authCodeOptional = authCodeRepository.findById(HashUtil.hashWithSHA256(code));
-
-        if (authCodeOptional.isEmpty()) {
-            return buildErrorResponse("Auth code does not exist or has already been used");
-        }
-        AuthCode authCode = authCodeOptional.get();
-        Consent consent = authCode.getConsent();
-
-        if (authCode.isExpired()) {
-            authCodeRepository.deleteById(HashUtil.hashWithSHA256(code));
-            return buildErrorResponse("Auth code has expired");
-        }
-        if (!consent.getClient().getClientId().equals(client.getClientId())) {
-            return buildErrorResponse("Authorization code was issued to a different client");
-        }
-        if (codeVerifier == null || codeVerifier.isEmpty()) {
-            return buildErrorResponse("Code verifier is required");
-        }
-        if (!CodeChallengeUtil.verifyCodeChallenge(authCode.getCodeChallenge(), codeVerifier, authCode.getCodeChallengeMethod())) {
-            return buildErrorResponse("Invalid code verifier");
-        }
-        User resourceOwner = consent.getResourceOwner();
-        authCodeRepository.deleteById(HashUtil.hashWithSHA256(code));
-
-        String accessToken = generateAccessToken(resourceOwner.getId().toString(), consent.getScopes());
-        String refreshToken = generateRefreshToken(consent.getId().toString());
-
-        return buildTokenResponse(accessToken, refreshToken);
-    }
-
-    private HttpResponse<?> handleRefreshTokenGrant(String refreshToken, OAuthClient client) throws BadJWTException {
-        if (!jwtService.extractClaimsSet(refreshToken).getAudience().contains(serverInfo.getBaseUrl())) {
-            return buildErrorResponse("Audience mismatch in the refresh token");
-        }
-        Optional<Consent> consentOptional;
-        try {
-            consentOptional = consentRepository.findById(UUID.fromString(jwtService.extractClaimsSet(refreshToken).getSubject()));
-        } catch (IllegalArgumentException e) {
-            return buildErrorResponse("Invalid refresh token subject");
-        }
-        if (consentOptional.isEmpty()) {
-            return buildErrorResponse("Refresh token no longer valid: consent revoked");
-        }
-        Consent consent = consentOptional.get();
-
-        if (!consent.getClient().getClientId().equals(client.getClientId())) {
-            return buildErrorResponse("Refresh Token was issued to a different client");
-        }
-        String accessToken = generateAccessToken(consent.getResourceOwner().getId().toString(), consent.getScopes());
-        String newRefreshToken = generateRefreshToken(consent.getId().toString());
-
-        return buildTokenResponse(accessToken, newRefreshToken);
-    }
-
-    private HttpResponse<?> handleClientCredentialsGrant(OAuthClient client) {
-        String accessToken = generateAccessToken(client.getClientId(), client.getScopes());
-        return buildTokenResponse(accessToken, null);
+        return tokenRequestHandler.handleTokenRequest(grantType, code, codeVerifier, refreshToken, clientOptional.get());
     }
 
     private HttpResponse<?> handleExistingConsent(Consent consent, Set<Scope> requestedScopes,
@@ -283,7 +183,7 @@ public class OAuthController {
                     .queryParam("error_description", "An existing auth code belonging to this user hasn't yet been used")
                     .queryParam("state", state);
 
-            return buildRedirectResponse(uriBuilder.build());
+            return ResponseBuilder.buildRedirectResponse(uriBuilder.build());
         }
         requestedScopes.removeAll(consent.getScopes());
 
@@ -300,7 +200,7 @@ public class OAuthController {
         authCode.setCode(HashUtil.hashWithSHA256(code));
         authCode.setCodeChallenge(codeChallenge);
         authCode.setCodeChallengeMethod(codeChallengeMethod);
-        authCode.setExpiresAt(LocalDateTime.now().plus(AUTH_CODE_EXP_TIME));
+        authCode.setExpiresAt(LocalDateTime.now().plus(OAuthConstants.AUTH_CODE_EXP_TIME));
         authCode.setConsent(consent);
         authCodeRepository.save(authCode);
 
@@ -309,7 +209,7 @@ public class OAuthController {
                 .queryParam("state", state)
                 .queryParam("iss", serverInfo.getBaseUrl());
 
-        return buildRedirectResponse(uriBuilder.build());
+        return ResponseBuilder.buildRedirectResponse(uriBuilder.build());
     }
 
     private Set<Scope> mapScopeStringToSet(String scopes) {
@@ -325,34 +225,5 @@ public class OAuthController {
 
     private String mapScopeSetToScopeDescriptions(Set<Scope> scopes) {
         return scopes.stream().map(Scope::getDescription).collect(Collectors.joining("\n"));
-    }
-
-    private String generateAccessToken(String subject, Set<Scope> scopes) {
-        return jwtService.generate(subject,
-                scopes.stream().map(Scope::getAudience).toList(),
-                ACCESS_TOKEN_EXP_TIME,
-                new JwtClaim("scopes", scopes.stream().map(Scope::getName).toList()));
-    }
-
-    private String generateRefreshToken(String subject) {
-        return jwtService.generate(subject, List.of(serverInfo.getBaseUrl()), REFRESH_TOKEN_EXP_TIME);
-    }
-
-    private HttpResponse<?> buildTokenResponse(String accessToken, String refreshToken) {
-        return HttpResponse
-                .ok(new TokenResponse(accessToken, refreshToken, ACCESS_TOKEN_EXP_TIME.toSeconds(), "Bearer"))
-                .header(HttpHeaders.CACHE_CONTROL, "no-store");
-    }
-
-    private HttpResponse<?> buildRedirectResponse(URI location) {
-        return HttpResponse.status(HttpStatus.FOUND)
-                .headers(headers ->
-                        headers.location(location).add(HttpHeaders.CACHE_CONTROL, "no-store")
-                );
-    }
-
-    private HttpResponse<?> buildErrorResponse(String error) {
-        return HttpResponse.badRequest(new ErrorResponse(error))
-                .header(HttpHeaders.CACHE_CONTROL, "no-store");
     }
 }

@@ -7,8 +7,8 @@ import io.micronaut.http.annotation.Get;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
 import pragmasoft.k1teauth.common.ServerInfo;
-import pragmasoft.k1teauth.oauth.OAuthController;
 import pragmasoft.k1teauth.oauth.util.CodeChallengeUtil;
+import pragmasoft.k1teauth.oauth.TokenRequestHandler;
 
 import java.util.Set;
 
@@ -35,7 +35,7 @@ public class OidcDiscoveryController {
         metadata.setResponseTypesSupported(Set.of("code"));
         metadata.setResponseModesSupported(Set.of("query"));
 
-        metadata.setGrantTypesSupported(OAuthController.AuthorizationGrantType.getAvailableAuthorizationGrantTypes());
+        metadata.setGrantTypesSupported(TokenRequestHandler.getAvailableAuthorizationGrantTypes());
         metadata.setCodeChallengeMethodsSupported(CodeChallengeUtil.getAvailableCodeChallengeMethods());
         metadata.setUiLocalesSupported(Set.of("en-US"));
 
