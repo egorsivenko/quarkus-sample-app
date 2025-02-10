@@ -113,30 +113,30 @@ public class OAuthController {
     public HttpResponse<?> authorization(@RequestBean AuthRequest request, Principal principal) {
         Optional<OAuthClient> clientOptional = clientRepository.findById(request.getClientId());
         if (clientOptional.isEmpty()) {
-            return buildResponse(HttpStatus.NOT_FOUND, "Client ID not found");
+            return buildErrorResponse("Client ID not found");
         }
         OAuthClient client = clientOptional.get();
         if (!client.getCallbackUrls().contains(request.getRedirectUri())) {
-            return buildResponse(HttpStatus.BAD_REQUEST, "Invalid redirect URI");
+            return buildErrorResponse("Invalid redirect URI");
         }
         if (!"code".equals(request.getResponseType())) {
-            return buildResponse(HttpStatus.BAD_REQUEST, "Unsupported response type");
+            return buildErrorResponse("Unsupported response type");
         }
         String codeChallenge = request.getCodeChallenge();
         String codeChallengeMethod = Optional.ofNullable(request.getCodeChallengeMethod()).orElse("plain");
 
         if (codeChallenge == null || codeChallenge.isBlank()) {
-            return buildResponse(HttpStatus.BAD_REQUEST, "Code challenge is required");
+            return buildErrorResponse("Code challenge is required");
         }
         if (!CodeChallengeUtil.getAvailableCodeChallengeMethods().contains(codeChallengeMethod)) {
-            return buildResponse(HttpStatus.BAD_REQUEST, "Unsupported code challenge method");
+            return buildErrorResponse("Unsupported code challenge method");
         }
         Set<Scope> requestedScopes = mapScopeStringToSet(request.getScope());
         if (requestedScopes.isEmpty()) {
-            return buildResponse(HttpStatus.BAD_REQUEST, "Not a single existing scope has been provided");
+            return buildErrorResponse("Not a single existing scope has been provided");
         }
         if (!client.getScopes().containsAll(requestedScopes)) {
-            return buildResponse(HttpStatus.BAD_REQUEST, "Unsupported scope has been provided");
+            return buildErrorResponse("Unsupported scope has been provided");
         }
         User user = userService.getByEmail(principal.getName());
         Optional<Consent> consentOptional = consentRepository.findByResourceOwnerAndClient(user, client);
@@ -208,7 +208,7 @@ public class OAuthController {
                 case CLIENT_CREDENTIALS -> handleClientCredentialsGrant(client);
             };
         } catch (IllegalArgumentException e) {
-            return buildResponse(HttpStatus.BAD_REQUEST, "Unsupported grant type");
+            return buildErrorResponse("Unsupported grant type");
         }
     }
 
@@ -216,23 +216,23 @@ public class OAuthController {
         Optional<AuthCode> authCodeOptional = authCodeRepository.findById(HashUtil.hashWithSHA256(code));
 
         if (authCodeOptional.isEmpty()) {
-            return buildResponse(HttpStatus.NOT_FOUND, "Auth code does not exist or has already been used");
+            return buildErrorResponse("Auth code does not exist or has already been used");
         }
         AuthCode authCode = authCodeOptional.get();
         Consent consent = authCode.getConsent();
 
         if (authCode.isExpired()) {
             authCodeRepository.deleteById(HashUtil.hashWithSHA256(code));
-            return buildResponse(HttpStatus.BAD_REQUEST, "Auth code has expired");
+            return buildErrorResponse("Auth code has expired");
         }
         if (!consent.getClient().getClientId().equals(client.getClientId())) {
-            return buildResponse(HttpStatus.BAD_REQUEST, "Authorization code was issued to a different client");
+            return buildErrorResponse("Authorization code was issued to a different client");
         }
         if (codeVerifier == null || codeVerifier.isEmpty()) {
-            return buildResponse(HttpStatus.BAD_REQUEST, "Code verifier is required");
+            return buildErrorResponse("Code verifier is required");
         }
         if (!CodeChallengeUtil.verifyCodeChallenge(authCode.getCodeChallenge(), codeVerifier, authCode.getCodeChallengeMethod())) {
-            return buildResponse(HttpStatus.BAD_REQUEST, "Invalid code verifier");
+            return buildErrorResponse("Invalid code verifier");
         }
         User resourceOwner = consent.getResourceOwner();
         authCodeRepository.deleteById(HashUtil.hashWithSHA256(code));
@@ -245,21 +245,21 @@ public class OAuthController {
 
     private HttpResponse<?> handleRefreshTokenGrant(String refreshToken, OAuthClient client) throws BadJWTException {
         if (!jwtService.extractClaimsSet(refreshToken).getAudience().contains(serverInfo.getBaseUrl())) {
-            return buildResponse(HttpStatus.BAD_REQUEST, "Audience mismatch in the refresh token");
+            return buildErrorResponse("Audience mismatch in the refresh token");
         }
         Optional<Consent> consentOptional;
         try {
             consentOptional = consentRepository.findById(UUID.fromString(jwtService.extractClaimsSet(refreshToken).getSubject()));
         } catch (IllegalArgumentException e) {
-            return buildResponse(HttpStatus.BAD_REQUEST, "Invalid refresh token subject");
+            return buildErrorResponse("Invalid refresh token subject");
         }
         if (consentOptional.isEmpty()) {
-            return buildResponse(HttpStatus.BAD_REQUEST, "Refresh token no longer valid: consent revoked");
+            return buildErrorResponse("Refresh token no longer valid: consent revoked");
         }
         Consent consent = consentOptional.get();
 
         if (!consent.getClient().getClientId().equals(client.getClientId())) {
-            return buildResponse(HttpStatus.BAD_REQUEST, "Refresh Token was issued to a different client");
+            return buildErrorResponse("Refresh Token was issued to a different client");
         }
         String accessToken = generateAccessToken(consent.getResourceOwner().getId().toString(), consent.getScopes());
         String newRefreshToken = generateRefreshToken(consent.getId().toString());
@@ -348,8 +348,7 @@ public class OAuthController {
                 .headers(headers -> headers.location(location));
     }
 
-    private HttpResponse<?> buildResponse(HttpStatus status, Object body) {
-        return HttpResponse.status(status)
-                .body(body instanceof String error ? new ErrorResponse(error) : body);
+    private HttpResponse<?> buildErrorResponse(String error) {
+        return HttpResponse.badRequest(new ErrorResponse(error));
     }
 }
