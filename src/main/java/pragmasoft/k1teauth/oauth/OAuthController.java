@@ -105,7 +105,7 @@ public class OAuthController {
         String codeChallenge = request.getCodeChallenge();
         String codeChallengeMethod = Optional.ofNullable(request.getCodeChallengeMethod()).orElse("plain");
 
-        if (codeChallenge == null || codeChallenge.isBlank()) {
+        if (!StringUtils.hasText(codeChallenge)) {
             return ResponseBuilder.buildErrorResponse("Code challenge is required");
         }
         if (!CodeChallengeUtil.getAvailableCodeChallengeMethods().contains(codeChallengeMethod)) {
@@ -123,7 +123,7 @@ public class OAuthController {
 
         if (consentOptional.isPresent()) {
             HttpResponse<?> response = handleExistingConsent(consentOptional.get(), requestedScopes,
-                    request.getRedirectUri(), request.getState(), codeChallenge, codeChallengeMethod);
+                    request.getRedirectUri(), request.getState(), codeChallenge, codeChallengeMethod, request.getNonce());
             if (response != null) {
                 return response;
             }
@@ -137,7 +137,8 @@ public class OAuthController {
                         mapScopeSetToScopeNames(requestedScopes),
                         mapScopeSetToScopeDescriptions(requestedScopes),
                         codeChallenge,
-                        codeChallengeMethod
+                        codeChallengeMethod,
+                        request.getNonce()
                 ))
         ));
     }
@@ -161,7 +162,7 @@ public class OAuthController {
                 consent = new Consent(user, client, allowedScopes);
             }
             return buildAuthCodeAndRedirect(uriBuilder, consent, form.getState(),
-                    form.getCodeChallenge(), form.getCodeChallengeMethod());
+                    form.getCodeChallenge(), form.getCodeChallengeMethod(), form.getNonce());
         } else {
             uriBuilder
                     .queryParam("error", "access_denied")
@@ -200,7 +201,7 @@ public class OAuthController {
 
     private HttpResponse<?> handleExistingConsent(Consent consent, Set<Scope> requestedScopes,
                                                   String callbackUrl, String state,
-                                                  String codeChallenge, String codeChallengeMethod) {
+                                                  String codeChallenge, String codeChallengeMethod, String nonce) {
         UriBuilder uriBuilder = UriBuilder.of(callbackUrl);
 
         if (authCodeRepository.findByConsent(consent).isPresent()) {
@@ -214,18 +215,19 @@ public class OAuthController {
         requestedScopes.removeAll(consent.getScopes());
 
         if (requestedScopes.isEmpty()) {
-            return buildAuthCodeAndRedirect(uriBuilder, consent, state, codeChallenge, codeChallengeMethod);
+            return buildAuthCodeAndRedirect(uriBuilder, consent, state, codeChallenge, codeChallengeMethod, nonce);
         }
         return null;
     }
 
     private HttpResponse<?> buildAuthCodeAndRedirect(UriBuilder uriBuilder, Consent consent, String state,
-                                                     String codeChallenge, String codeChallengeMethod) {
+                                                     String codeChallenge, String codeChallengeMethod, String nonce) {
         AuthCode authCode = new AuthCode();
         String code = CodeGenerator.generate(40);
         authCode.setCode(HashUtil.hashWithSHA256(code));
         authCode.setCodeChallenge(codeChallenge);
         authCode.setCodeChallengeMethod(codeChallengeMethod);
+        authCode.setNonce(nonce);
         authCode.setExpiresAt(LocalDateTime.now().plus(OAuthConstants.AUTH_CODE_EXP_TIME));
         authCode.setConsent(consent);
         authCodeRepository.save(authCode);

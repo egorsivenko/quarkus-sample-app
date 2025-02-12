@@ -20,6 +20,7 @@ import pragmasoft.k1teauth.security.jwt.JwtService;
 import pragmasoft.k1teauth.user.User;
 
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -108,7 +109,7 @@ public class TokenRequestHandler {
         String refreshToken = generateRefreshToken(consent.getId().toString());
 
         if (consent.getScopes().contains(scopeRepository.findById("openid").orElseThrow())) {
-            String idToken = generateIdToken(resourceOwner, client.getClientId());
+            String idToken = generateIdToken(resourceOwner, client.getClientId(), authCode.getNonce());
             return ResponseBuilder.buildTokenResponse(accessToken, refreshToken, idToken);
         }
         return ResponseBuilder.buildTokenResponse(accessToken, refreshToken, null);
@@ -151,14 +152,20 @@ public class TokenRequestHandler {
                 new JwtClaim("scopes", scopes.stream().map(Scope::getName).toList()));
     }
 
-    private String generateIdToken(User resourceOwner, String clientId) {
-        return jwtService.generate(resourceOwner.getId().toString(),
-                List.of(clientId),
-                OAuthConstants.ID_TOKEN_EXP_TIME,
+    private String generateIdToken(User resourceOwner, String clientId, String nonce) {
+        List<JwtClaim> claims = new ArrayList<>(Arrays.asList(
                 new JwtClaim("name", resourceOwner.getFullName()),
                 new JwtClaim("email", resourceOwner.getEmail()),
                 new JwtClaim("email_verified", resourceOwner.isVerified()),
-                new JwtClaim("created_at", Date.from(resourceOwner.getCreatedAt().toInstant(ZoneOffset.UTC))));
+                new JwtClaim("created_at", Date.from(resourceOwner.getCreatedAt().toInstant(ZoneOffset.UTC)))
+        ));
+        if (nonce != null) {
+            claims.add(new JwtClaim("nonce", nonce));
+        }
+        return jwtService.generate(resourceOwner.getId().toString(),
+                List.of(clientId),
+                OAuthConstants.ID_TOKEN_EXP_TIME,
+                claims.toArray(new JwtClaim[0]));
     }
 
     private String generateRefreshToken(String subject) {

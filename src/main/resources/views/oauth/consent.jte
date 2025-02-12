@@ -28,6 +28,7 @@ body = @`
                     <input type="hidden" name="scopeNames" value="${form.getScopeNames()}"/>
                     <input type="hidden" name="codeChallenge" value="${form.getCodeChallenge()}"/>
                     <input type="hidden" name="codeChallengeMethod" value="${form.getCodeChallengeMethod()}"/>
+                    <input type="hidden" name="nonce" value="${form.getNonce()}"/>
                     <input type="hidden" name="csrfToken" value="${csrfToken}">
                     <button type="submit" class="outline">Yes</button>
                 </form>
