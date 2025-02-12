@@ -8,5 +8,6 @@ public final class OAuthConstants {
 
     public static final Duration AUTH_CODE_EXP_TIME = Duration.ofMinutes(10);
     public static final Duration ACCESS_TOKEN_EXP_TIME = Duration.ofHours(1);
+    public static final Duration ID_TOKEN_EXP_TIME = Duration.ofHours(1);
     public static final Duration REFRESH_TOKEN_EXP_TIME = Duration.ofDays(7);
 }

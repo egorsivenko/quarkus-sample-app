@@ -12,9 +12,10 @@ public final class ResponseBuilder {
 
     private ResponseBuilder() {}
 
-    public static HttpResponse<?> buildTokenResponse(String accessToken, String refreshToken) {
+    public static HttpResponse<?> buildTokenResponse(String accessToken, String refreshToken, String idToken) {
         return HttpResponse
-                .ok(new TokenResponse(accessToken, refreshToken, OAuthConstants.ACCESS_TOKEN_EXP_TIME.toSeconds(), "Bearer"))
+                .ok(new TokenResponse(accessToken, refreshToken, idToken,
+                        OAuthConstants.ACCESS_TOKEN_EXP_TIME.toSeconds(), "Bearer"))
                 .header(HttpHeaders.CACHE_CONTROL, "no-store");
     }
 

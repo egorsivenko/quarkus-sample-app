@@ -10,6 +10,7 @@ import io.micronaut.serde.annotation.Serdeable;
 public record TokenResponse(
         @JsonProperty("access_token") String accessToken,
         @JsonProperty("refresh_token") String refreshToken,
+        @JsonProperty("id_token") String idToken,
         @JsonProperty("expires_in") long expiresIn,
         @JsonProperty("token_type") String tokenType
 ) {}
