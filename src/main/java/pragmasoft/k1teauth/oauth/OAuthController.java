@@ -1,13 +1,18 @@
 package pragmasoft.k1teauth.oauth;
 
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.BadJWTException;
 import io.micronaut.core.annotation.Nullable;
+import io.micronaut.core.util.StringUtils;
+import io.micronaut.http.HttpHeaders;
 import io.micronaut.http.HttpResponse;
+import io.micronaut.http.HttpStatus;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Consumes;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
+import io.micronaut.http.annotation.Header;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.Produces;
 import io.micronaut.http.annotation.RequestBean;
@@ -27,6 +32,7 @@ import pragmasoft.k1teauth.oauth.consent.Consent;
 import pragmasoft.k1teauth.oauth.consent.ConsentRepository;
 import pragmasoft.k1teauth.oauth.dto.AuthRequest;
 import pragmasoft.k1teauth.oauth.dto.ConsentForm;
+import pragmasoft.k1teauth.oauth.dto.UserInfoResponse;
 import pragmasoft.k1teauth.oauth.scope.Scope;
 import pragmasoft.k1teauth.oauth.scope.ScopeRepository;
 import pragmasoft.k1teauth.oauth.util.CodeChallengeUtil;
@@ -34,16 +40,19 @@ import pragmasoft.k1teauth.oauth.util.OAuthConstants;
 import pragmasoft.k1teauth.oauth.util.ResponseBuilder;
 import pragmasoft.k1teauth.security.generator.CodeGenerator;
 import pragmasoft.k1teauth.security.hash.HashUtil;
+import pragmasoft.k1teauth.security.jwt.JwtService;
 import pragmasoft.k1teauth.user.User;
 import pragmasoft.k1teauth.user.UserService;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Controller("/oauth2")
@@ -51,7 +60,10 @@ import java.util.stream.Collectors;
 @Transactional
 public class OAuthController {
 
+    private static final String BEARER_PREFIX = "Bearer ";
+
     private final UserService userService;
+    private final JwtService jwtService;
     private final ServerInfo serverInfo;
     private final TokenRequestHandler tokenRequestHandler;
     private final OAuthClientRepository clientRepository;
@@ -60,6 +72,7 @@ public class OAuthController {
     private final AuthCodeRepository authCodeRepository;
 
     public OAuthController(UserService userService,
+                           JwtService jwtService,
                            ServerInfo serverInfo,
                            TokenRequestHandler tokenRequestHandler,
                            OAuthClientRepository clientRepository,
@@ -67,6 +80,7 @@ public class OAuthController {
                            ConsentRepository consentRepository,
                            AuthCodeRepository authCodeRepository) {
         this.userService = userService;
+        this.jwtService = jwtService;
         this.serverInfo = serverInfo;
         this.tokenRequestHandler = tokenRequestHandler;
         this.clientRepository = clientRepository;
@@ -91,7 +105,7 @@ public class OAuthController {
         String codeChallenge = request.getCodeChallenge();
         String codeChallengeMethod = Optional.ofNullable(request.getCodeChallengeMethod()).orElse("plain");
 
-        if (codeChallenge == null || codeChallenge.isBlank()) {
+        if (!StringUtils.hasText(codeChallenge)) {
             return ResponseBuilder.buildErrorResponse("Code challenge is required");
         }
         if (!CodeChallengeUtil.getAvailableCodeChallengeMethods().contains(codeChallengeMethod)) {
@@ -109,7 +123,7 @@ public class OAuthController {
 
         if (consentOptional.isPresent()) {
             HttpResponse<?> response = handleExistingConsent(consentOptional.get(), requestedScopes,
-                    request.getRedirectUri(), request.getState(), codeChallenge, codeChallengeMethod);
+                    request.getRedirectUri(), request.getState(), codeChallenge, codeChallengeMethod, request.getNonce());
             if (response != null) {
                 return response;
             }
@@ -123,7 +137,8 @@ public class OAuthController {
                         mapScopeSetToScopeNames(requestedScopes),
                         mapScopeSetToScopeDescriptions(requestedScopes),
                         codeChallenge,
-                        codeChallengeMethod
+                        codeChallengeMethod,
+                        request.getNonce()
                 ))
         ));
     }
@@ -147,7 +162,7 @@ public class OAuthController {
                 consent = new Consent(user, client, allowedScopes);
             }
             return buildAuthCodeAndRedirect(uriBuilder, consent, form.getState(),
-                    form.getCodeChallenge(), form.getCodeChallengeMethod());
+                    form.getCodeChallenge(), form.getCodeChallengeMethod(), form.getNonce());
         } else {
             uriBuilder
                     .queryParam("error", "access_denied")
@@ -172,9 +187,21 @@ public class OAuthController {
         return tokenRequestHandler.handleTokenRequest(grantType, code, codeVerifier, refreshToken, clientOptional.get());
     }
 
+    @Get(uri = "/userinfo", produces = MediaType.APPLICATION_JSON)
+    @Secured(SecurityRule.IS_ANONYMOUS)
+    public HttpResponse<?> userInfoGet(@Header(HttpHeaders.AUTHORIZATION) String authorization) {
+        return processUserInfoRequest(authorization);
+    }
+
+    @Post(uri = "/userinfo", produces = MediaType.APPLICATION_JSON)
+    @Secured(SecurityRule.IS_ANONYMOUS)
+    public HttpResponse<?> userInfoPost(@Header(HttpHeaders.AUTHORIZATION) String authorization) {
+        return processUserInfoRequest(authorization);
+    }
+
     private HttpResponse<?> handleExistingConsent(Consent consent, Set<Scope> requestedScopes,
                                                   String callbackUrl, String state,
-                                                  String codeChallenge, String codeChallengeMethod) {
+                                                  String codeChallenge, String codeChallengeMethod, String nonce) {
         UriBuilder uriBuilder = UriBuilder.of(callbackUrl);
 
         if (authCodeRepository.findByConsent(consent).isPresent()) {
@@ -188,18 +215,19 @@ public class OAuthController {
         requestedScopes.removeAll(consent.getScopes());
 
         if (requestedScopes.isEmpty()) {
-            return buildAuthCodeAndRedirect(uriBuilder, consent, state, codeChallenge, codeChallengeMethod);
+            return buildAuthCodeAndRedirect(uriBuilder, consent, state, codeChallenge, codeChallengeMethod, nonce);
         }
         return null;
     }
 
     private HttpResponse<?> buildAuthCodeAndRedirect(UriBuilder uriBuilder, Consent consent, String state,
-                                                     String codeChallenge, String codeChallengeMethod) {
+                                                     String codeChallenge, String codeChallengeMethod, String nonce) {
         AuthCode authCode = new AuthCode();
         String code = CodeGenerator.generate(40);
         authCode.setCode(HashUtil.hashWithSHA256(code));
         authCode.setCodeChallenge(codeChallenge);
         authCode.setCodeChallengeMethod(codeChallengeMethod);
+        authCode.setNonce(nonce);
         authCode.setExpiresAt(LocalDateTime.now().plus(OAuthConstants.AUTH_CODE_EXP_TIME));
         authCode.setConsent(consent);
         authCodeRepository.save(authCode);
@@ -210,6 +238,30 @@ public class OAuthController {
                 .queryParam("iss", serverInfo.getBaseUrl());
 
         return ResponseBuilder.buildRedirectResponse(uriBuilder.build());
+    }
+
+    private HttpResponse<?> processUserInfoRequest(String authHeader) {
+        String accessToken = extractJwtToken(authHeader);
+        try {
+            JWTClaimsSet jwtClaimsSet = jwtService.extractClaimsSet(accessToken);
+            List<String> scopes = jwtClaimsSet.getStringListClaim("scopes");
+            if (!jwtClaimsSet.getAudience().contains(serverInfo.getBaseUrl())
+                    || scopes == null
+                    || !scopes.contains("openid")) {
+                return HttpResponse.status(HttpStatus.FORBIDDEN);
+            }
+            User user = userService.getById(UUID.fromString(jwtClaimsSet.getSubject()));
+            return HttpResponse.ok(UserInfoResponse.fromUser(user));
+
+        } catch (Exception e) {
+            return ResponseBuilder.buildErrorResponse(e.getMessage());
+        }
+    }
+
+    private String extractJwtToken(String authHeader) {
+        return StringUtils.hasText(authHeader) && authHeader.startsWith(BEARER_PREFIX)
+                ? authHeader.substring(BEARER_PREFIX.length())
+                : null;
     }
 
     private Set<Scope> mapScopeStringToSet(String scopes) {

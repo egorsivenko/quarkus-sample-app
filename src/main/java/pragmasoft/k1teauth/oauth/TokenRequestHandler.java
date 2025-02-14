@@ -10,6 +10,7 @@ import pragmasoft.k1teauth.oauth.code.AuthCodeRepository;
 import pragmasoft.k1teauth.oauth.consent.Consent;
 import pragmasoft.k1teauth.oauth.consent.ConsentRepository;
 import pragmasoft.k1teauth.oauth.scope.Scope;
+import pragmasoft.k1teauth.oauth.scope.ScopeRepository;
 import pragmasoft.k1teauth.oauth.util.CodeChallengeUtil;
 import pragmasoft.k1teauth.oauth.util.OAuthConstants;
 import pragmasoft.k1teauth.oauth.util.ResponseBuilder;
@@ -18,7 +19,10 @@ import pragmasoft.k1teauth.security.jwt.JwtClaim;
 import pragmasoft.k1teauth.security.jwt.JwtService;
 import pragmasoft.k1teauth.user.User;
 
+import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -32,15 +36,18 @@ public class TokenRequestHandler {
     private final ServerInfo serverInfo;
     private final ConsentRepository consentRepository;
     private final AuthCodeRepository authCodeRepository;
+    private final ScopeRepository scopeRepository;
 
     public TokenRequestHandler(JwtService jwtService,
                                ServerInfo serverInfo,
                                ConsentRepository consentRepository,
-                               AuthCodeRepository authCodeRepository) {
+                               AuthCodeRepository authCodeRepository,
+                               ScopeRepository scopeRepository) {
         this.jwtService = jwtService;
         this.serverInfo = serverInfo;
         this.consentRepository = consentRepository;
         this.authCodeRepository = authCodeRepository;
+        this.scopeRepository = scopeRepository;
     }
 
     public enum GrantType {
@@ -82,10 +89,11 @@ public class TokenRequestHandler {
         Consent consent = authCode.getConsent();
 
         if (authCode.isExpired()) {
-            authCodeRepository.deleteById(HashUtil.hashWithSHA256(code));
+            authCodeRepository.delete(authCode);
             return ResponseBuilder.buildErrorResponse("Auth code has expired");
         }
         if (!consent.getClient().getClientId().equals(client.getClientId())) {
+            consentRepository.delete(consent);
             return ResponseBuilder.buildErrorResponse("Authorization code was issued to a different client");
         }
         if (codeVerifier == null || codeVerifier.isEmpty()) {
@@ -94,13 +102,17 @@ public class TokenRequestHandler {
         if (!CodeChallengeUtil.verifyCodeChallenge(authCode.getCodeChallenge(), codeVerifier, authCode.getCodeChallengeMethod())) {
             return ResponseBuilder.buildErrorResponse("Invalid code verifier");
         }
+        authCodeRepository.delete(authCode);
         User resourceOwner = consent.getResourceOwner();
-        authCodeRepository.deleteById(HashUtil.hashWithSHA256(code));
 
         String accessToken = generateAccessToken(resourceOwner.getId().toString(), consent.getScopes());
         String refreshToken = generateRefreshToken(consent.getId().toString());
 
-        return ResponseBuilder.buildTokenResponse(accessToken, refreshToken);
+        if (consent.getScopes().contains(scopeRepository.findById("openid").orElseThrow())) {
+            String idToken = generateIdToken(resourceOwner, client.getClientId(), authCode.getNonce());
+            return ResponseBuilder.buildTokenResponse(accessToken, refreshToken, idToken);
+        }
+        return ResponseBuilder.buildTokenResponse(accessToken, refreshToken, null);
     }
 
     private HttpResponse<?> handleRefreshTokenGrant(String refreshToken, OAuthClient client) throws BadJWTException {
@@ -125,12 +137,12 @@ public class TokenRequestHandler {
         String accessToken = generateAccessToken(consent.getResourceOwner().getId().toString(), consent.getScopes());
         String newRefreshToken = generateRefreshToken(consent.getId().toString());
 
-        return ResponseBuilder.buildTokenResponse(accessToken, newRefreshToken);
+        return ResponseBuilder.buildTokenResponse(accessToken, newRefreshToken, null);
     }
 
     private HttpResponse<?> handleClientCredentialsGrant(OAuthClient client) {
         String accessToken = generateAccessToken(client.getClientId(), client.getScopes());
-        return ResponseBuilder.buildTokenResponse(accessToken, null);
+        return ResponseBuilder.buildTokenResponse(accessToken, null, null);
     }
 
     private String generateAccessToken(String subject, Set<Scope> scopes) {
@@ -138,6 +150,22 @@ public class TokenRequestHandler {
                 scopes.stream().map(Scope::getAudience).toList(),
                 OAuthConstants.ACCESS_TOKEN_EXP_TIME,
                 new JwtClaim("scopes", scopes.stream().map(Scope::getName).toList()));
+    }
+
+    private String generateIdToken(User resourceOwner, String clientId, String nonce) {
+        List<JwtClaim> claims = new ArrayList<>(Arrays.asList(
+                new JwtClaim("name", resourceOwner.getFullName()),
+                new JwtClaim("email", resourceOwner.getEmail()),
+                new JwtClaim("email_verified", resourceOwner.isVerified()),
+                new JwtClaim("created_at", Date.from(resourceOwner.getCreatedAt().toInstant(ZoneOffset.UTC)))
+        ));
+        if (nonce != null) {
+            claims.add(new JwtClaim("nonce", nonce));
+        }
+        return jwtService.generate(resourceOwner.getId().toString(),
+                List.of(clientId),
+                OAuthConstants.ID_TOKEN_EXP_TIME,
+                claims.toArray(new JwtClaim[0]));
     }
 
     private String generateRefreshToken(String subject) {

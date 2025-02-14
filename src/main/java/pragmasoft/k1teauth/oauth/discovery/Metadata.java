@@ -1,4 +1,4 @@
-package pragmasoft.k1teauth.oidc.discovery;
+package pragmasoft.k1teauth.oauth.discovery;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.micronaut.serde.annotation.Serdeable;
@@ -6,7 +6,7 @@ import io.micronaut.serde.annotation.Serdeable;
 import java.util.Set;
 
 @Serdeable
-public class OidcMetadata {
+public class Metadata {
 
     private String issuer;
     @JsonProperty("authorization_endpoint")
@@ -15,6 +15,10 @@ public class OidcMetadata {
     private String tokenEndpoint;
     @JsonProperty("token_endpoint_auth_methods_supported")
     private Set<String> tokenEndpointAuthMethodsSupported;
+    @JsonProperty("userinfo_endpoint")
+    private String userInfoEndpoint;
+    @JsonProperty("scopes_supported")
+    private Set<String> scopesSupported;
     @JsonProperty("response_types_supported")
     private Set<String> responseTypesSupported;
     @JsonProperty("response_modes_supported")
@@ -56,6 +60,22 @@ public class OidcMetadata {
 
     public void setTokenEndpointAuthMethodsSupported(Set<String> tokenEndpointAuthMethodsSupported) {
         this.tokenEndpointAuthMethodsSupported = tokenEndpointAuthMethodsSupported;
+    }
+
+    public String getUserInfoEndpoint() {
+        return userInfoEndpoint;
+    }
+
+    public void setUserInfoEndpoint(String userInfoEndpoint) {
+        this.userInfoEndpoint = userInfoEndpoint;
+    }
+
+    public Set<String> getScopesSupported() {
+        return scopesSupported;
+    }
+
+    public void setScopesSupported(Set<String> scopesSupported) {
+        this.scopesSupported = scopesSupported;
     }
 
     public Set<String> getResponseTypesSupported() {

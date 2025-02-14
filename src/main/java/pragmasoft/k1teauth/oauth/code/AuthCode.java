@@ -33,16 +33,21 @@ public class AuthCode {
     @Column(name = "code_challenge_method", nullable = false)
     private String codeChallengeMethod;
 
+    @Column
+    private String nonce;
+
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
     public AuthCode() {}
 
-    public AuthCode(String code, Consent consent, String codeChallenge, String codeChallengeMethod, LocalDateTime expiresAt) {
+    public AuthCode(String code, Consent consent, String codeChallenge, String codeChallengeMethod,
+                    String nonce, LocalDateTime expiresAt) {
         this.code = code;
         this.consent = consent;
         this.codeChallenge = codeChallenge;
         this.codeChallengeMethod = codeChallengeMethod;
+        this.nonce = nonce;
         this.expiresAt = expiresAt;
     }
 
@@ -80,6 +85,14 @@ public class AuthCode {
 
     public void setCodeChallengeMethod(String codeChallengeMethod) {
         this.codeChallengeMethod = codeChallengeMethod;
+    }
+
+    public String getNonce() {
+        return nonce;
+    }
+
+    public void setNonce(String nonce) {
+        this.nonce = nonce;
     }
 
     public LocalDateTime getExpiresAt() {

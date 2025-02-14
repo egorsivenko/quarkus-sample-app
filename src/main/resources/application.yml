@@ -48,7 +48,7 @@ micronaut:
       cookie-same-site: strict
       cookie-max-age: 1h
       filter:
-        regex-pattern: "^(?!(/login|/logout|/auth/.*|/oauth2/token)$).*$"
+        regex-pattern: "^(?!(/login|/logout|/auth/.*|/oauth2/token|/oauth2/userinfo)$).*$"
   email:
     from:
       email: ${SENDER_EMAIL}

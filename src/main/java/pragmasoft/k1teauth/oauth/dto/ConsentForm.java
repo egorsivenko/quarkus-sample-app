@@ -36,12 +36,15 @@ public class ConsentForm {
     @Nullable
     private String codeChallengeMethod;
 
+    @Nullable
+    private String nonce;
+
     public ConsentForm() {}
 
     @Creator
     public ConsentForm(String clientName, String callbackUrl, String state, UUID userId,
                        String scopeNames, String scopeDescriptions,
-                       String codeChallenge, String codeChallengeMethod) {
+                       String codeChallenge, String codeChallengeMethod, String nonce) {
         this.clientName = clientName;
         this.callbackUrl = callbackUrl;
         this.state = state;
@@ -50,6 +53,7 @@ public class ConsentForm {
         this.scopeDescriptions = scopeDescriptions;
         this.codeChallenge = codeChallenge;
         this.codeChallengeMethod = codeChallengeMethod;
+        this.nonce = nonce;
     }
 
     public boolean userGaveConsent() {
@@ -122,5 +126,13 @@ public class ConsentForm {
 
     public void setCodeChallengeMethod(String codeChallengeMethod) {
         this.codeChallengeMethod = codeChallengeMethod;
+    }
+
+    public String getNonce() {
+        return nonce;
+    }
+
+    public void setNonce(String nonce) {
+        this.nonce = nonce;
     }
 }

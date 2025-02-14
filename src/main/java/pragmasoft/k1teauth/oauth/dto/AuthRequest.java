@@ -27,6 +27,10 @@ public class AuthRequest {
     @Nullable
     private String codeChallengeMethod;
 
+    @QueryValue("nonce")
+    @Nullable
+    private String nonce;
+
     @QueryValue("scope")
     private String scope;
 
@@ -36,13 +40,15 @@ public class AuthRequest {
     public AuthRequest() {}
 
     @Creator
-    public AuthRequest(String clientId, String redirectUri, String responseType, String codeChallenge,
-                       String codeChallengeMethod, String scope, String state) {
+    public AuthRequest(String clientId, String redirectUri, String responseType,
+                       String codeChallenge, String codeChallengeMethod,
+                       String nonce, String scope, String state) {
         this.clientId = clientId;
         this.redirectUri = redirectUri;
         this.responseType = responseType;
         this.codeChallenge = codeChallenge;
         this.codeChallengeMethod = codeChallengeMethod;
+        this.nonce = nonce;
         this.scope = scope;
         this.state = state;
     }
@@ -85,6 +91,14 @@ public class AuthRequest {
 
     public void setCodeChallengeMethod(String codeChallengeMethod) {
         this.codeChallengeMethod = codeChallengeMethod;
+    }
+
+    public String getNonce() {
+        return nonce;
+    }
+
+    public void setNonce(String nonce) {
+        this.nonce = nonce;
     }
 
     public String getScope() {
