@@ -21,6 +21,14 @@ import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.views.ModelAndView;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import pragmasoft.k1teauth.common.ServerInfo;
@@ -55,6 +63,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Tag(name = "OAuth 2.0")
 @Controller("/oauth2")
 @Secured(SecurityRule.IS_AUTHENTICATED)
 @Transactional
@@ -89,6 +98,7 @@ public class OAuthController {
         this.authCodeRepository = authCodeRepository;
     }
 
+    @Hidden
     @Get(uri = "/auth")
     public HttpResponse<?> authorization(@RequestBean AuthRequest request, Principal principal) {
         Optional<OAuthClient> clientOptional = clientRepository.findById(request.getClientId());
@@ -143,6 +153,7 @@ public class OAuthController {
         ));
     }
 
+    @Hidden
     @Post(uri = "/consent")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public HttpResponse<?> consent(@Valid @Body ConsentForm form) {
@@ -172,6 +183,7 @@ public class OAuthController {
         return ResponseBuilder.buildRedirectResponse(uriBuilder.build());
     }
 
+    @Hidden
     @Post(uri = "/token")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
@@ -187,12 +199,58 @@ public class OAuthController {
         return tokenRequestHandler.handleTokenRequest(grantType, code, codeVerifier, refreshToken, clientOptional.get());
     }
 
+    @Operation(
+            summary = "UserInfo endpoint",
+            description = "Retrieve details about the logged-in user"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "The consented claims, packaged in a JSON object",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = UserInfoResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "An invalid or missing access token"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Insufficient privileges within the access token"
+            )
+    })
+    @SecurityRequirement(name = "jwt")
     @Get(uri = "/userinfo", produces = MediaType.APPLICATION_JSON)
     @Secured(SecurityRule.IS_ANONYMOUS)
     public HttpResponse<?> userInfoGet(@Header(HttpHeaders.AUTHORIZATION) String authorization) {
         return processUserInfoRequest(authorization);
     }
 
+    @Operation(
+            summary = "UserInfo endpoint",
+            description = "Retrieve details about the logged-in user"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "The consented claims, packaged in a JSON object",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = UserInfoResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "An invalid or missing access token"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Insufficient privileges within the access token"
+            )
+    })
+    @SecurityRequirement(name = "jwt")
     @Post(uri = "/userinfo", produces = MediaType.APPLICATION_JSON)
     @Secured(SecurityRule.IS_ANONYMOUS)
     public HttpResponse<?> userInfoPost(@Header(HttpHeaders.AUTHORIZATION) String authorization) {

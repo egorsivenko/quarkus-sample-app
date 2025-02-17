@@ -9,6 +9,12 @@ micronaut:
       js:
         mapping: /js/*.js
         paths: classpath:static/js
+      swagger:
+        mapping: /swagger/**
+        paths: classpath:META-INF/swagger
+      swagger-ui:
+        mapping: /swagger-ui/**
+        paths: classpath:META-INF/swagger/views/swagger-ui
   security:
     reject-not-found: true
     authentication: cookie
@@ -25,6 +31,13 @@ micronaut:
         access:
           - isAnonymous()
       - pattern: /js/**
+        httpMethod: GET
+        access:
+          - isAnonymous()
+      - pattern: /swagger/**
+        access:
+          - isAnonymous()
+      - pattern: /swagger-ui/**
         httpMethod: GET
         access:
           - isAnonymous()

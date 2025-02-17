@@ -6,12 +6,18 @@ import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import pragmasoft.k1teauth.common.ServerInfo;
 import pragmasoft.k1teauth.oauth.TokenRequestHandler;
 import pragmasoft.k1teauth.oauth.util.CodeChallengeUtil;
 
 import java.util.Set;
 
+@Tag(name = "OpenID Connect Discovery")
 @Controller("/.well-known")
 @Secured(SecurityRule.IS_ANONYMOUS)
 public class DiscoveryController {
@@ -22,6 +28,14 @@ public class DiscoveryController {
         this.serverInfo = serverInfo;
     }
 
+    @Operation(summary = "Authorization Server Metadata")
+    @ApiResponse(
+            responseCode = "200",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Metadata.class)
+            )
+    )
     @Get(uri = "/openid-configuration", produces = MediaType.APPLICATION_JSON)
     public HttpResponse<?> oidcDiscovery() {
         Metadata metadata = new Metadata();

@@ -3,12 +3,29 @@ package pragmasoft.k1teauth;
 import io.micronaut.context.event.StartupEvent;
 import io.micronaut.runtime.Micronaut;
 import io.micronaut.runtime.event.annotation.EventListener;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import jakarta.inject.Singleton;
 import pragmasoft.k1teauth.common.ServerInfo;
 import pragmasoft.k1teauth.oauth.scope.Scope;
 import pragmasoft.k1teauth.oauth.scope.ScopeRepository;
 
 @Singleton
+@OpenAPIDefinition(
+        info = @Info(
+                title = "k1te-auth",
+                description = "The OAuth 2.0 and OpenID Connect 1.0 Authorization Server",
+                version = "1.0"
+        )
+)
+@SecurityScheme(
+        name = "jwt",
+        type = SecuritySchemeType.HTTP,
+        scheme = "bearer",
+        bearerFormat = "jwt"
+)
 public class Application {
 
     private final ScopeRepository scopeRepository;

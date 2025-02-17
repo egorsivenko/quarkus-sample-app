@@ -7,12 +7,14 @@ import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.QueryValue;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
+import io.swagger.v3.oas.annotations.Hidden;
 import pragmasoft.k1teauth.security.jwt.JwtService;
 import pragmasoft.k1teauth.user.UserService;
 
 import java.net.URI;
 import java.util.UUID;
 
+@Hidden
 @Controller("/verify")
 @Secured(SecurityRule.IS_ANONYMOUS)
 public class VerificationController {

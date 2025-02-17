@@ -9,9 +9,11 @@ import io.micronaut.http.annotation.QueryValue;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.views.View;
+import io.swagger.v3.oas.annotations.Hidden;
 
 import java.util.Map;
 
+@Hidden
 @Controller("/auth")
 @Secured(SecurityRule.IS_ANONYMOUS)
 public class LoginController {
