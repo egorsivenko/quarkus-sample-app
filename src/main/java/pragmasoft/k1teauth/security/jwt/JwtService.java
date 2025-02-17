@@ -71,10 +71,13 @@ public class JwtService {
             SignedJWT signedJWT = SignedJWT.parse(token);
 
             if (!signedJWT.verify(new RSASSAVerifier(rsaPublicJWK))) {
-                throw new BadJWTException("Invalid token");
+                throw new BadJWTException("Invalid token signature");
+            }
+            if (!serverInfo.getBaseUrl().equals(signedJWT.getJWTClaimsSet().getIssuer())) {
+                throw new BadJWTException("Invalid token issuer");
             }
             if (new Date().after(signedJWT.getJWTClaimsSet().getExpirationTime())) {
-                throw new BadJWTException("Token is expired");
+                throw new BadJWTException("Token has expired");
             }
             return signedJWT.getJWTClaimsSet();
 
