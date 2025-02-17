@@ -12,6 +12,7 @@ import io.micronaut.http.server.exceptions.NotFoundException;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.views.ModelAndView;
 import io.micronaut.views.View;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
@@ -29,6 +30,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Hidden
 @Controller("/oauth2/clients")
 @Secured("ADMIN")
 public class OAuthClientController {

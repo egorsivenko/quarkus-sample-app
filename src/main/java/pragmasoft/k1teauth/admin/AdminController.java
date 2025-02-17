@@ -12,6 +12,7 @@ import io.micronaut.http.annotation.QueryValue;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.views.ModelAndView;
 import io.micronaut.views.View;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import pragmasoft.k1teauth.common.violation.MessageSource;
@@ -26,6 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+@Hidden
 @Controller("/admin")
 @Secured("ADMIN")
 public class AdminController {

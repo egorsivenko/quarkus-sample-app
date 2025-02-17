@@ -8,6 +8,7 @@ import io.micronaut.http.annotation.Post;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.views.View;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.transaction.Transactional;
 import pragmasoft.k1teauth.user.User;
 import pragmasoft.k1teauth.user.UserService;
@@ -17,6 +18,7 @@ import java.security.Principal;
 import java.util.Map;
 import java.util.UUID;
 
+@Hidden
 @Controller("/granted-consents")
 @Secured(SecurityRule.IS_AUTHENTICATED)
 public class ConsentController {

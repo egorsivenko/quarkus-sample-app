@@ -11,6 +11,7 @@ import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.views.ModelAndView;
 import io.micronaut.views.View;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import pragmasoft.k1teauth.common.violation.MessageSource;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+@Hidden
 @Controller("/profile")
 @Secured(SecurityRule.IS_AUTHENTICATED)
 public class UserProfileController {

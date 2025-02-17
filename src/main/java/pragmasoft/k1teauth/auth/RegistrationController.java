@@ -15,6 +15,7 @@ import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.views.ModelAndView;
 import io.micronaut.views.View;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import pragmasoft.k1teauth.auth.form.RegistrationForm;
@@ -31,6 +32,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+@Hidden
 @Controller("/auth")
 @Secured(SecurityRule.IS_ANONYMOUS)
 public class RegistrationController {

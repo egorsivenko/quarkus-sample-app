@@ -13,6 +13,7 @@ import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.views.View;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import pragmasoft.k1teauth.auth.form.ForgotPasswordForm;
@@ -27,6 +28,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+@Hidden
 @Controller("/auth")
 @Secured(SecurityRule.IS_ANONYMOUS)
 public class ForgotPasswordController {
