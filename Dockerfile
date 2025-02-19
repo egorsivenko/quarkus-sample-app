@@ -3,6 +3,7 @@ FROM maven:3.9-eclipse-temurin-21-alpine AS build
 RUN mkdir -p /workspace
 WORKDIR /workspace
 COPY pom.xml /workspace
+COPY openapi.properties /workspace
 COPY src /workspace/src
 RUN mvn clean package
 
