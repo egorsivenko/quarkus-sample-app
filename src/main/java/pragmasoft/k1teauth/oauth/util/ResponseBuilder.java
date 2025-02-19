@@ -27,7 +27,6 @@ public final class ResponseBuilder {
     }
 
     public static HttpResponse<?> buildErrorResponse(String error) {
-        return HttpResponse.badRequest(new ErrorResponse(error))
-                .header(HttpHeaders.CACHE_CONTROL, "no-store");
+        return HttpResponse.badRequest(new ErrorResponse(error));
     }
 }

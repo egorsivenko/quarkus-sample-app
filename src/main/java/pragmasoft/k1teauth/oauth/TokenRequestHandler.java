@@ -100,6 +100,7 @@ public class TokenRequestHandler {
             return ResponseBuilder.buildErrorResponse("Code verifier is required");
         }
         if (!CodeChallengeUtil.verifyCodeChallenge(authCode.getCodeChallenge(), codeVerifier, authCode.getCodeChallengeMethod())) {
+            consentRepository.delete(consent);
             return ResponseBuilder.buildErrorResponse("Invalid code verifier");
         }
         authCodeRepository.delete(authCode);
