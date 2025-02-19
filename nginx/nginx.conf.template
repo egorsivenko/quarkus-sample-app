@@ -10,9 +10,9 @@ http {
             proxy_pass http://app:8080;
 
             set ${DOLLAR}DEFAULT  "default-src 'self'";
-            set ${DOLLAR}SCRIPT   "script-src 'self' https://challenges.cloudflare.com/turnstile/v0/api.js";
-            set ${DOLLAR}STYLE    "style-src 'self' https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css";
-            set ${DOLLAR}IMG      "img-src 'self' https://picocss.com/favicon.ico";
+            set ${DOLLAR}SCRIPT   "script-src 'self' 'sha256-+7wsW1Oejx7zSdItyDEqu/Kizy+mrP8nZiUCPON/czQ=' 'sha256-dk5tS6x3KBnHeLdk1MrElwfehYsePagQhx25cy/CaEI=' https://challenges.cloudflare.com/turnstile/v0/api.js";
+            set ${DOLLAR}STYLE    "style-src 'self' 'sha256-RL3ie0nH+Lzz2YNqQN83mnU0J1ot4QL7b99vMdIX99w=' https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css";
+            set ${DOLLAR}IMG      "img-src 'self' data: https://picocss.com/favicon.ico";
             set ${DOLLAR}CONNECT  "connect-src 'self' https://challenges.cloudflare.com/turnstile/v0/siteverify";
             set ${DOLLAR}FRAME    "frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'none'";
 
