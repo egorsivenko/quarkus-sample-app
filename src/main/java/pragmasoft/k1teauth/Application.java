@@ -21,10 +21,9 @@ import pragmasoft.k1teauth.oauth.scope.ScopeRepository;
         )
 )
 @SecurityScheme(
-        name = "jwt",
-        type = SecuritySchemeType.HTTP,
-        scheme = "bearer",
-        bearerFormat = "jwt"
+        name = "openId",
+        type = SecuritySchemeType.OPENIDCONNECT,
+        openIdConnectUrl = "/.well-known/openid-configuration"
 )
 public class Application {
 

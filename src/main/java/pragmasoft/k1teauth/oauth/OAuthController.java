@@ -221,7 +221,7 @@ public class OAuthController {
                     description = "Insufficient privileges within the access token"
             )
     })
-    @SecurityRequirement(name = "jwt")
+    @SecurityRequirement(name = "openId", scopes = {"openid"})
     @Get(uri = "/userinfo", produces = MediaType.APPLICATION_JSON)
     @Secured(SecurityRule.IS_ANONYMOUS)
     public HttpResponse<?> userInfoGet(@Header(HttpHeaders.AUTHORIZATION) String authorization) {
@@ -250,7 +250,7 @@ public class OAuthController {
                     description = "Insufficient privileges within the access token"
             )
     })
-    @SecurityRequirement(name = "jwt")
+    @SecurityRequirement(name = "openId", scopes = {"openid"})
     @Post(uri = "/userinfo", produces = MediaType.APPLICATION_JSON)
     @Secured(SecurityRule.IS_ANONYMOUS)
     public HttpResponse<?> userInfoPost(@Header(HttpHeaders.AUTHORIZATION) String authorization) {
