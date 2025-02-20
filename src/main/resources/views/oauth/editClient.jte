@@ -26,6 +26,7 @@ body = @`
                     @endif
                     <input type="hidden" name="csrfToken" value="${csrfToken}">
                     <input type="hidden" name="clientId" value="${client.getClientId()}" />
+                    <input type="hidden" name="isConfidential" value="${client.isConfidential()}" />
                     <label for="clientName">Client name</label>
                     <input type="text" id="clientName" name="clientName" minlength="3" maxlength="100" value="${client.getName()}"
                            placeholder="Client name" required autofocus />

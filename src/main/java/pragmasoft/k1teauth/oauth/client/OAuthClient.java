@@ -26,7 +26,7 @@ public class OAuthClient {
     @Column(name = "client_id")
     private String clientId;
 
-    @Column(name = "client_secret", nullable = false, unique = true)
+    @Column(name = "client_secret", unique = true)
     private String clientSecret;
 
     @Column(name = "name", nullable = false, unique = true)
@@ -58,14 +58,18 @@ public class OAuthClient {
     )
     private Set<Scope> scopes = new HashSet<>();
 
+    @Column(name = "is_confidential", nullable = false)
+    private boolean isConfidential;
+
     public OAuthClient() {}
 
-    public OAuthClient(String clientId, String clientSecret, String name, Set<String> callbackUrls, Set<Scope> scopes) {
+    public OAuthClient(String clientId, String clientSecret, String name, Set<String> callbackUrls, Set<Scope> scopes, boolean isConfidential) {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.name = name;
         this.callbackUrls = callbackUrls;
         this.scopes = scopes;
+        this.isConfidential = isConfidential;
     }
 
     public String getClientId() {
@@ -106,5 +110,13 @@ public class OAuthClient {
 
     public void setScopes(Set<Scope> scopes) {
         this.scopes = scopes;
+    }
+
+    public boolean isConfidential() {
+        return isConfidential;
+    }
+
+    public void setConfidential(boolean confidential) {
+        isConfidential = confidential;
     }
 }

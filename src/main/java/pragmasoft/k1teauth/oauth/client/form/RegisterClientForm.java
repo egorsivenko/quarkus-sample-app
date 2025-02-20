@@ -2,6 +2,7 @@ package pragmasoft.k1teauth.oauth.client.form;
 
 import io.micronaut.core.annotation.Creator;
 import io.micronaut.serde.annotation.Serdeable;
+import io.micronaut.views.fields.annotations.InputCheckbox;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -21,13 +22,17 @@ public class RegisterClientForm {
     @NotNull
     private List<String> scopes;
 
+    @InputCheckbox
+    private boolean isConfidential;
+
     public RegisterClientForm() {}
 
     @Creator
-    public RegisterClientForm(String clientName, String callbackUrls, List<String> scopes) {
+    public RegisterClientForm(String clientName, String callbackUrls, List<String> scopes, boolean isConfidential) {
         this.clientName = clientName;
         this.callbackUrls = callbackUrls;
         this.scopes = scopes;
+        this.isConfidential = isConfidential;
     }
 
     public String getClientName() {
@@ -52,5 +57,13 @@ public class RegisterClientForm {
 
     public void setScopes(List<String> scopes) {
         this.scopes = scopes;
+    }
+
+    public boolean isConfidential() {
+        return isConfidential;
+    }
+
+    public void setConfidential(boolean confidential) {
+        isConfidential = confidential;
     }
 }
