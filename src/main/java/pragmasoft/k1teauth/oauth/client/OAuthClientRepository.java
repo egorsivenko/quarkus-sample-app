@@ -9,6 +9,4 @@ import java.util.Optional;
 public interface OAuthClientRepository extends CrudRepository<OAuthClient, String> {
 
     Optional<OAuthClient> findByName(String name);
-
-    Optional<OAuthClient> findByClientIdAndClientSecret(String clientId, String clientSecret);
 }

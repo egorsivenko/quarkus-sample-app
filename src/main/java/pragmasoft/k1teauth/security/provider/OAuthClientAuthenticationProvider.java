@@ -6,10 +6,7 @@ import io.micronaut.security.authentication.AuthenticationRequest;
 import io.micronaut.security.authentication.AuthenticationResponse;
 import io.micronaut.security.authentication.provider.HttpRequestExecutorAuthenticationProvider;
 import jakarta.inject.Singleton;
-import pragmasoft.k1teauth.oauth.client.OAuthClient;
 import pragmasoft.k1teauth.oauth.client.OAuthClientRepository;
-
-import java.util.Optional;
 
 @Singleton
 public class OAuthClientAuthenticationProvider<B> implements HttpRequestExecutorAuthenticationProvider<B> {
@@ -23,10 +20,9 @@ public class OAuthClientAuthenticationProvider<B> implements HttpRequestExecutor
     @Override
     public AuthenticationResponse authenticate(HttpRequest<B> requestContext,
                                                AuthenticationRequest<String, String> authRequest) {
-        Optional<OAuthClient> clientOptional = clientRepository
-                .findByClientIdAndClientSecret(authRequest.getIdentity(), authRequest.getSecret());
-        return clientOptional.isPresent()
-                ? AuthenticationResponse.success(authRequest.getIdentity())
-                : AuthenticationResponse.failure(AuthenticationFailureReason.CREDENTIALS_DO_NOT_MATCH);
+        return clientRepository.findById(authRequest.getIdentity())
+                .filter(client -> !client.isConfidential() || client.getClientSecret().equals(authRequest.getSecret()))
+                .map(client -> AuthenticationResponse.success(authRequest.getIdentity()))
+                .orElse(AuthenticationResponse.failure(AuthenticationFailureReason.CREDENTIALS_DO_NOT_MATCH));
     }
 }
