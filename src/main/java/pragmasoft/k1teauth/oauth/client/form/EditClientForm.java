@@ -15,8 +15,8 @@ public class EditClientForm extends RegisterClientForm {
     public EditClientForm() {}
 
     @Creator
-    public EditClientForm(String clientName, String callbackUrls, List<String> scopes, String clientId) {
-        super(clientName, callbackUrls, scopes);
+    public EditClientForm(String clientName, String callbackUrls, List<String> scopes, boolean isConfidential, String clientId) {
+        super(clientName, callbackUrls, scopes, isConfidential);
         this.clientId = clientId;
     }
 

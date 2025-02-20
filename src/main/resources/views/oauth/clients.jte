@@ -25,6 +25,7 @@ body = @`
             <th scope="col">Client Name</th>
             <th scope="col">Callback URLs</th>
             <th scope="col">Scopes</th>
+            <th scope="col">Confidential</th>
             <th scope="col">Actions</th>
         </tr>
         </thead>
@@ -32,7 +33,13 @@ body = @`
         @for(var client : clients)
             <tr>
                 <th scope="row">${client.getClientId()}</th>
-                <td>${client.getClientSecret()}</td>
+                <td>
+                    @if(client.getClientSecret() != null)
+                        ${client.getClientSecret()}
+                    @else
+                        <i>Public client</i>
+                    @endif
+                </td>
                 <td>${client.getName()}</td>
                 <td>${String.join(", ", client.getCallbackUrls())}</td>
                 <td>
@@ -40,6 +47,7 @@ body = @`
                         <div>${scope.getName()}</div>
                     @endfor
                 </td>
+                <td>${client.isConfidential()}</td>
                 <td>
                     <form action="/oauth2/clients/delete" method="POST"
                           onsubmit="return confirm('Are you sure you want to delete this OAuth client?');">

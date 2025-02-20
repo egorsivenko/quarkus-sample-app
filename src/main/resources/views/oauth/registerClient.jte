@@ -36,6 +36,12 @@ body = @`
                             <option value="${scope.getName()}">${scope.getName()}</option>
                         @endfor
                     </select>
+                    <fieldset>
+                        <label>
+                            <input type="checkbox" id="isConfidential" name="isConfidential" value="true" />
+                            Confidential client
+                        </label>
+                    </fieldset>
                     <button type="submit" class="contrast">Create OAuth Client</button>
                     <a href="/oauth2/clients" role="button" class="outline contrast wide">Cancel</a>
                 </form>

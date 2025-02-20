@@ -66,7 +66,9 @@ public class OAuthClientController {
         }
         OAuthClient client = new OAuthClient();
         client.setClientId(CodeGenerator.generate(40));
-        client.setClientSecret(CodeGenerator.generate(40));
+        if (form.isConfidential()) {
+            client.setClientSecret(CodeGenerator.generate(40));
+        }
         assignFormDataToClient(client, form);
 
         clientRepository.save(client);
@@ -112,6 +114,7 @@ public class OAuthClientController {
         client.setName(form.getClientName());
         client.setCallbackUrls(parseCallbackUrls(form.getCallbackUrls()));
         client.setScopes(mapScopes(form.getScopes()));
+        client.setConfidential(form.isConfidential());
     }
 
     private Set<String> parseCallbackUrls(String callbackUrls) {
