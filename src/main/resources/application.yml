@@ -83,8 +83,14 @@ aws:
 turnstile:
   siteKey: ${TURNSTILE_SITE_KEY}
   secretKey: ${TURNSTILE_SECRET_KEY}
+admin:
+  name: ${ADMIN_NAME}
+  email: ${ADMIN_EMAIL}
+  password: ${ADMIN_PASSWORD}
 host:
   name: ${HOST_NAME}
+server:
+  url: ${SERVER_URL}
 pem:
   path: ${PEM_FILE_LOCATION:`.key-pair/ec512-key-pair.pem`}
 datasources:
@@ -100,9 +106,18 @@ jpa:
         show_sql: true
         format_sql: true
         hbm2ddl:
-          auto: update
-    entity-scan:
-      packages: 'pragmasoft.k1teauth'
+          auto: none
+    packages-to-scan:
+      - 'pragmasoft.k1teauth'
+flyway:
+  datasources:
+    default:
+      enabled: true
+      placeholders:
+        server-url: ${server.url}
+        admin-name: ${admin.name}
+        admin-email: ${admin.email}
+        admin-password: ${admin.password}
 cache:
   capacity: 1000
 bucket:
