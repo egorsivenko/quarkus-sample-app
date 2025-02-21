@@ -299,7 +299,7 @@
                 <artifactId>jte-maven-plugin</artifactId>
                 <version>${jte.version}</version>
                 <configuration>
-                    <sourceDirectory>${project.basedir}/src/main/resources/views</sourceDirectory>
+                    <sourceDirectory>${project.basedir}/src/main/jte</sourceDirectory>
                     <targetDirectory>${project.build.directory}/generated-sources/jte</targetDirectory>
                     <contentType>Html</contentType>
                 </configuration>
