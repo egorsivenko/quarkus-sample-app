@@ -62,6 +62,16 @@ micronaut:
       cookie-max-age: 1h
       filter:
         regex-pattern: "^(?!(/login|/logout|/auth/.*|/oauth2/token|/oauth2/userinfo)$).*$"
+  views:
+    csp:
+      enabled: true
+      policy-directives: >-
+        default-src 'self';
+        script-src 'self' 'sha256-HZbM5aZPE0t7sUAGF95thuZ6hV0Z1HDVee1M4aBPjW4=' 'sha256-dk5tS6x3KBnHeLdk1MrElwfehYsePagQhx25cy/CaEI=' https://challenges.cloudflare.com/turnstile/v0/api.js;
+        style-src 'self' 'sha256-RL3ie0nH+Lzz2YNqQN83mnU0J1ot4QL7b99vMdIX99w=' https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css;
+        img-src 'self' data: https://picocss.com/favicon.ico;
+        connect-src 'self' https://challenges.cloudflare.com/turnstile/v0/siteverify;
+        frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'none'
   email:
     from:
       email: ${SENDER_EMAIL}
