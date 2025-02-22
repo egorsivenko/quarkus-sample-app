@@ -157,9 +157,6 @@ admin:
   email: # Admin user email for login
   password: # Admin user password
 
-host:
-  name: # Hostname of the application
-
 server:
   url: # Base URL of the server
 
@@ -182,7 +179,7 @@ DB_PASSWORD=             # PostgreSQL password for authentication
 DB_PORT=                 # The port PostgreSQL should use
 
 # NGINX
-HOST_NAME=               # The hostname used by Nginx
+NGINX_SERVER_NAME=       # The server name used by Nginx
 
 # Grafana
 GRAFANA_ADMIN_USER=      # The administrator username for Grafana
