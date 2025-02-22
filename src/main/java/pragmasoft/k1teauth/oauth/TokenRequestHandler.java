@@ -1,9 +1,9 @@
 package pragmasoft.k1teauth.oauth;
 
 import com.nimbusds.jwt.proc.BadJWTException;
+import io.micronaut.context.annotation.Property;
 import io.micronaut.http.HttpResponse;
 import jakarta.inject.Singleton;
-import pragmasoft.k1teauth.common.ServerInfo;
 import pragmasoft.k1teauth.oauth.client.OAuthClient;
 import pragmasoft.k1teauth.oauth.code.AuthCode;
 import pragmasoft.k1teauth.oauth.code.AuthCodeRepository;
@@ -32,19 +32,19 @@ import java.util.stream.Collectors;
 @Singleton
 public class TokenRequestHandler {
 
+    @Property(name = "server.url")
+    private String serverUrl;
+
     private final JwtService jwtService;
-    private final ServerInfo serverInfo;
     private final ConsentRepository consentRepository;
     private final AuthCodeRepository authCodeRepository;
     private final ScopeRepository scopeRepository;
 
     public TokenRequestHandler(JwtService jwtService,
-                               ServerInfo serverInfo,
                                ConsentRepository consentRepository,
                                AuthCodeRepository authCodeRepository,
                                ScopeRepository scopeRepository) {
         this.jwtService = jwtService;
-        this.serverInfo = serverInfo;
         this.consentRepository = consentRepository;
         this.authCodeRepository = authCodeRepository;
         this.scopeRepository = scopeRepository;
@@ -117,7 +117,7 @@ public class TokenRequestHandler {
     }
 
     private HttpResponse<?> handleRefreshTokenGrant(String refreshToken, OAuthClient client) throws BadJWTException {
-        if (!jwtService.extractClaimsSet(refreshToken).getAudience().contains(serverInfo.getBaseUrl())) {
+        if (!jwtService.extractClaimsSet(refreshToken).getAudience().contains(serverUrl)) {
             return ResponseBuilder.buildErrorResponse("Audience mismatch in the refresh token");
         }
         Optional<Consent> consentOptional;
@@ -171,7 +171,7 @@ public class TokenRequestHandler {
 
     private String generateRefreshToken(String subject) {
         return jwtService.generate(subject,
-                List.of(serverInfo.getBaseUrl()),
+                List.of(serverUrl),
                 OAuthConstants.REFRESH_TOKEN_EXP_TIME);
     }
 }

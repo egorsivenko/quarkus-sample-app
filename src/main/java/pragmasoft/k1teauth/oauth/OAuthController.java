@@ -2,6 +2,7 @@ package pragmasoft.k1teauth.oauth;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.BadJWTException;
+import io.micronaut.context.annotation.Property;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.util.StringUtils;
 import io.micronaut.http.HttpHeaders;
@@ -31,7 +32,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
-import pragmasoft.k1teauth.common.ServerInfo;
 import pragmasoft.k1teauth.oauth.client.OAuthClient;
 import pragmasoft.k1teauth.oauth.client.OAuthClientRepository;
 import pragmasoft.k1teauth.oauth.code.AuthCode;
@@ -71,9 +71,11 @@ public class OAuthController {
 
     private static final String BEARER_PREFIX = "Bearer ";
 
+    @Property(name = "server.url")
+    private String serverUrl;
+
     private final UserService userService;
     private final JwtService jwtService;
-    private final ServerInfo serverInfo;
     private final TokenRequestHandler tokenRequestHandler;
     private final OAuthClientRepository clientRepository;
     private final ScopeRepository scopeRepository;
@@ -82,7 +84,6 @@ public class OAuthController {
 
     public OAuthController(UserService userService,
                            JwtService jwtService,
-                           ServerInfo serverInfo,
                            TokenRequestHandler tokenRequestHandler,
                            OAuthClientRepository clientRepository,
                            ScopeRepository scopeRepository,
@@ -90,7 +91,6 @@ public class OAuthController {
                            AuthCodeRepository authCodeRepository) {
         this.userService = userService;
         this.jwtService = jwtService;
-        this.serverInfo = serverInfo;
         this.tokenRequestHandler = tokenRequestHandler;
         this.clientRepository = clientRepository;
         this.scopeRepository = scopeRepository;
@@ -293,7 +293,7 @@ public class OAuthController {
         uriBuilder
                 .queryParam("code", code)
                 .queryParam("state", state)
-                .queryParam("iss", serverInfo.getBaseUrl());
+                .queryParam("iss", serverUrl);
 
         return ResponseBuilder.buildRedirectResponse(uriBuilder.build());
     }
@@ -303,7 +303,7 @@ public class OAuthController {
         try {
             JWTClaimsSet jwtClaimsSet = jwtService.extractClaimsSet(accessToken);
             List<String> scopes = jwtClaimsSet.getStringListClaim("scopes");
-            if (!jwtClaimsSet.getAudience().contains(serverInfo.getBaseUrl())
+            if (!jwtClaimsSet.getAudience().contains(serverUrl)
                     || scopes == null
                     || !scopes.contains("openid")) {
                 return HttpResponse.status(HttpStatus.FORBIDDEN);

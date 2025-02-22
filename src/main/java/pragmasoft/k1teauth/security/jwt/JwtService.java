@@ -10,9 +10,9 @@ import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.BadJWTException;
+import io.micronaut.context.annotation.Property;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Singleton;
-import pragmasoft.k1teauth.common.ServerInfo;
 
 import java.text.ParseException;
 import java.time.Duration;
@@ -24,14 +24,11 @@ import java.util.stream.Stream;
 @Singleton
 public class JwtService {
 
+    @Property(name = "server.url")
+    private String serverUrl;
+
     private RSAKey rsaJWK;
     private RSAKey rsaPublicJWK;
-
-    private final ServerInfo serverInfo;
-
-    public JwtService(ServerInfo serverInfo) {
-        this.serverInfo = serverInfo;
-    }
 
     @PostConstruct
     public void init() throws JOSEException {
@@ -46,7 +43,7 @@ public class JwtService {
         try {
             JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder()
                     .subject(subject)
-                    .issuer(serverInfo.getBaseUrl())
+                    .issuer(serverUrl)
                     .audience(audience)
                     .issueTime(new Date())
                     .expirationTime(new Date(System.currentTimeMillis() + expirationTime.toMillis()));
@@ -73,7 +70,7 @@ public class JwtService {
             if (!signedJWT.verify(new RSASSAVerifier(rsaPublicJWK))) {
                 throw new BadJWTException("Invalid token signature");
             }
-            if (!serverInfo.getBaseUrl().equals(signedJWT.getJWTClaimsSet().getIssuer())) {
+            if (!serverUrl.equals(signedJWT.getJWTClaimsSet().getIssuer())) {
                 throw new BadJWTException("Invalid token issuer");
             }
             if (new Date().after(signedJWT.getJWTClaimsSet().getExpirationTime())) {

@@ -1,5 +1,6 @@
 package pragmasoft.k1teauth.email;
 
+import io.micronaut.context.annotation.Property;
 import io.micronaut.email.BodyType;
 import io.micronaut.email.Email;
 import io.micronaut.email.EmailSender;
@@ -8,7 +9,6 @@ import io.micronaut.email.template.TemplateBody;
 import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.views.ModelAndView;
 import jakarta.inject.Singleton;
-import pragmasoft.k1teauth.common.ServerInfo;
 import pragmasoft.k1teauth.security.jwt.JwtService;
 import pragmasoft.k1teauth.user.User;
 
@@ -25,16 +25,16 @@ public class EmailService {
 
     private static final Duration TOKEN_EXP_TIME = Duration.ofMinutes(30);
 
+    @Property(name = "server.url")
+    private String serverUrl;
+
     private final EmailSender<?, ?> emailSender;
     private final JwtService jwtService;
-    private final ServerInfo serverInfo;
 
     public EmailService(EmailSender<?, ?> emailSender,
-                        JwtService jwtService,
-                        ServerInfo serverInfo) {
+                        JwtService jwtService) {
         this.emailSender = emailSender;
         this.jwtService = jwtService;
-        this.serverInfo = serverInfo;
     }
 
     public void sendRegistrationEmail(User recipient) {
@@ -66,7 +66,7 @@ public class EmailService {
     }
 
     private String formatLink(UUID userId, String endpoint) {
-        String path = serverInfo.getBaseUrl() + "/verify" + endpoint;
+        String path = serverUrl + "/verify" + endpoint;
         String token = jwtService.generate(userId.toString(), List.of(path), TOKEN_EXP_TIME);
 
         return UriBuilder.of(path)

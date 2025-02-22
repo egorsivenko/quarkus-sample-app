@@ -1,5 +1,6 @@
 package pragmasoft.k1teauth.oauth.discovery;
 
+import io.micronaut.context.annotation.Property;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Controller;
@@ -11,7 +12,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import pragmasoft.k1teauth.common.ServerInfo;
 import pragmasoft.k1teauth.oauth.TokenRequestHandler;
 import pragmasoft.k1teauth.oauth.util.CodeChallengeUtil;
 
@@ -22,11 +22,8 @@ import java.util.Set;
 @Secured(SecurityRule.IS_ANONYMOUS)
 public class DiscoveryController {
 
-    private final ServerInfo serverInfo;
-
-    public DiscoveryController(ServerInfo serverInfo) {
-        this.serverInfo = serverInfo;
-    }
+    @Property(name = "server.url")
+    private String serverUrl;
 
     @Operation(summary = "Authorization Server Metadata")
     @ApiResponse(
@@ -39,13 +36,12 @@ public class DiscoveryController {
     @Get(uri = "/openid-configuration", produces = MediaType.APPLICATION_JSON)
     public HttpResponse<?> oidcDiscovery() {
         Metadata metadata = new Metadata();
-        String baseUrl = serverInfo.getBaseUrl();
 
-        metadata.setIssuer(baseUrl);
-        metadata.setAuthorizationEndpoint(baseUrl + "/oauth2/auth");
-        metadata.setTokenEndpoint(baseUrl + "/oauth2/token");
+        metadata.setIssuer(serverUrl);
+        metadata.setAuthorizationEndpoint(serverUrl + "/oauth2/auth");
+        metadata.setTokenEndpoint(serverUrl + "/oauth2/token");
         metadata.setTokenEndpointAuthMethodsSupported(Set.of("client_secret_basic"));
-        metadata.setUserInfoEndpoint(baseUrl + "/oauth2/userinfo");
+        metadata.setUserInfoEndpoint(serverUrl + "/oauth2/userinfo");
 
         metadata.setScopesSupported(Set.of("openid"));
         metadata.setResponseTypesSupported(Set.of("code"));
