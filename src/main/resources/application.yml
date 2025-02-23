@@ -85,10 +85,15 @@ micronaut:
 endpoints:
   prometheus:
     sensitive: false
-aws:
-  accessKeyId: ${AWS_ACCESS_KEY_ID}
-  secretKey: ${AWS_SECRET_ACCESS_KEY}
-  region: ${AWS_REGION:us-east-1}
+smtp:
+  auth: ${SMTP_AUTH}
+  starttls:
+    enable: ${SMTP_STARTTLS_ENABLE}
+  session:
+    username: ${SMTP_SESSION_USERNAME}
+    password: ${SMTP_SESSION_PASSWORD}
+  host: ${SMTP_HOST}
+  port: ${SMTP_PORT}
 turnstile:
   siteKey: ${TURNSTILE_SITE_KEY}
   secretKey: ${TURNSTILE_SECRET_KEY}
