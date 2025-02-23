@@ -154,7 +154,12 @@
         </dependency>
         <dependency>
             <groupId>io.micronaut.email</groupId>
-            <artifactId>micronaut-email-amazon-ses</artifactId>
+            <artifactId>micronaut-email-javamail</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>angus-mail</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
