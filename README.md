@@ -143,10 +143,15 @@ micronaut:
       email: # Sender email address for outgoing emails
       name: # Sender name for outgoing emails
 
-aws:
-  accessKeyId: # AWS access key ID for authentication with AWS services
-  secretKey: # AWS secret access key for authentication with AWS services
-  region: # AWS region where the services are hosted (e.g., us-east-1)
+smtp:
+  auth: # Whether SMTP authentication is required (true/false)
+  starttls:
+    enable: # Whether STARTTLS should be enabled for secure email transmission (true/false)
+  session:
+    username: # SMTP username for authentication
+    password: # SMTP password for authentication
+  host: # SMTP server host
+  port: # SMTP server port
 
 turnstile:
   siteKey: # Cloudflare Turnstile site key for CAPTCHA verification
