@@ -1,7 +1,9 @@
 @import java.util.List
 @import io.micronaut.views.fields.messages.Message
-@param String name
+@param String name = null
 @param List<Message> errors
-@for(var error: errors)
-<div id="${name}ValidationServerFeedback" class="invalid-feedback">${error.defaultMessage()}</div>
-@endfor
+@if(errors != null)
+    @for(var error : errors)
+        <p id="${name}ValidationServerFeedback" class="invalid-feedback">${error.defaultMessage()}</p>
+    @endfor
+@endif

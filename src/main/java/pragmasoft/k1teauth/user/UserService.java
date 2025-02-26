@@ -2,10 +2,10 @@ package pragmasoft.k1teauth.user;
 
 import jakarta.inject.Singleton;
 import jakarta.transaction.Transactional;
+import pragmasoft.k1teauth.admin.form.EditUserForm;
 import pragmasoft.k1teauth.user.User.Role;
 import pragmasoft.k1teauth.user.exception.EmailAlreadyTakenException;
 import pragmasoft.k1teauth.user.exception.UserNotFoundException;
-import pragmasoft.k1teauth.user.form.EditUserForm;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,10 +34,6 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException(email));
     }
 
-    public boolean existsById(UUID id) {
-        return userRepository.existsById(id);
-    }
-
     public boolean existsByEmail(String email) {
         return userRepository.findByEmail(email).isPresent();
     }
@@ -50,15 +46,15 @@ public class UserService {
     }
 
     public void edit(EditUserForm form) {
-        User user = getById(form.getId());
-        String newEmail = form.getEmail();
+        User user = getById(form.id());
+        String newEmail = form.email();
 
         if (!user.getEmail().equals(newEmail) && existsByEmail(newEmail)) {
             throw new EmailAlreadyTakenException(newEmail);
         }
         user.setEmail(newEmail);
-        user.setFullName(form.getFullName());
-        user.setRole(Role.valueOf(form.getRole().toUpperCase()));
+        user.setFullName(form.fullName());
+        user.setRole(Role.valueOf(form.role().toUpperCase()));
 
         userRepository.update(user);
     }
