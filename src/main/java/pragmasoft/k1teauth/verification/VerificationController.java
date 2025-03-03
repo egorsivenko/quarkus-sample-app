@@ -29,7 +29,7 @@ public class VerificationController {
     }
 
     @Get(uri = "/registration")
-    public HttpResponse<?> verifyRegistration(@QueryValue String token) throws BadJWTException {
+    public HttpResponse<Void> verifyRegistration(@QueryValue String token) throws BadJWTException {
         String subj = jwtService.extractClaimsSet(token).getSubject();
         userService.verifyUser(UUID.fromString(subj));
 
@@ -37,7 +37,7 @@ public class VerificationController {
     }
 
     @Get(uri = "/reset-password")
-    public HttpResponse<?> verifyResetPassword(@QueryValue String token) throws BadJWTException {
+    public HttpResponse<Void> verifyResetPassword(@QueryValue String token) throws BadJWTException {
         String subj = jwtService.extractClaimsSet(token).getSubject();
         userService.verifyUser(UUID.fromString(subj));
 

@@ -22,7 +22,7 @@ public class RateLimitFilter {
     }
 
     @RequestFilter
-    public CompletableFuture<@Nullable HttpResponse<?>> filter(@NotNull HttpRequest<?> request) {
+    public CompletableFuture<@Nullable HttpResponse<Void>> filter(@NotNull HttpRequest<?> request) {
         String clientIp = getClientIpAddress(request);
         if (!rateLimiter.tryAcquire(clientIp)) {
             return CompletableFuture.completedFuture(HttpResponse.status(HttpStatus.TOO_MANY_REQUESTS));
