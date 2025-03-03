@@ -1,7 +1,13 @@
-const password = document.getElementById('password');
-const confirmPassword = document.getElementById('confirm-password');
-const submitButton = document.getElementById('submit-button');
-const invalidHelper = document.getElementById('invalid-helper-confirm');
+const password = document.getElementById('newPassword');
+const confirmPassword = document.getElementById('confirmPassword');
+const submitButton = document.querySelector('input[type=submit]');
+
+const invalidHelper = document.createElement('small');
+invalidHelper.id = 'invalidHelper';
+invalidHelper.textContent = 'Passwords don’t match';
+invalidHelper.style.display = 'none';
+
+confirmPassword.insertAdjacentElement("afterend", invalidHelper);
 
 function validatePasswords() {
     if (password.value && confirmPassword.value) {
@@ -9,10 +15,12 @@ function validatePasswords() {
             submitButton.disabled = false;
             invalidHelper.style.display = 'none';
             confirmPassword.removeAttribute('aria-invalid');
+            confirmPassword.removeAttribute('aria-describedby');
         } else {
             submitButton.disabled = true;
             invalidHelper.style.display = 'block';
             confirmPassword.setAttribute('aria-invalid', 'true');
+            confirmPassword.setAttribute('aria-describedby', 'invalidHelper');
         }
     }
 }
