@@ -1,9 +1,12 @@
+@import io.micronaut.views.fields.FormGenerator
+@import io.micronaut.views.fields.messages.Message
+@import pragmasoft.k1teauth.admin.form.DeleteUserForm
 @import pragmasoft.k1teauth.user.User
 @import java.time.format.DateTimeFormatter
 @import java.util.List
 
-@param String csrfToken
 @param List<User> users
+@param FormGenerator formGenerator
 
 @template.layout(title = "Users list",
 styles = @`
@@ -33,12 +36,7 @@ body = @`
                 <td>${user.getCreatedAt().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"))}</td>
                 <td>
                     @if(!user.isAdmin())
-                        <form action="/admin/delete-user" method="post"
-                              onsubmit="return confirm('Are you sure you want to delete this user?');">
-                            <input type="hidden" name="csrfToken" value="${csrfToken}">
-                            <input type="hidden" name="id" value="${user.getId().toString()}"/>
-                            <button type="submit" class="outline">Delete</button>
-                        </form>
+                        @template.fieldset.form(form = formGenerator.generate("/admin/delete-user", new DeleteUserForm(user.getId()), Message.of("Delete")))
                         <a href="/admin/edit-user?id=${user.getId().toString()}" role="button" class="outline wide">Edit</a>
                     @else
                         <i>Administrator</i>

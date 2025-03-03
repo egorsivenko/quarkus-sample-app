@@ -34,6 +34,8 @@ import java.util.UUID;
 @Secured("ADMIN")
 public class AdminController {
 
+    protected static final String EDIT_USER_PATH = "/admin/edit-user";
+
     private final UserService userService;
     private final FormGenerator formGenerator;
 
@@ -45,15 +47,15 @@ public class AdminController {
 
     @View("admin/usersList")
     @Get(uri = "/users-list", produces = MediaType.TEXT_HTML)
-    public Map<String, List<User>> usersList() {
-        return Map.of("users", userService.listAll());
+    public Map<String, Object> usersList() {
+        return Map.of("users", userService.listAll(), "formGenerator", formGenerator);
     }
 
     @View("admin/editUser")
     @Get(uri = "/edit-user", produces = MediaType.TEXT_HTML)
     public Map<String, Form> editUserTemplate(@QueryValue UUID id) {
         User user = userService.getById(id);
-        return Map.of("form", formGenerator.generate("/admin/edit-user", EditUserForm.from(user)));
+        return Map.of("form", formGenerator.generate(EDIT_USER_PATH, EditUserForm.from(user)));
     }
 
     @Post(uri = "/edit-user", consumes = MediaType.APPLICATION_FORM_URLENCODED)
@@ -63,7 +65,7 @@ public class AdminController {
             return HttpResponse.seeOther(URI.create("/admin/users-list"));
         } catch (EmailAlreadyTakenException e) {
             return HttpResponse.badRequest(new ModelAndView<>("admin/editUser",
-                    Map.of("form", formGenerator.generate("/admin/edit-user", form),
+                    Map.of("form", formGenerator.generate(EDIT_USER_PATH, form),
                             "errors", List.of(Message.of("Email address is already registered")))
             ));
         }
@@ -80,7 +82,7 @@ public class AdminController {
         Optional<EditUserForm> formOptional = request.getBody();
         return formOptional.isPresent()
                 ? HttpResponse.unprocessableEntity().body(new ModelAndView<>("admin/editUser",
-                        Map.of("form", formGenerator.generate("/admin/edit-user", formOptional.get(), ex))))
+                        Map.of("form", formGenerator.generate(EDIT_USER_PATH, formOptional.get(), ex))))
                 : HttpResponse.serverError();
     }
 }
