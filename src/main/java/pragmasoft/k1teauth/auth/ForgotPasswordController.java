@@ -41,6 +41,7 @@ public class ForgotPasswordController {
     private static final String FORGOT_PASSWORD_TEMPLATE = "auth/forgotPassword.jte";
     private static final String SITE_KEY = "siteKey";
     private static final String ERRORS = "errors";
+    private static final Message SUBMIT_MESSAGE = Message.of("Proceed");
 
     @Property(name = "turnstile.siteKey")
     private String siteKey;
@@ -69,7 +70,7 @@ public class ForgotPasswordController {
     @Get(uri = "/forgot-password", produces = MediaType.TEXT_HTML)
     public String forgotPasswordTemplate() {
         return jteTemplateRenderer.render(FORGOT_PASSWORD_TEMPLATE,
-                Map.of("form", formGenerator.generate(FORGOT_PASSWORD_PATH, ForgotPasswordForm.class, Message.of("Proceed")),
+                Map.of("form", formGenerator.generate(FORGOT_PASSWORD_PATH, ForgotPasswordForm.class, SUBMIT_MESSAGE),
                         SITE_KEY, siteKey));
     }
 
@@ -79,12 +80,12 @@ public class ForgotPasswordController {
         TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, form.cfTurnstileResponse());
         if (!turnstileClient.verifyToken(turnstileRequest).success()) {
             return HttpResponse.badRequest(jteTemplateRenderer.render(FORGOT_PASSWORD_TEMPLATE,
-                    Map.of("form", formGenerator.generate(FORGOT_PASSWORD_PATH, form),
+                    Map.of("form", formGenerator.generate(FORGOT_PASSWORD_PATH, form, SUBMIT_MESSAGE),
                             SITE_KEY, siteKey, ERRORS, List.of(Message.of("Turnstile verification failed")))));
         }
         if (!userService.existsByEmail(form.email())) {
             return HttpResponse.badRequest(jteTemplateRenderer.render(FORGOT_PASSWORD_TEMPLATE,
-                    Map.of("form", formGenerator.generate(FORGOT_PASSWORD_PATH, form),
+                    Map.of("form", formGenerator.generate(FORGOT_PASSWORD_PATH, form, SUBMIT_MESSAGE),
                             SITE_KEY, siteKey, ERRORS, List.of(Message.of("Account with this email is not registered")))));
         }
         User user = userService.getByEmail(form.email());
@@ -98,7 +99,8 @@ public class ForgotPasswordController {
         Optional<ForgotPasswordForm> formOptional = request.getBody();
         return formOptional.isPresent()
                 ? HttpResponse.unprocessableEntity().body(jteTemplateRenderer.render(FORGOT_PASSWORD_TEMPLATE,
-                        Map.of("form", formGenerator.generate(FORGOT_PASSWORD_PATH, formOptional.get(), ex), SITE_KEY, siteKey)))
+                        Map.of("form", formGenerator.generate(FORGOT_PASSWORD_PATH, formOptional.get(), ex, SUBMIT_MESSAGE),
+                                SITE_KEY, siteKey)))
                 : HttpResponse.serverError();
     }
 }

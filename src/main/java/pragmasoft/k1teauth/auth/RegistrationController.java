@@ -44,6 +44,7 @@ public class RegistrationController {
     private static final String REGISTRATION_TEMPLATE = "auth/registration.jte";
     private static final String SITE_KEY = "siteKey";
     private static final String ERRORS = "errors";
+    private static final Message SUBMIT_MESSAGE = Message.of("Register");
 
     @Property(name = "turnstile.siteKey")
     private String siteKey;
@@ -72,7 +73,7 @@ public class RegistrationController {
     @Get(uri = "/registration", produces = MediaType.TEXT_HTML)
     public String registrationTemplate() {
         return jteTemplateRenderer.render(REGISTRATION_TEMPLATE,
-                Map.of("form", formGenerator.generate(REGISTRATION_PATH, RegistrationForm.class, Message.of("Register")),
+                Map.of("form", formGenerator.generate(REGISTRATION_PATH, RegistrationForm.class, SUBMIT_MESSAGE),
                         SITE_KEY, siteKey));
     }
 
@@ -82,17 +83,17 @@ public class RegistrationController {
         TurnstileRequest turnstileRequest = new TurnstileRequest(secretKey, form.cfTurnstileResponse());
         if (!turnstileClient.verifyToken(turnstileRequest).success()) {
             return HttpResponse.badRequest(jteTemplateRenderer.render(REGISTRATION_TEMPLATE,
-                    Map.of("form", formGenerator.generate(REGISTRATION_PATH, form),
+                    Map.of("form", formGenerator.generate(REGISTRATION_PATH, form, SUBMIT_MESSAGE),
                             SITE_KEY, siteKey, ERRORS, List.of(Message.of("Turnstile verification failed")))));
         }
         if (!Objects.equals(form.password(), form.confirmPassword())) {
             return HttpResponse.badRequest(jteTemplateRenderer.render(REGISTRATION_TEMPLATE,
-                    Map.of("form", formGenerator.generate(REGISTRATION_PATH, form),
+                    Map.of("form", formGenerator.generate(REGISTRATION_PATH, form, SUBMIT_MESSAGE),
                             SITE_KEY, siteKey, ERRORS, List.of(Message.of("Passwords don't match")))));
         }
         if (userService.existsByEmail(form.email())) {
             return HttpResponse.badRequest(jteTemplateRenderer.render(REGISTRATION_TEMPLATE,
-                    Map.of("form", formGenerator.generate(REGISTRATION_PATH, form),
+                    Map.of("form", formGenerator.generate(REGISTRATION_PATH, form, SUBMIT_MESSAGE),
                             SITE_KEY, siteKey, ERRORS, List.of(Message.of("Email address is already registered")))));
         }
         User user = form.mapToUser();
@@ -121,7 +122,8 @@ public class RegistrationController {
         Optional<RegistrationForm> formOptional = request.getBody();
         return formOptional.isPresent()
                 ? HttpResponse.unprocessableEntity().body(jteTemplateRenderer.render(REGISTRATION_TEMPLATE,
-                        Map.of("form", formGenerator.generate(REGISTRATION_PATH, formOptional.get(), ex), SITE_KEY, siteKey)))
+                        Map.of("form", formGenerator.generate(REGISTRATION_PATH, formOptional.get(), ex, SUBMIT_MESSAGE),
+                                SITE_KEY, siteKey)))
                 : HttpResponse.serverError();
     }
 }
