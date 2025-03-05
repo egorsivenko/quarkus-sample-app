@@ -1,4 +1,4 @@
-const password = document.getElementById('newPassword');
+const password = document.querySelector('#password, #newPassword');
 const confirmPassword = document.getElementById('confirmPassword');
 const submitButton = document.querySelector('input[type=submit]');
 
