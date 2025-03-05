@@ -18,6 +18,9 @@
 @import io.micronaut.views.fields.elements.InputFileFormElement
 
 @param Fieldset el
+@param boolean useCaptcha = false
+@param String siteKey = null
+
 @for(var field : el.fields())
     @if(field instanceof InputHiddenFormElement inputHiddenFormElement)
         @template.fieldset.inputhidden(inputHiddenFormElement)
@@ -75,6 +78,9 @@
         @template.fieldset.inputfile(inputFileFormElement)
     @endif
     @if(field instanceof InputSubmitFormElement inputSubmitFormElement)
+        @if(useCaptcha && siteKey != null)
+            <div class="cf-turnstile" data-sitekey="${siteKey}" data-language="en-us"></div>
+        @endif
         @template.fieldset.inputsubmit(inputSubmitFormElement)
     @endif
 @endfor

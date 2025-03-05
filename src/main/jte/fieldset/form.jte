@@ -1,12 +1,10 @@
 @import io.micronaut.views.fields.Form
 @param Form form
-@if(form.dataturbo() != null)
-<form action="${form.action()}" method="${form.method()}" enctype="${form.enctype()}" data-turbo="${form.dataturbo() ? "true": "false"}">
-    @template.fieldset.fieldset(form.fieldset())
-</form>
-@else
-<form action="${form.action()}" method="${form.method()}" enctype="${form.enctype()}">
-    @template.fieldset.fieldset(form.fieldset())
-</form>
-@endif
+@param Boolean useTurboDrive = true
+@param boolean useCaptcha = false
+@param String siteKey = null
 
+<form action="${form.action()}" method="${form.method()}" enctype="${form.enctype()}" autocomplete="off"
+      data-turbo="${useTurboDrive.toString()}">
+    @template.fieldset.fieldset(el = form.fieldset(), useCaptcha = useCaptcha, siteKey = siteKey)
+</form>
