@@ -1,34 +1,26 @@
-@import java.util.UUID
-@import java.lang.Iterable
+@import java.util.List
+@import io.micronaut.views.fields.Form
+@import io.micronaut.views.fields.messages.Message
 
-@param UUID userId
-@param Iterable<String> errors
+@param List<Message> errors
+@param Form form
 
 @template.layout(title = "Reset password",
 styles = @`
     <link rel="stylesheet" href="/css/styles.css"/>
     <link rel="stylesheet" href="/css/extra-styles.css"/>
 `,
+scripts = @`
+    <script src="https://unpkg.com/@hotwired/turbo@8.0.11/dist/turbo.es2017-umd.js"></script>
+`,
 body = @`
     <main class="container">
         <article>
             <div>
                 <h1>Reset password</h1>
-                <form action="/auth/reset-password" method="post" autocomplete="off">
-                    @if(errors != null)
-                        @for(var error : errors)
-                            <p class="error">${error}</p>
-                        @endfor
-                    @endif
-                    <input type="hidden" name="userId" value="${userId.toString()}"/>
-                    <label for="password">New password</label>
-                    <input type="password" id="password" name="password" minlength="6" maxlength="50" placeholder="New password" required/>
-                    <input type="password" id="confirm-password" name="confirmPassword" minlength="6" maxlength="50"
-                           placeholder="Confirm new password" required aria-describedby="invalid-helper-confirm"/>
-                    <small id="invalid-helper-confirm">Passwords don’t match.</small>
-                    <button type="submit" class="contrast" id="submit-button">Reset password</button>
-                    <a href="/auth/forgot-password" role="button" class="outline contrast wide">Cancel</a>
-                </form>
+                @template.fieldset.errors(errors = errors)
+                @template.fieldset.form(form = form)
+                <a href="/auth/forgot-password" role="button" class="outline contrast wide">Cancel</a>
             </div>
         </article>
     </main>
