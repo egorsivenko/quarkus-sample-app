@@ -34,7 +34,7 @@ public class DiscoveryController {
             )
     )
     @Get(uri = "/openid-configuration", produces = MediaType.APPLICATION_JSON)
-    public HttpResponse<?> oidcDiscovery() {
+    public HttpResponse<Metadata> oidcDiscovery() {
         Metadata metadata = new Metadata();
 
         metadata.setIssuer(serverUrl);
