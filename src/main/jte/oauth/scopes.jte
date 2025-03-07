@@ -1,12 +1,18 @@
+@import io.micronaut.views.fields.FormGenerator
+@import io.micronaut.views.fields.messages.Message
 @import pragmasoft.k1teauth.oauth.scope.Scope
+@import pragmasoft.k1teauth.oauth.scope.form.DeleteScopeForm
 @import java.util.List
 
-@param String csrfToken
 @param List<Scope> scopes
+@param FormGenerator formGenerator
 
 @template.layout(title = "OAuth scopes",
 styles = @`
     <link rel="stylesheet" href="/css/extra-styles.css"/>
+`,
+scripts = @`
+    <script src="https://unpkg.com/@hotwired/turbo@8.0.11/dist/turbo.es2017-umd.js"></script>
 `,
 body = @`
     <h3>OAuth scopes</h3>
@@ -33,12 +39,7 @@ body = @`
                 <td>${scope.getDescription()}</td>
                 <td>${scope.getAudience()}</td>
                 <td>
-                    <form action="/oauth2/scopes/delete" method="post"
-                          onsubmit="return confirm('Are you sure you want to delete this scope?');">
-                        <input type="hidden" name="csrfToken" value="${csrfToken}">
-                        <input type="hidden" name="name" value="${scope.getName()}"/>
-                        <button type="submit" class="outline">Delete</button>
-                    </form>
+                    @template.fieldset.form(form = formGenerator.generate("/oauth2/scopes/delete", new DeleteScopeForm(scope.getName()), Message.of("Delete")))
                     <a href="/oauth2/scopes/edit?name=${scope.getName()}" role="button" class="outline wide">Edit</a>
                 </td>
             </tr>

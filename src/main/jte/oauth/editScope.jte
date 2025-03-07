@@ -1,40 +1,26 @@
-@import java.lang.Iterable
-@import pragmasoft.k1teauth.oauth.scope.Scope
+@import java.util.List
+@import io.micronaut.views.fields.Form
+@import io.micronaut.views.fields.messages.Message
 
-@param String csrfToken
-@param Scope scope
-@param Iterable<String> errors
+@param Form form
+@param List<Message> errors
 
 @template.layout(title = "Edit scope",
 styles = @`
     <link rel="stylesheet" href="/css/styles.css"/>
     <link rel="stylesheet" href="/css/extra-styles.css"/>
 `,
+scripts = @`
+    <script src="https://unpkg.com/@hotwired/turbo@8.0.11/dist/turbo.es2017-umd.js"></script>
+`,
 body = @`
     <main class="container">
         <article>
             <div>
                 <h1>Edit scope</h1>
-                <form action="/oauth2/scopes/edit" method="post" autocomplete="off">
-                    @if(errors != null)
-                        @for(var error : errors)
-                            <p class="error">${error}</p>
-                        @endfor
-                    @endif
-                    <input type="hidden" name="csrfToken" value="${csrfToken}">
-                    <input type="hidden" name="previousName" value="${scope.getName()}" />
-                    <label for="name">Name</label>
-                    <input type="text" id="name" name="name" minlength="3" maxlength="255" value="${scope.getName()}"
-                           placeholder="Name" required autofocus />
-                    <label for="description">Description</label>
-                    <input type="text" id="description" name="description" minlength="3" maxlength="255" value="${scope.getDescription()}"
-                           placeholder="Description" required />
-                    <label for="audience">Audience</label>
-                    <input type="url" id="audience" name="audience" maxlength="255" value="${scope.getAudience()}"
-                           placeholder="Audience" required />
-                    <button type="submit" class="contrast">Save changes</button>
-                    <a href="/oauth2/scopes" role="button" class="outline contrast wide">Cancel</a>
-                </form>
+                @template.fieldset.errors(errors = errors)
+                @template.fieldset.form(form = form)
+                <a href="/oauth2/scopes" role="button" class="outline contrast wide">Cancel</a>
             </div>
         </article>
     </main>

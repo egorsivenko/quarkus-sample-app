@@ -1,34 +1,26 @@
-@import java.lang.Iterable
+@import java.util.List
+@import io.micronaut.views.fields.Form
+@import io.micronaut.views.fields.messages.Message
 
-@param String csrfToken
-@param Iterable<String> errors
+@param Form form
+@param List<Message> errors
 
 @template.layout(title = "Add new scope",
 styles = @`
     <link rel="stylesheet" href="/css/styles.css"/>
     <link rel="stylesheet" href="/css/extra-styles.css"/>
 `,
+scripts = @`
+    <script src="https://unpkg.com/@hotwired/turbo@8.0.11/dist/turbo.es2017-umd.js"></script>
+`,
 body = @`
     <main class="container">
         <article>
             <div>
                 <h1>Add new scope</h1>
-                <form action="/oauth2/scopes/new" method="post" autocomplete="off">
-                    @if(errors != null)
-                        @for(var error : errors)
-                            <p class="error">${error}</p>
-                        @endfor
-                    @endif
-                    <input type="hidden" name="csrfToken" value="${csrfToken}">
-                    <label for="name">Name</label>
-                    <input type="text" id="name" name="name" minlength="3" maxlength="255" placeholder="Name" required autofocus/>
-                    <label for="description">Description</label>
-                    <input type="text" id="description" name="description" minlength="3" maxlength="255" placeholder="Description" required/>
-                    <label for="audience">Audience</label>
-                    <input type="url" id="audience" name="audience" maxlength="255" placeholder="Audience" required/>
-                    <button type="submit" class="contrast">Create scope</button>
-                    <a href="/oauth2/scopes" role="button" class="outline contrast wide">Cancel</a>
-                </form>
+                @template.fieldset.errors(errors = errors)
+                @template.fieldset.form(form = form)
+                <a href="/oauth2/scopes" role="button" class="outline contrast wide">Cancel</a>
             </div>
         </article>
     </main>

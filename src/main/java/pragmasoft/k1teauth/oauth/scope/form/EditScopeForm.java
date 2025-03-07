@@ -1,36 +1,31 @@
 package pragmasoft.k1teauth.oauth.scope.form;
 
-import io.micronaut.core.annotation.Creator;
 import io.micronaut.serde.annotation.Serdeable;
+import io.micronaut.views.fields.annotations.InputHidden;
+import io.micronaut.views.fields.annotations.InputUrl;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import pragmasoft.k1teauth.oauth.scope.Scope;
 
 import java.util.Objects;
 
 @Serdeable
-public class EditScopeForm extends AddScopeForm {
-
-    @NotBlank
-    @Size(min = 3, max = 255)
-    private String previousName;
-
-    public EditScopeForm() {}
-
-    @Creator
-    public EditScopeForm(String name, String description, String audience, String previousName) {
-        super(name, description, audience);
-        this.previousName = previousName;
+public record EditScopeForm(
+        @NotBlank @Size(min = 3, max = 255) String name,
+        @NotBlank @Size(min = 3, max = 255) String description,
+        @InputUrl @NotBlank @Size(max = 255) String audience,
+        @InputHidden @NotBlank String previousName
+) {
+    public static EditScopeForm from(Scope scope) {
+        return new EditScopeForm(scope.getName(),
+                scope.getDescription(), scope.getAudience(), scope.getName());
     }
 
-    public boolean isNameChanged() {
+    public Scope mapToScope() {
+        return new Scope(name, description, audience);
+    }
+
+    public boolean hasNameChanged() {
         return !Objects.equals(name, previousName);
-    }
-
-    public String getPreviousName() {
-        return previousName;
-    }
-
-    public void setPreviousName(String previousName) {
-        this.previousName = previousName;
     }
 }
