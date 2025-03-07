@@ -4,10 +4,6 @@
 @param ConsentForm form
 
 @template.layout(title = "Access permission",
-styles = @`
-    <link rel="stylesheet" href="/css/styles.css"/>
-    <link rel="stylesheet" href="/css/extra-styles.css"/>
-`,
 body = @`
     <main class="container">
         <article>

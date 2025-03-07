@@ -17,6 +17,20 @@ form {
     margin: 0;
 }
 
+table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+td, th {
+    word-wrap: break-word;
+}
+
+caption {
+    margin-top: 20px;
+    caption-side: bottom;
+}
+
 article {
     padding: 0;
     overflow: hidden;
@@ -64,4 +78,22 @@ article div {
     article div {
         padding: 2rem;
     }
+}
+
+.logout-form {
+    margin-top: 15px;
+    width: 150px;
+}
+
+.resend-email-form {
+    margin-top: 15px;
+    width: 200px;
+}
+
+.invalid-feedback {
+    color: red;
+}
+
+.wide {
+    width: 100%;
 }

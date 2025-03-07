@@ -15,6 +15,7 @@
 
     <link rel="shortcut icon" href="https://picocss.com/favicon.ico"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
+    <link rel="stylesheet" href="/css/styles.css"/>
     ${styles}
     ${scripts}
 </head>
