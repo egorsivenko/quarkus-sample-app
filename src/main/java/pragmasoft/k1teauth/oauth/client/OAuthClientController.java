@@ -1,5 +1,6 @@
 package pragmasoft.k1teauth.oauth.client;
 
+import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Body;
@@ -7,15 +8,17 @@ import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Error;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Post;
+import io.micronaut.http.annotation.Produces;
 import io.micronaut.http.annotation.QueryValue;
 import io.micronaut.http.server.exceptions.NotFoundException;
 import io.micronaut.security.annotation.Secured;
-import io.micronaut.views.ModelAndView;
-import io.micronaut.views.View;
+import io.micronaut.views.fields.FormGenerator;
+import io.micronaut.views.fields.messages.Message;
 import io.swagger.v3.oas.annotations.Hidden;
-import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
+import pragmasoft.k1teauth.common.jte.JteTemplateRenderer;
+import pragmasoft.k1teauth.oauth.client.form.ClientFormData;
 import pragmasoft.k1teauth.oauth.client.form.EditClientForm;
 import pragmasoft.k1teauth.oauth.client.form.RegisterClientForm;
 import pragmasoft.k1teauth.oauth.scope.Scope;
@@ -27,6 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,34 +39,45 @@ import java.util.stream.Collectors;
 @Secured("ADMIN")
 public class OAuthClientController {
 
+    private static final String CLIENTS_PATH = "/oauth2/clients";
+    private static final String REGISTER_CLIENT_PATH = "/oauth2/clients/new";
+    private static final String REGISTER_CLIENT_TEMPLATE = "oauth/registerClient.jte";
+    private static final String EDIT_CLIENT_PATH = "/oauth2/clients/edit";
+    private static final String EDIT_CLIENT_TEMPLATE = "oauth/editClient.jte";
+
     private final OAuthClientRepository clientRepository;
     private final ScopeRepository scopeRepository;
+    private final FormGenerator formGenerator;
+    private final JteTemplateRenderer jteTemplateRenderer;
 
     public OAuthClientController(OAuthClientRepository clientRepository,
-                                 ScopeRepository scopeRepository) {
+                                 ScopeRepository scopeRepository,
+                                 FormGenerator formGenerator,
+                                 JteTemplateRenderer jteTemplateRenderer) {
         this.clientRepository = clientRepository;
         this.scopeRepository = scopeRepository;
+        this.formGenerator = formGenerator;
+        this.jteTemplateRenderer = jteTemplateRenderer;
     }
 
-    @View("oauth/clients")
     @Get(produces = MediaType.TEXT_HTML)
-    public HttpResponse<?> clients() {
-        return HttpResponse.ok(Map.of("clients", clientRepository.findAll()));
+    public String clients() {
+        return jteTemplateRenderer.render("oauth/clients.jte",
+                Map.of("clients", clientRepository.findAll(), "formGenerator", formGenerator));
     }
 
-    @View("oauth/registerClient")
     @Get(uri = "/new", produces = MediaType.TEXT_HTML)
-    public HttpResponse<?> registerClientTemplate() {
-        return HttpResponse.ok(Map.of("scopes", scopeRepository.findAll()));
+    public String registerClientTemplate() {
+        return jteTemplateRenderer.render(REGISTER_CLIENT_TEMPLATE,
+                Map.of("form", formGenerator.generate(REGISTER_CLIENT_PATH, RegisterClientForm.class)));
     }
 
-    @Post(uri = "/new", consumes = MediaType.APPLICATION_FORM_URLENCODED)
-    @Transactional
-    public HttpResponse<?> registerClient(@Valid @Body RegisterClientForm form) {
-        if (clientRepository.findByName(form.getClientName()).isPresent()) {
-            return HttpResponse.badRequest(new ModelAndView<>("oauth/registerClient",
-                    Map.of("scopes", scopeRepository.findAll(),
-                            "errors", List.of("OAuth client name is already registered"))));
+    @Post(uri = "/new", consumes = MediaType.APPLICATION_FORM_URLENCODED, produces = MediaType.TEXT_HTML)
+    public HttpResponse<String> registerClient(@Valid @Body RegisterClientForm form) {
+        if (clientRepository.findByName(form.clientName()).isPresent()) {
+            return HttpResponse.badRequest(jteTemplateRenderer.render(REGISTER_CLIENT_TEMPLATE,
+                    Map.of("form", formGenerator.generate(REGISTER_CLIENT_PATH, form),
+                            "errors", List.of(Message.of("OAuth client name is already registered")))));
         }
         OAuthClient client = new OAuthClient();
         client.setClientId(CodeGenerator.generate(40));
@@ -72,49 +87,61 @@ public class OAuthClientController {
         assignFormDataToClient(client, form);
 
         clientRepository.save(client);
-        return HttpResponse.seeOther(URI.create("/oauth2/clients"));
+        return HttpResponse.seeOther(URI.create(CLIENTS_PATH));
     }
 
-    @View("oauth/editClient")
     @Get(uri = "/edit", produces = MediaType.TEXT_HTML)
-    public HttpResponse<?> editClientTemplate(@QueryValue String clientId) {
+    public String editClientTemplate(@QueryValue String clientId) {
         OAuthClient client = clientRepository.findById(clientId).orElseThrow(NotFoundException::new);
-        return HttpResponse.ok(Map.of("client", client, "scopes", scopeRepository.findAll()));
+        return jteTemplateRenderer.render(EDIT_CLIENT_TEMPLATE,
+                Map.of("form", formGenerator.generate(EDIT_CLIENT_PATH, EditClientForm.from(client))));
     }
 
-    @Post(uri = "/edit", consumes = MediaType.APPLICATION_FORM_URLENCODED)
-    @Transactional
-    public HttpResponse<?> editClient(@Valid @Body EditClientForm form) {
-        OAuthClient client = clientRepository.findById(form.getClientId()).orElseThrow(NotFoundException::new);
-        if (!client.getName().equals(form.getClientName())
-                && clientRepository.findByName(form.getClientName()).isPresent()) {
-            return HttpResponse.badRequest(new ModelAndView<>("oauth/editClient",
-                    Map.of("client", client, "scopes", scopeRepository.findAll(),
-                            "errors", List.of("OAuth client name is already registered"))));
+    @Post(uri = "/edit", consumes = MediaType.APPLICATION_FORM_URLENCODED, produces = MediaType.TEXT_HTML)
+    public HttpResponse<String> editClient(@Valid @Body EditClientForm form) {
+        OAuthClient client = clientRepository.findById(form.clientId()).orElseThrow(NotFoundException::new);
+        if (!client.getName().equals(form.clientName())
+                && clientRepository.findByName(form.clientName()).isPresent()) {
+            return HttpResponse.badRequest(jteTemplateRenderer.render(EDIT_CLIENT_TEMPLATE,
+                    Map.of("form", formGenerator.generate(EDIT_CLIENT_PATH, form),
+                            "errors", List.of(Message.of("OAuth client name is already registered")))));
         }
         assignFormDataToClient(client, form);
 
         clientRepository.update(client);
-        return HttpResponse.seeOther(URI.create("/oauth2/clients"));
+        return HttpResponse.seeOther(URI.create(CLIENTS_PATH));
     }
 
-    @Post(uri = "/delete", consumes = MediaType.APPLICATION_FORM_URLENCODED)
-    @Transactional
-    public HttpResponse<?> deleteClient(String clientId) {
+    @Post(uri = "/delete", consumes = MediaType.APPLICATION_FORM_URLENCODED, produces = MediaType.TEXT_HTML)
+    public HttpResponse<Void> deleteClient(String clientId) {
         clientRepository.deleteById(clientId);
-        return HttpResponse.seeOther(URI.create("/oauth2/clients"));
+        return HttpResponse.seeOther(URI.create(CLIENTS_PATH));
     }
 
     @Error(exception = ConstraintViolationException.class)
-    public HttpResponse<?> handleError() {
-        return HttpResponse.seeOther(URI.create("/oauth2/clients"));
+    @Produces(MediaType.TEXT_HTML)
+    public HttpResponse<String> handleError(HttpRequest<?> request, ConstraintViolationException ex) {
+        if (request.getPath().equals(REGISTER_CLIENT_PATH)) {
+            Optional<RegisterClientForm> formOptional = request.getBody(RegisterClientForm.class);
+            if (formOptional.isPresent()) {
+                return HttpResponse.unprocessableEntity().body(jteTemplateRenderer.render(REGISTER_CLIENT_TEMPLATE,
+                        Map.of("form", formGenerator.generate(REGISTER_CLIENT_PATH, formOptional.get(), ex))));
+            }
+        } else if (request.getPath().equals(EDIT_CLIENT_PATH)) {
+            Optional<EditClientForm> formOptional = request.getBody(EditClientForm.class);
+            if (formOptional.isPresent()) {
+                return HttpResponse.unprocessableEntity().body(jteTemplateRenderer.render(EDIT_CLIENT_TEMPLATE,
+                        Map.of("form", formGenerator.generate(EDIT_CLIENT_PATH, formOptional.get(), ex))));
+            }
+        }
+        return HttpResponse.serverError();
     }
 
-    private void assignFormDataToClient(OAuthClient client, RegisterClientForm form) {
-        client.setName(form.getClientName());
-        client.setCallbackUrls(parseCallbackUrls(form.getCallbackUrls()));
-        client.setScopes(mapScopes(form.getScopes()));
-        client.setConfidential(form.isConfidential());
+    private void assignFormDataToClient(OAuthClient client, ClientFormData formData) {
+        client.setName(formData.clientName());
+        client.setCallbackUrls(parseCallbackUrls(formData.callbackUrls()));
+        client.setScopes(mapScopes(formData.scopes()));
+        client.setConfidential(formData.isConfidential());
     }
 
     private Set<String> parseCallbackUrls(String callbackUrls) {

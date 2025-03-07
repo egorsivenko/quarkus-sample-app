@@ -20,6 +20,7 @@
 @param Fieldset el
 @param boolean useCaptcha = false
 @param String siteKey = null
+@param boolean multipleSelect = false
 
 @for(var field : el.fields())
     @if(field instanceof InputHiddenFormElement inputHiddenFormElement)
@@ -38,7 +39,7 @@
             @template.fieldset.inputcheckbox(inputCheckboxFormElement)
         @endif
         @if(field instanceof SelectFormElement selectFormElement)
-            @template.fieldset.select(selectFormElement)
+            @template.fieldset.select(selectFormElement, multipleSelect)
         @endif
         @if(field instanceof TextareaFormElement textareaFormElement)
             @template.fieldset.textarea(textareaFormElement)

@@ -4,11 +4,11 @@
 @template.fieldset.label(null, el.label())
 @endif
 @for(var checkbox : el.checkboxes())
-    <div class="form-check">
+    <fieldset class="form-check">
     @if(el.hasErrors())
         <input type="checkbox"
                name="${checkbox.name()}"
-               value="${checkbox.value()}"
+               value="true"
                id="${checkbox.id()}"
                class="form-check-input is-invalid"
                required="${checkbox.required()}"
@@ -17,7 +17,7 @@
     @else
         <input type="checkbox"
                name="${checkbox.name()}"
-               value="${checkbox.value()}"
+               value="true"
                id="${checkbox.id()}"
                class="form-check-input"
                required="${checkbox.required()}"
@@ -25,5 +25,5 @@
                checked="${checkbox.checked()}"/>
     @endif
     @template.fieldset.label(checkbox.id(), checkbox.label())
-    </div>
+    </fieldset>
 @endfor
