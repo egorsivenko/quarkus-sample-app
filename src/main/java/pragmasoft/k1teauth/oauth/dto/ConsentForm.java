@@ -3,7 +3,7 @@ package pragmasoft.k1teauth.oauth.dto;
 import io.micronaut.core.annotation.Creator;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.serde.annotation.Serdeable;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 
 import java.util.UUID;
 
@@ -12,11 +12,11 @@ public class ConsentForm {
 
     private boolean userGaveConsent;
 
+    @NotBlank
+    private String callbackUrl;
+
     @Nullable
     private String clientName;
-
-    @NotNull
-    private String callbackUrl;
 
     @Nullable
     private String state;
@@ -42,11 +42,11 @@ public class ConsentForm {
     public ConsentForm() {}
 
     @Creator
-    public ConsentForm(String clientName, String callbackUrl, String state, UUID userId,
+    public ConsentForm(String callbackUrl, String clientName, String state, UUID userId,
                        String scopeNames, String scopeDescriptions,
                        String codeChallenge, String codeChallengeMethod, String nonce) {
-        this.clientName = clientName;
         this.callbackUrl = callbackUrl;
+        this.clientName = clientName;
         this.state = state;
         this.userId = userId;
         this.scopeNames = scopeNames;
@@ -64,20 +64,20 @@ public class ConsentForm {
         this.userGaveConsent = userGaveConsent;
     }
 
-    public String getClientName() {
-        return clientName;
-    }
-
-    public void setClientName(String clientName) {
-        this.clientName = clientName;
-    }
-
     public String getCallbackUrl() {
         return callbackUrl;
     }
 
     public void setCallbackUrl(String callbackUrl) {
         this.callbackUrl = callbackUrl;
+    }
+
+    public String getClientName() {
+        return clientName;
+    }
+
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
     }
 
     public String getState() {
