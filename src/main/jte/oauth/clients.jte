@@ -8,9 +8,6 @@
 @param FormGenerator formGenerator
 
 @template.layout(title = "OAuth Clients",
-scripts = @`
-    <script src="https://unpkg.com/@hotwired/turbo@8.0.11/dist/turbo.es2017-umd.js"></script>
-`,
 body = @`
     <h3>OAuth Clients</h3>
     <a href="/profile" role="button" class="outline contrast">Back</a>

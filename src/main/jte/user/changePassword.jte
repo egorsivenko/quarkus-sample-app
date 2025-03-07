@@ -6,9 +6,6 @@
 @param List<Message> errors
 
 @template.layout(title = "Change password",
-scripts = @`
-    <script src="https://unpkg.com/@hotwired/turbo@8.0.11/dist/turbo.es2017-umd.js"></script>
-`,
 body = @`
     <main class="container">
         <article>

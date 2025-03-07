@@ -3,9 +3,6 @@
 @param User user
 
 @template.layout(title = "Profile",
-scripts = @`
-    <script src="https://unpkg.com/@hotwired/turbo@8.0.11/dist/turbo.es2017-umd.js"></script>
-`,
 body = @`
     <h4>Hello, ${user.getFullName()} &#x1F44B;</h4>
     <h4>Email: ${user.getEmail()}</h4>
