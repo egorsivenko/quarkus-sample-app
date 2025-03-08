@@ -67,8 +67,8 @@ micronaut:
       enabled: true
       policy-directives: >-
         default-src 'self';
-        script-src 'self' 'sha256-HZbM5aZPE0t7sUAGF95thuZ6hV0Z1HDVee1M4aBPjW4=' 'sha256-dk5tS6x3KBnHeLdk1MrElwfehYsePagQhx25cy/CaEI=' https://challenges.cloudflare.com;
-        style-src 'self' 'sha256-RL3ie0nH+Lzz2YNqQN83mnU0J1ot4QL7b99vMdIX99w=' https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css;
+        script-src 'self' 'sha256-HZbM5aZPE0t7sUAGF95thuZ6hV0Z1HDVee1M4aBPjW4=' 'sha256-dk5tS6x3KBnHeLdk1MrElwfehYsePagQhx25cy/CaEI=' https://challenges.cloudflare.com https://unpkg.com/@hotwired/turbo@8.0.11/dist/turbo.es2017-umd.js;
+        style-src 'self' 'sha256-RL3ie0nH+Lzz2YNqQN83mnU0J1ot4QL7b99vMdIX99w=' 'sha256-WAyOw4V+FqDc35lQPyRADLBWbuNK8ahvYEaQIYF1+Ps=' 'sha256-ThOZ6uA061m+uFm4SBBZk00gmID2mIz7KZPk50Wjjho=' https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css;
         img-src 'self' data: https://picocss.com/favicon.ico;
         frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'none'
   email:

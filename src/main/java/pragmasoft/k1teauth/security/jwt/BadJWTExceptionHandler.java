@@ -12,8 +12,10 @@ import pragmasoft.k1teauth.common.dto.ErrorResponse;
 @Requires(classes = {BadJWTException.class, ExceptionHandler.class})
 public class BadJWTExceptionHandler implements ExceptionHandler<BadJWTException, HttpResponse<?>> {
 
-    @Override
-    public HttpResponse<?> handle(HttpRequest request, BadJWTException exception) {
-        return HttpResponse.badRequest(new ErrorResponse(exception.getMessage()));
-    }
+  /** Interface we extend itself uses raw type, @see ExceptionHandler */
+  @Override
+  public HttpResponse<?> handle(@SuppressWarnings("rawtypes") HttpRequest request,
+      BadJWTException exception) {
+    return HttpResponse.badRequest(new ErrorResponse(exception.getMessage()));
+  }
 }

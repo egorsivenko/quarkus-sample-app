@@ -12,21 +12,21 @@ public final class ResponseBuilder {
 
     private ResponseBuilder() {}
 
-    public static HttpResponse<?> buildTokenResponse(String accessToken, String refreshToken, String idToken) {
+    public static HttpResponse<TokenResponse> buildTokenResponse(String accessToken, String refreshToken, String idToken) {
         return HttpResponse
                 .ok(new TokenResponse(accessToken, refreshToken, idToken,
                         OAuthConstants.ACCESS_TOKEN_EXP_TIME.toSeconds(), "Bearer"))
                 .header(HttpHeaders.CACHE_CONTROL, "no-store");
     }
 
-    public static HttpResponse<?> buildRedirectResponse(URI location) {
+    public static HttpResponse<Object> buildRedirectResponse(URI location) {
         return HttpResponse.status(HttpStatus.FOUND)
                 .headers(headers ->
                         headers.location(location).add(HttpHeaders.CACHE_CONTROL, "no-store")
                 );
     }
 
-    public static HttpResponse<?> buildErrorResponse(String error) {
+    public static HttpResponse<ErrorResponse> buildErrorResponse(String error) {
         return HttpResponse.badRequest(new ErrorResponse(error));
     }
 }

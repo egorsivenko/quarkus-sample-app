@@ -1,13 +1,13 @@
+@import io.micronaut.views.fields.FormGenerator
+@import io.micronaut.views.fields.messages.Message
 @import pragmasoft.k1teauth.oauth.client.OAuthClient
+@import pragmasoft.k1teauth.oauth.client.form.DeleteClientForm
 @import java.util.List
 
-@param String csrfToken
 @param List<OAuthClient> clients
+@param FormGenerator formGenerator
 
 @template.layout(title = "OAuth Clients",
-styles = @`
-    <link rel="stylesheet" href="/css/extra-styles.css"/>
-`,
 body = @`
     <h3>OAuth Clients</h3>
     <a href="/profile" role="button" class="outline contrast">Back</a>
@@ -49,12 +49,7 @@ body = @`
                 </td>
                 <td>${client.isConfidential()}</td>
                 <td>
-                    <form action="/oauth2/clients/delete" method="POST"
-                          onsubmit="return confirm('Are you sure you want to delete this OAuth client?');">
-                        <input type="hidden" name="csrfToken" value="${csrfToken}">
-                        <input type="hidden" name="clientId" value="${client.getClientId()}"/>
-                        <button type="submit" class="outline">Delete</button>
-                    </form>
+                    @template.fieldset.form(form = formGenerator.generate("/oauth2/clients/delete", new DeleteClientForm(client.getClientId()), Message.of("Delete")))
                     <a href="/oauth2/clients/edit?clientId=${client.getClientId()}" role="button" class="outline wide">Edit</a>
                 </td>
             </tr>

@@ -1,15 +1,15 @@
+@import io.micronaut.views.fields.FormGenerator
+@import io.micronaut.views.fields.messages.Message
 @import pragmasoft.k1teauth.oauth.consent.Consent
+@import pragmasoft.k1teauth.oauth.consent.form.RevokeConsentForm
 @import java.time.format.DateTimeFormatter
 @import java.util.List
 @import java.util.Locale
 
-@param String csrfToken
 @param List<Consent> consents
+@param FormGenerator formGenerator
 
 @template.layout(title = "Granted consents",
-styles = @`
-    <link rel="stylesheet" href="/css/extra-styles.css"/>
-`,
 body = @`
     <h3>Granted consents</h3>
     <a href="/profile" role="button" class="outline contrast">Back</a>
@@ -38,12 +38,7 @@ body = @`
                 </td>
                 <td>${consent.getGrantedAt().format(DateTimeFormatter.ofPattern("d MMMM yyyy, HH:mm", Locale.ENGLISH))}</td>
                 <td>
-                    <form action="/granted-consents/revoke" method="post"
-                          onsubmit="return confirm('Are you sure you want to revoke this consent?');">
-                        <input type="hidden" name="csrfToken" value="${csrfToken}">
-                        <input type="hidden" name="id" value="${consent.getId().toString()}"/>
-                        <button type="submit" class="outline">Revoke</button>
-                    </form>
+                    @template.fieldset.form(form = formGenerator.generate("/granted-consents/revoke", new RevokeConsentForm(consent.getId()), Message.of("Revoke")))
                 </td>
             </tr>
         @endfor

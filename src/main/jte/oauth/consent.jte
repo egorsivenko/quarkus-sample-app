@@ -4,10 +4,6 @@
 @param ConsentForm form
 
 @template.layout(title = "Access permission",
-styles = @`
-    <link rel="stylesheet" href="/css/styles.css"/>
-    <link rel="stylesheet" href="/css/extra-styles.css"/>
-`,
 body = @`
     <main class="container">
         <article>
@@ -19,7 +15,7 @@ body = @`
                     @endfor
                 </ul>
                 <h4>Do you want to continue?</h4>
-                <form action="/oauth2/consent" method="post" autocomplete="off">
+                <form action="/oauth2/consent" method="post" autocomplete="off" data-turbo="false">
                     <input type="hidden" name="userGaveConsent" value="true"/>
                     <input type="hidden" name="callbackUrl" value="${form.getCallbackUrl()}"/>
                     <input type="hidden" name="clientName" value="${form.getClientName()}"/>
@@ -32,7 +28,7 @@ body = @`
                     <input type="hidden" name="csrfToken" value="${csrfToken}">
                     <button type="submit" class="outline">Yes</button>
                 </form>
-                <form action="/oauth2/consent" method="post" autocomplete="off">
+                <form action="/oauth2/consent" method="post" autocomplete="off" data-turbo="false">
                     <input type="hidden" name="userGaveConsent" value="false"/>
                     <input type="hidden" name="callbackUrl" value="${form.getCallbackUrl()}"/>
                     <input type="hidden" name="csrfToken" value="${csrfToken}">

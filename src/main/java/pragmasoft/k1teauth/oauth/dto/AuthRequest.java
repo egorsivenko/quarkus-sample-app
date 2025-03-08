@@ -5,18 +5,22 @@ import io.micronaut.core.annotation.Introspected;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.http.annotation.QueryValue;
 import io.micronaut.serde.annotation.Serdeable;
+import jakarta.validation.constraints.NotBlank;
 
 @Serdeable
 @Introspected
 public class AuthRequest {
 
     @QueryValue("client_id")
+    @NotBlank
     private String clientId;
 
     @QueryValue("redirect_uri")
+    @NotBlank
     private String redirectUri;
 
     @QueryValue("response_type")
+    @NotBlank
     private String responseType;
 
     @QueryValue("code_challenge")
@@ -32,9 +36,11 @@ public class AuthRequest {
     private String nonce;
 
     @QueryValue("scope")
+    @NotBlank
     private String scope;
 
     @QueryValue("state")
+    @NotBlank
     private String state;
 
     public AuthRequest() {}

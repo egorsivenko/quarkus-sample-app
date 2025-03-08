@@ -3,9 +3,6 @@
 @param UUID userId
 
 @template.layout(title = "Confirm email",
-styles = @`
-    <link rel="stylesheet" href="/css/extra-styles.css"/>
-`,
 body = @`
     <h4>You need to confirm your email address.</h4>
     <h5>Email with confirmation link was sent, please check your inbox.</h5>

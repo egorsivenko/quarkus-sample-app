@@ -15,7 +15,7 @@ import java.net.URI;
 public class RootController {
 
     @Get
-    public HttpResponse<?> redirect() {
+    public HttpResponse<Void> redirect() {
         return HttpResponse.redirect(URI.create("/auth/login"));
     }
 }

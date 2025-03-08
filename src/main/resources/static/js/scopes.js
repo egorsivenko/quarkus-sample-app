@@ -1,5 +1,13 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const scopeSearch = document.getElementById('scopeSearch');
+    const scopeSearch = document.createElement('input')
+    scopeSearch.type = 'text';
+    scopeSearch.id = 'scopeSearch';
+    scopeSearch.ariaLabel = 'scopeSearch';
+    scopeSearch.placeholder = 'Search scopes...';
+
+    const scopesLabel = document.querySelector('label[for=scopes]');
+    scopesLabel.insertAdjacentElement("afterend", scopeSearch);
+
     const scopesSelect = document.getElementById('scopes');
     const options = Array.from(scopesSelect.options);
 

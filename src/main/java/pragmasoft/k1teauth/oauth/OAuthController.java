@@ -27,7 +27,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.transaction.Transactional;
@@ -100,7 +99,8 @@ public class OAuthController {
 
     @Hidden
     @Get(uri = "/auth")
-    public HttpResponse<?> authorization(@RequestBean AuthRequest request, Principal principal) {
+    @Produces(MediaType.TEXT_HTML)
+    public HttpResponse<?> authorization(@Valid @RequestBean AuthRequest request, Principal principal) {
         Optional<OAuthClient> clientOptional = clientRepository.findById(request.getClientId());
         if (clientOptional.isEmpty()) {
             return ResponseBuilder.buildErrorResponse("Unknown Client ID");
@@ -140,8 +140,8 @@ public class OAuthController {
         }
         return HttpResponse.ok(new ModelAndView<>("oauth/consent",
                 Map.of("form", new ConsentForm(
-                        client.getName(),
                         request.getRedirectUri(),
+                        client.getName(),
                         request.getState(),
                         user.getId(),
                         mapScopeSetToScopeNames(requestedScopes),
@@ -156,7 +156,7 @@ public class OAuthController {
     @Hidden
     @Post(uri = "/consent")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public HttpResponse<?> consent(@Valid @Body ConsentForm form) {
+    public HttpResponse<Object> consent(@Valid @Body ConsentForm form) {
         UriBuilder uriBuilder = UriBuilder.of(form.getCallbackUrl());
 
         if (form.userGaveConsent()) {
@@ -203,24 +203,22 @@ public class OAuthController {
             summary = "UserInfo endpoint",
             description = "Retrieve details about the logged-in user"
     )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "The consented claims, packaged in a JSON object",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = UserInfoResponse.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "An invalid or missing access token"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "Insufficient privileges within the access token"
+    @ApiResponse(
+            responseCode = "200",
+            description = "The consented claims, packaged in a JSON object",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = UserInfoResponse.class)
             )
-    })
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "An invalid or missing access token"
+    )
+    @ApiResponse(
+            responseCode = "403",
+            description = "Insufficient privileges within the access token"
+    )
     @SecurityRequirement(name = "openId", scopes = {"openid"})
     @Get(uri = "/userinfo", produces = MediaType.APPLICATION_JSON)
     @Secured(SecurityRule.IS_ANONYMOUS)
@@ -232,24 +230,22 @@ public class OAuthController {
             summary = "UserInfo endpoint",
             description = "Retrieve details about the logged-in user"
     )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "The consented claims, packaged in a JSON object",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = UserInfoResponse.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "An invalid or missing access token"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "Insufficient privileges within the access token"
+    @ApiResponse(
+            responseCode = "200",
+            description = "The consented claims, packaged in a JSON object",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = UserInfoResponse.class)
             )
-    })
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "An invalid or missing access token"
+    )
+    @ApiResponse(
+            responseCode = "403",
+            description = "Insufficient privileges within the access token"
+    )
     @SecurityRequirement(name = "openId", scopes = {"openid"})
     @Post(uri = "/userinfo", produces = MediaType.APPLICATION_JSON)
     @Secured(SecurityRule.IS_ANONYMOUS)
@@ -257,9 +253,9 @@ public class OAuthController {
         return processUserInfoRequest(authorization);
     }
 
-    private HttpResponse<?> handleExistingConsent(Consent consent, Set<Scope> requestedScopes,
-                                                  String callbackUrl, String state,
-                                                  String codeChallenge, String codeChallengeMethod, String nonce) {
+    private HttpResponse<Object> handleExistingConsent(Consent consent, Set<Scope> requestedScopes,
+                                                       String callbackUrl, String state,
+                                                       String codeChallenge, String codeChallengeMethod, String nonce) {
         UriBuilder uriBuilder = UriBuilder.of(callbackUrl);
 
         if (authCodeRepository.findByConsent(consent).isPresent()) {
@@ -278,8 +274,8 @@ public class OAuthController {
         return null;
     }
 
-    private HttpResponse<?> buildAuthCodeAndRedirect(UriBuilder uriBuilder, Consent consent, String state,
-                                                     String codeChallenge, String codeChallengeMethod, String nonce) {
+    private HttpResponse<Object> buildAuthCodeAndRedirect(UriBuilder uriBuilder, Consent consent, String state,
+                                                          String codeChallenge, String codeChallengeMethod, String nonce) {
         AuthCode authCode = new AuthCode();
         String code = CodeGenerator.generate(40);
         authCode.setCode(HashUtil.hashWithSHA256(code));
