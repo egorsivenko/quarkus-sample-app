@@ -135,3 +135,5 @@ cache:
 bucket:
   capacity: 10
   refillRate: 1s
+page:
+  size: 10

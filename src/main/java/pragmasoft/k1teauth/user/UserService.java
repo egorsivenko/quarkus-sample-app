@@ -1,5 +1,9 @@
 package pragmasoft.k1teauth.user;
 
+import io.micronaut.context.annotation.Property;
+import io.micronaut.data.model.Page;
+import io.micronaut.data.model.Pageable;
+import io.micronaut.data.model.Sort;
 import jakarta.inject.Singleton;
 import jakarta.transaction.Transactional;
 import pragmasoft.k1teauth.admin.form.EditUserForm;
@@ -7,12 +11,15 @@ import pragmasoft.k1teauth.user.User.Role;
 import pragmasoft.k1teauth.user.exception.EmailAlreadyTakenException;
 import pragmasoft.k1teauth.user.exception.UserNotFoundException;
 
-import java.util.List;
 import java.util.UUID;
 
 @Singleton
 @Transactional
 public class UserService {
+
+    @Property(name = "page.size", defaultValue = "-1")
+    private int pageSize;
+    private static final Sort SORT = Sort.of(Sort.Order.desc("createdAt"));
 
     private final UserRepository userRepository;
 
@@ -20,8 +27,8 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public List<User> listAll() {
-        return userRepository.findAll();
+    public Page<User> listAll(Pageable pageable) {
+        return userRepository.findAll(Pageable.from(pageable.getNumber(), pageSize, SORT));
     }
 
     public User getById(UUID id) {

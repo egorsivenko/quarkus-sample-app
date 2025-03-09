@@ -1,10 +1,10 @@
+@import io.micronaut.data.model.Page
 @import io.micronaut.views.fields.FormGenerator
 @import io.micronaut.views.fields.messages.Message
 @import pragmasoft.k1teauth.oauth.client.OAuthClient
 @import pragmasoft.k1teauth.oauth.client.form.DeleteClientForm
-@import java.util.List
 
-@param List<OAuthClient> clients
+@param Page<OAuthClient> page
 @param FormGenerator formGenerator
 
 @template.layout(title = "OAuth Clients",
@@ -13,11 +13,7 @@ body = @`
     <a href="/profile" role="button" class="outline contrast">Back</a>
     <a href="/oauth2/clients/new" role="button" class="outline contrast">New OAuth Client</a>
     <table>
-        @if(clients.isEmpty())
-            <caption>
-                <p>No OAuth clients yet</p>
-            </caption>
-        @endif
+        @template.caption(path = "/oauth2/clients", page = page, emptyContentMessage = "No OAuth clients yet")
         <thead>
         <tr>
             <th scope="col">Client ID</th>
@@ -30,7 +26,7 @@ body = @`
         </tr>
         </thead>
         <tbody>
-        @for(var client : clients)
+        @for(var client : page.getContent())
             <tr>
                 <th scope="row">${client.getClientId()}</th>
                 <td>

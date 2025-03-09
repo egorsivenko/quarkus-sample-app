@@ -1,11 +1,11 @@
+@import io.micronaut.data.model.Page
 @import io.micronaut.views.fields.FormGenerator
 @import io.micronaut.views.fields.messages.Message
 @import pragmasoft.k1teauth.admin.form.DeleteUserForm
 @import pragmasoft.k1teauth.user.User
 @import java.time.format.DateTimeFormatter
-@import java.util.List
 
-@param List<User> users
+@param Page<User> page
 @param FormGenerator formGenerator
 
 @template.layout(title = "Users list",
@@ -13,6 +13,7 @@ body = @`
     <h3>Users list</h3>
     <a href="/profile" role="button" class="outline contrast">Back</a>
     <table>
+        @template.caption(path = "/admin/users-list", page = page, emptyContentMessage = "No registered users")
         <thead>
         <tr>
             <th scope="col">Full name</th>
@@ -24,7 +25,7 @@ body = @`
         </tr>
         </thead>
         <tbody>
-        @for(var user : users)
+        @for(var user : page.getContent())
             <tr>
                 <th scope="row">${user.getFullName()}</th>
                 <td>${user.getEmail()}</td>
