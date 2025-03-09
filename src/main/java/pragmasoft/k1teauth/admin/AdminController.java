@@ -1,5 +1,6 @@
 package pragmasoft.k1teauth.admin;
 
+import io.micronaut.data.model.Pageable;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MediaType;
@@ -50,9 +51,9 @@ public class AdminController {
     }
 
     @Get(uri = "/users-list", produces = MediaType.TEXT_HTML)
-    public String usersList() {
+    public String usersList(Pageable pageable) {
         return jteTemplateRenderer.render(USERS_LIST_TEMPLATE,
-                Map.of("users", userService.listAll(), "formGenerator", formGenerator));
+                Map.of("page", userService.listAll(pageable), "formGenerator", formGenerator));
     }
 
     @Get(uri = "/edit-user", produces = MediaType.TEXT_HTML)

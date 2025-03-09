@@ -1,12 +1,12 @@
+@import io.micronaut.data.model.Page
 @import io.micronaut.views.fields.FormGenerator
 @import io.micronaut.views.fields.messages.Message
 @import pragmasoft.k1teauth.oauth.consent.Consent
 @import pragmasoft.k1teauth.oauth.consent.form.RevokeConsentForm
 @import java.time.format.DateTimeFormatter
-@import java.util.List
 @import java.util.Locale
 
-@param List<Consent> consents
+@param Page<Consent> page
 @param FormGenerator formGenerator
 
 @template.layout(title = "Granted consents",
@@ -14,11 +14,7 @@ body = @`
     <h3>Granted consents</h3>
     <a href="/profile" role="button" class="outline contrast">Back</a>
     <table>
-        @if(consents.isEmpty())
-            <caption>
-                <p>You have not granted any consent</p>
-            </caption>
-        @endif
+        @template.caption(path = "/granted-consents", page = page, emptyContentMessage = "You have not granted any consent")
         <thead>
         <tr>
             <th scope="col">Application name</th>
@@ -28,7 +24,7 @@ body = @`
         </tr>
         </thead>
         <tbody>
-        @for(var consent : consents)
+        @for(var consent : page.getContent())
             <tr>
                 <th scope="row">${consent.getClient().getName()}</th>
                 <td>

@@ -1,5 +1,8 @@
 package pragmasoft.k1teauth.oauth.client;
 
+import io.micronaut.context.annotation.Property;
+import io.micronaut.data.model.Pageable;
+import io.micronaut.data.model.Sort;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MediaType;
@@ -45,6 +48,10 @@ public class OAuthClientController {
     private static final String EDIT_CLIENT_PATH = "/oauth2/clients/edit";
     private static final String EDIT_CLIENT_TEMPLATE = "oauth/editClient.jte";
 
+    @Property(name = "page.size", defaultValue = "-1")
+    private int pageSize;
+    private static final Sort SORT = Sort.of(Sort.Order.asc("name"));
+
     private final OAuthClientRepository clientRepository;
     private final ScopeRepository scopeRepository;
     private final FormGenerator formGenerator;
@@ -61,9 +68,10 @@ public class OAuthClientController {
     }
 
     @Get(produces = MediaType.TEXT_HTML)
-    public String clients() {
+    public String clients(Pageable pageable) {
         return jteTemplateRenderer.render("oauth/clients.jte",
-                Map.of("clients", clientRepository.findAll(), "formGenerator", formGenerator));
+                Map.of("page", clientRepository.findAll(Pageable.from(pageable.getNumber(), pageSize, SORT)),
+                        "formGenerator", formGenerator));
     }
 
     @Get(uri = "/new", produces = MediaType.TEXT_HTML)

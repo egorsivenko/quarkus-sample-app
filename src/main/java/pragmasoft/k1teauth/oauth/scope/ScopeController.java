@@ -1,5 +1,8 @@
 package pragmasoft.k1teauth.oauth.scope;
 
+import io.micronaut.context.annotation.Property;
+import io.micronaut.data.model.Pageable;
+import io.micronaut.data.model.Sort;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MediaType;
@@ -37,6 +40,10 @@ public class ScopeController {
     private static final String EDIT_SCOPE_PATH = "/oauth2/scopes/edit";
     private static final String EDIT_SCOPE_TEMPLATE = "oauth/editScope.jte";
 
+    @Property(name = "page.size", defaultValue = "-1")
+    private int pageSize;
+    private static final Sort SORT = Sort.of(Sort.Order.asc("name"));
+
     private final ScopeRepository scopeRepository;
     private final FormGenerator formGenerator;
     private final JteTemplateRenderer jteTemplateRenderer;
@@ -50,9 +57,10 @@ public class ScopeController {
     }
 
     @Get(produces = MediaType.TEXT_HTML)
-    public String scopes() {
+    public String scopes(Pageable pageable) {
         return jteTemplateRenderer.render("oauth/scopes.jte",
-                Map.of("scopes", scopeRepository.findAll(), "formGenerator", formGenerator));
+                Map.of("page", scopeRepository.findAll(Pageable.from(pageable.getNumber(), pageSize, SORT)),
+                        "formGenerator", formGenerator));
     }
 
     @Get(uri = "/new", produces = MediaType.TEXT_HTML)

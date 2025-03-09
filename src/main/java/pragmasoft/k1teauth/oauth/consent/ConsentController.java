@@ -1,5 +1,8 @@
 package pragmasoft.k1teauth.oauth.consent;
 
+import io.micronaut.context.annotation.Property;
+import io.micronaut.data.model.Pageable;
+import io.micronaut.data.model.Sort;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Controller;
@@ -26,6 +29,10 @@ public class ConsentController {
     private static final String CONSENTS_PATH = "/granted-consents";
     private static final String CONSENTS_TEMPLATE = "oauth/grantedConsents.jte";
 
+    @Property(name = "page.size", defaultValue = "-1")
+    private int pageSize;
+    private static final Sort SORT = Sort.of(Sort.Order.desc("grantedAt"));
+
     private final UserService userService;
     private final ConsentRepository consentRepository;
     private final FormGenerator formGenerator;
@@ -42,10 +49,12 @@ public class ConsentController {
     }
 
     @Get(produces = MediaType.TEXT_HTML)
-    public String grantedConsents(Principal principal) {
+    public String grantedConsents(Principal principal, Pageable pageable) {
         User user = userService.getByEmail(principal.getName());
         return jteTemplateRenderer.render(CONSENTS_TEMPLATE,
-                Map.of("consents", consentRepository.findAllByResourceOwner(user), "formGenerator", formGenerator));
+                Map.of("page", consentRepository.findAllByResourceOwner(user,
+                                Pageable.from(pageable.getNumber(), pageSize, SORT)),
+                        "formGenerator", formGenerator));
     }
 
     @Post(uri = "/revoke", consumes = MediaType.APPLICATION_FORM_URLENCODED, produces = MediaType.TEXT_HTML)

@@ -1,10 +1,10 @@
+@import io.micronaut.data.model.Page
 @import io.micronaut.views.fields.FormGenerator
 @import io.micronaut.views.fields.messages.Message
 @import pragmasoft.k1teauth.oauth.scope.Scope
 @import pragmasoft.k1teauth.oauth.scope.form.DeleteScopeForm
-@import java.util.List
 
-@param List<Scope> scopes
+@param Page<Scope> page
 @param FormGenerator formGenerator
 
 @template.layout(title = "OAuth scopes",
@@ -13,11 +13,7 @@ body = @`
     <a href="/profile" role="button" class="outline contrast">Back</a>
     <a href="/oauth2/scopes/new" role="button" class="outline contrast">New scope</a>
     <table>
-        @if(scopes.isEmpty())
-            <caption>
-                <p>No scopes yet</p>
-            </caption>
-        @endif
+        @template.caption(path = "/oauth2/scopes", page = page, emptyContentMessage = "No scopes yet")
         <thead>
         <tr>
             <th scope="col">Name</th>
@@ -27,7 +23,7 @@ body = @`
         </tr>
         </thead>
         <tbody>
-        @for(var scope : scopes)
+        @for(var scope : page.getContent())
             <tr>
                 <th scope="row">${scope.getName()}</th>
                 <td>${scope.getDescription()}</td>
