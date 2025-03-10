@@ -1,7 +1,9 @@
-const resendButton = document.getElementById('resendButton');
-const countdownLabel = document.getElementById('countdown');
+function initializeCountdown() {
+    const resendButton = document.getElementById('resendButton');
+    const countdownLabel = document.getElementById('countdown');
 
-function startCountdown() {
+    if (!resendButton || !countdownLabel) return;
+
     let cooldownTime = 60;
     resendButton.disabled = true;
     countdownLabel.innerHTML = "Resend the email after: " + cooldownTime + " seconds.";
@@ -18,4 +20,5 @@ function startCountdown() {
     }, 1000);
 }
 
-window.onload = startCountdown;
+document.addEventListener('DOMContentLoaded', initializeCountdown);
+document.addEventListener('turbo:render', initializeCountdown);
