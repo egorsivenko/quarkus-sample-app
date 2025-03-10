@@ -16,8 +16,8 @@ body = @`
             <div>
                 <h1>Forgot password</h1>
                 @template.fieldset.errors(errors = errors)
-                @template.fieldset.form(form = form, useCaptcha = true, siteKey = siteKey)
-                <a href="/auth/login" role="button" class="outline contrast wide">Back</a>
+                @template.fieldset.form(form = form, useCaptcha = true, siteKey = siteKey, useTurboDrive = false)
+                <a href="/auth/login" role="button" class="outline contrast wide" data-turbo="false">Back</a>
             </div>
         </article>
     </main>
