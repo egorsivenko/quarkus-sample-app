@@ -16,9 +16,9 @@ body = @`
             <div>
                 <h1>Registration</h1>
                 @template.fieldset.errors(errors = errors)
-                @template.fieldset.form(form = form, useCaptcha = true, siteKey = siteKey)
+                @template.fieldset.form(form = form, useCaptcha = true, siteKey = siteKey, useTurboDrive = false)
                 <label align="center">
-                    Already have an account? <a href="/auth/login">Login</a>
+                    Already have an account? <a href="/auth/login" data-turbo="false">Login</a>
                 </label>
             </div>
         </article>
