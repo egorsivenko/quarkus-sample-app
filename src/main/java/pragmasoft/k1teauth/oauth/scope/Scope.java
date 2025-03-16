@@ -1,33 +1,28 @@
 package pragmasoft.k1teauth.oauth.scope;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.micronaut.serde.annotation.Serdeable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 
 import java.util.Objects;
-import java.util.Optional;
 
+@Serdeable
 @Entity
-@Table(
-        name = "scopes",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"name", "audience"})
-)
-public class Scope extends PanacheEntityBase {
+@Table(name = "scopes")
+public class Scope {
 
     @Id
-    public String name;
+    private String name;
 
     @Column(nullable = false)
-    public String description;
+    private String description;
 
     @Column(nullable = false)
-    public String audience;
+    private String audience;
 
-    public Scope() {
-    }
+    public Scope() {}
 
     public Scope(String name, String description, String audience) {
         this.name = name;
@@ -35,8 +30,28 @@ public class Scope extends PanacheEntityBase {
         this.audience = audience;
     }
 
-    public static Optional<Scope> findByName(String name) {
-        return find("name", name).firstResultOptional();
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getAudience() {
+        return audience;
+    }
+
+    public void setAudience(String audience) {
+        this.audience = audience;
     }
 
     @Override

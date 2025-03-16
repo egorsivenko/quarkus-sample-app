@@ -1,7 +1,7 @@
 package pragmasoft.k1teauth.oauth.client;
 
 import io.hypersistence.utils.hibernate.type.array.ListArrayType;
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.micronaut.serde.annotation.Serdeable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -15,22 +15,22 @@ import org.hibernate.annotations.Type;
 import pragmasoft.k1teauth.oauth.scope.Scope;
 
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 
+@Serdeable
 @Entity
 @Table(name = "oauth_clients")
-public class OAuthClient extends PanacheEntityBase {
+public class OAuthClient {
 
     @Id
-    @Column(name = "client_id", nullable = false, unique = true)
-    public String clientId;
+    @Column(name = "client_id")
+    private String clientId;
 
-    @Column(name = "client_secret", nullable = false, unique = true)
-    public String clientSecret;
+    @Column(name = "client_secret", unique = true)
+    private String clientSecret;
 
     @Column(name = "name", nullable = false, unique = true)
-    public String name;
+    private String name;
 
     @Type(ListArrayType.class)
     @Column(
@@ -38,7 +38,7 @@ public class OAuthClient extends PanacheEntityBase {
             nullable = false,
             columnDefinition = "text[]"
     )
-    public Set<String> callbackUrls;
+    private Set<String> callbackUrls;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -56,21 +56,67 @@ public class OAuthClient extends PanacheEntityBase {
                     )
             )
     )
-    public Set<Scope> scopes = new HashSet<>();
+    private Set<Scope> scopes = new HashSet<>();
 
-    public static Optional<OAuthClient> findByClientIdOptional(String clientId) {
-        return find("clientId", clientId).firstResultOptional();
+    @Column(name = "is_confidential", nullable = false)
+    private boolean isConfidential;
+
+    public OAuthClient() {}
+
+    public OAuthClient(String clientId, String clientSecret, String name, Set<String> callbackUrls, Set<Scope> scopes, boolean isConfidential) {
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+        this.name = name;
+        this.callbackUrls = callbackUrls;
+        this.scopes = scopes;
+        this.isConfidential = isConfidential;
     }
 
-    public static Optional<OAuthClient> findByClientIdAndSecret(String clientId, String clientSecret) {
-        return find("clientId = ?1 and clientSecret = ?2", clientId, clientSecret).firstResultOptional();
+    public String getClientId() {
+        return clientId;
     }
 
-    public static Optional<OAuthClient> findByNameOptional(String name) {
-        return find("name", name).firstResultOptional();
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
-    public static void deleteByClientId(String clientId) {
-        delete("clientId", clientId);
+    public String getClientSecret() {
+        return clientSecret;
+    }
+
+    public void setClientSecret(String clientSecret) {
+        this.clientSecret = clientSecret;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Set<String> getCallbackUrls() {
+        return callbackUrls;
+    }
+
+    public void setCallbackUrls(Set<String> callbackUrls) {
+        this.callbackUrls = callbackUrls;
+    }
+
+    public Set<Scope> getScopes() {
+        return scopes;
+    }
+
+    public void setScopes(Set<Scope> scopes) {
+        this.scopes = scopes;
+    }
+
+    public boolean isConfidential() {
+        return isConfidential;
+    }
+
+    public void setConfidential(boolean confidential) {
+        isConfidential = confidential;
     }
 }

@@ -1,4 +1,4 @@
-#Maven
+# Maven
 target/
 pom.xml.tag
 pom.xml.releaseBackup
@@ -38,12 +38,16 @@ nb-configuration.xml
 
 # Local environment
 .env
+local-config.yml
 
-# Plugin directory
-/.quarkus/cli/plugins/
-# TLS Certificates
-.certs/
-# RSA key pair
-.key-pair/
 # Logging
 logs/
+
+# Key pair
+.key-pair/
+
+# JTE
+build/
+
+# Micronaut
+.micronaut/

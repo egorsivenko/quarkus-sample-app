@@ -1,90 +1,88 @@
 package pragmasoft.k1teauth.user;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Named;
+import io.micronaut.context.annotation.Property;
+import io.micronaut.data.model.Page;
+import io.micronaut.data.model.Pageable;
+import io.micronaut.data.model.Sort;
+import jakarta.inject.Singleton;
 import jakarta.transaction.Transactional;
 import pragmasoft.k1teauth.admin.form.EditUserForm;
+import pragmasoft.k1teauth.user.User.Role;
 import pragmasoft.k1teauth.user.exception.EmailAlreadyTakenException;
 import pragmasoft.k1teauth.user.exception.UserNotFoundException;
-import pragmasoft.k1teauth.user.repository.PanacheUserRepository;
 
-import java.util.List;
 import java.util.UUID;
 
-@Named("userService")
-@ApplicationScoped
+@Singleton
 @Transactional
 public class UserService {
 
-    private final PanacheUserRepository userRepository;
+    @Property(name = "page.size", defaultValue = "-1")
+    private int pageSize;
+    private static final Sort SORT = Sort.of(Sort.Order.desc("createdAt"));
 
-    public UserService(PanacheUserRepository userRepository) {
+    private final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    public List<User> listAll() {
-        return userRepository.listAll();
+    public Page<User> listAll(Pageable pageable) {
+        return userRepository.findAll(Pageable.from(pageable.getNumber(), pageSize, SORT));
     }
 
     public User getById(UUID id) {
-        return userRepository.findByIdOptional(id)
+        return userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
     }
 
     public User getByEmail(String email) {
-        return userRepository.findByEmailOptional(email)
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(email));
     }
 
-    public boolean existsById(UUID id) {
-        return userRepository.findByIdOptional(id)
-                .isPresent();
-    }
-
     public boolean existsByEmail(String email) {
-        return userRepository.findByEmailOptional(email)
-                .isPresent();
+        return userRepository.findByEmail(email).isPresent();
     }
 
     public void create(User user) {
         if (existsByEmail(user.getEmail())) {
             throw new EmailAlreadyTakenException(user.getEmail());
         }
-        userRepository.persist(user);
+        userRepository.save(user);
     }
 
     public void edit(EditUserForm form) {
-        User user = getById(form.getId());
-        String newEmail = form.getEmail();
+        User user = getById(form.id());
+        String newEmail = form.email();
 
         if (!user.getEmail().equals(newEmail) && existsByEmail(newEmail)) {
             throw new EmailAlreadyTakenException(newEmail);
         }
         user.setEmail(newEmail);
-        user.setFullName(form.getFullName());
-        user.setRole(UserRole.valueOf(form.getRole().toUpperCase()));
+        user.setFullName(form.fullName());
+        user.setRole(Role.valueOf(form.role().toUpperCase()));
 
-        userRepository.persist(user);
+        userRepository.update(user);
     }
 
     public void delete(UUID id) {
         userRepository.deleteById(id);
     }
 
+    public void changePassword(UUID id, String newPassword) {
+        User user = getById(id);
+        changePassword(user, newPassword);
+    }
+
     public void changePassword(User user, String newPassword) {
         user.changePassword(newPassword);
-        userRepository.persist(user);
+        userRepository.update(user);
     }
 
-    public User verifyUser(UUID id) {
+    public void verifyUser(UUID id) {
         User user = getById(id);
         user.setVerified(true);
-
-        userRepository.persist(user);
-        return user;
-    }
-
-    public boolean isUserAdmin(User user) {
-        return user.getRole() == UserRole.ADMIN;
+        userRepository.update(user);
     }
 }

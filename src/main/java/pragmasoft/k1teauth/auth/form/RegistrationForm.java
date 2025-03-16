@@ -1,49 +1,24 @@
 package pragmasoft.k1teauth.auth.form;
 
+import io.micronaut.core.annotation.Nullable;
+import io.micronaut.serde.annotation.Serdeable;
+import io.micronaut.views.fields.annotations.InputEmail;
+import io.micronaut.views.fields.annotations.InputHidden;
+import io.micronaut.views.fields.annotations.InputPassword;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import org.jboss.resteasy.reactive.RestForm;
 import pragmasoft.k1teauth.user.User;
 
-public class RegistrationForm {
-
-    @RestForm
-    @NotBlank
-    @Size(min = 4, max = 50)
-    String fullName;
-
-    @RestForm
-    @NotBlank
-    @Size(min = 6, max = 50)
-    String email;
-
-    @RestForm
-    @NotBlank
-    @Size(min = 6, max = 50)
-    String password;
-
-    @RestForm
-    @NotBlank
-    @Size(min = 6, max = 50)
-    String confirmPassword;
-
+@Serdeable
+public record RegistrationForm(
+        @NotBlank @Size(min = 4, max = 50) String fullName,
+        @InputEmail @Email @NotBlank @Size(min = 6, max = 50) String email,
+        @InputPassword @NotBlank @Size(min = 6, max = 50) String password,
+        @InputPassword @NotBlank @Size(min = 6, max = 50) String confirmPassword,
+        @InputHidden @Nullable String cfTurnstileResponse
+) {
     public User mapToUser() {
         return new User(fullName, email, password);
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getConfirmPassword() {
-        return confirmPassword;
     }
 }

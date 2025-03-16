@@ -1,6 +1,6 @@
 package pragmasoft.k1teauth.user;
 
-import io.quarkus.elytron.security.common.BcryptUtil;
+import io.micronaut.serde.annotation.Serdeable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -9,13 +9,18 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.CreationTimestamp;
+import pragmasoft.k1teauth.security.hash.BcryptUtil;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Serdeable
 @Entity
 @Table(name = "users")
 public class User {
+
+    public enum Role { ADMIN, USER }
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -32,28 +37,27 @@ public class User {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private UserRole role;
+    private Role role;
 
     @Column(name = "is_verified", nullable = false)
     private boolean isVerified;
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    public User() {
-    }
+    public User() {}
 
     public User(String fullName, String email, String password) {
-        this(fullName, email, password, UserRole.USER, false);
+        this(fullName, email, password, Role.USER, false);
     }
 
-    public User(String fullName, String email, String password, UserRole role, boolean isVerified) {
+    public User(String fullName, String email, String password, Role role, boolean isVerified) {
         this.fullName = fullName;
         this.email = email;
-        this.password = BcryptUtil.bcryptHash(password);
+        this.password = BcryptUtil.encode(password);
         this.role = role;
         this.isVerified = isVerified;
-        this.createdAt = LocalDateTime.now();
     }
 
     public boolean verifyPassword(String password) {
@@ -61,54 +65,66 @@ public class User {
     }
 
     public void changePassword(String newPassword) {
-        this.password = BcryptUtil.bcryptHash(newPassword);
+        this.password = BcryptUtil.encode(newPassword);
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setRole(UserRole role) {
-        this.role = role;
-    }
-
-    public void setVerified(boolean verified) {
-        isVerified = verified;
+    public boolean isAdmin() {
+        return role == Role.ADMIN;
     }
 
     public UUID getId() {
         return id;
     }
 
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
     public String getFullName() {
         return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public String getEmail() {
         return email;
     }
 
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public String getPassword() {
         return password;
     }
 
-    public UserRole getRole() {
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Role getRole() {
         return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     public boolean isVerified() {
         return isVerified;
     }
 
+    public void setVerified(boolean verified) {
+        isVerified = verified;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }
